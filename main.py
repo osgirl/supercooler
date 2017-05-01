@@ -14,12 +14,12 @@ import sys
 BASE_PATH = os.path.dirname(os.path.realpath(__file__))
 UPPER_PATH = os.path.split(os.path.dirname(os.path.realpath(__file__)))[0]
 DEVICES_PATH = "%s/Hosts/" % (BASE_PATH )
-THIRTYBIRDS_PATH = "%s/thirtybirds-2.0" % (UPPER_PATH )
+THIRTYBIRDS_PATH = "%s/thirtybirds_2_0" % (UPPER_PATH )
 
 sys.path.append(BASE_PATH)
 sys.path.append(UPPER_PATH)
 
-from thirtybirds.Network.info import init as network_info_init
+from thirtybirds_2_0.Network.info import init as network_info_init
 network_info = network_info_init()
 
 def get_hostname():
@@ -54,17 +54,17 @@ pause_until_online(PAUSE_UNTIL_ONLINE_MAX_SECONDS)
 ###############
 
 args = sys.argv[1:]
-try:
-    pos = args.index("-u")
-    au = args[pos+1]
-    assert au in ["true","True"]
-    from thirtybirds.Updates.manager import init as updates_init
-    result = updates_init(THIRTYBIRDS_PATH, True, True)
-    print result
-    result = updates_init(BASE_PATH, True, False)
-    print result
-except Exception as E:
-    pass
+#try:
+pos = args.index("-u")
+au = args[pos+1]
+assert au in ["true","True"]
+from thirtybirds_2_0.Updates.manager import init as updates_init
+result = updates_init(THIRTYBIRDS_PATH, True, True)
+print result
+result = updates_init(BASE_PATH, True, True)
+print result
+#except Exception as E:
+#    pass
 
 #########################
 ### LOAD DEVICE-SPECIFIC CODE ###
