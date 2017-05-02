@@ -29,7 +29,7 @@ echo
 echo "COPY NEW RC.LOCAL FILE"
 echo
 
-sudo cp home/pi/supercooler/scripts/rc.local /etc/rc.local
+sudo cp /home/pi/scripts/rc.local /etc/rc.local
 
 #sudo ssh-keygen
 #echo 
