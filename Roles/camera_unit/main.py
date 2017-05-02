@@ -38,8 +38,11 @@ import os
 import settings 
 import sys
 import threading
+import time
 
 from thirtybirds_2_0.Network.manager import init as network_init
+from thirtybirds_2_0.Network.email_simple import init as email_init
+from thirtybirds_2_0.Adapters.elp import init as camera_init
 
 BASE_PATH = os.path.dirname(os.path.realpath(__file__))
 UPPER_PATH = os.path.split(os.path.dirname(os.path.realpath(__file__)))[0]
@@ -53,7 +56,8 @@ class Main(threading.Thread):
     def __init__(self, hostname):
         threading.Thread.__init__(self)
         self.hostname = hostname
-
+        self.camera = camera_init("/home/pi/Captures/")
+        self.email_init = email_init(settings["from_field"],settings["password_field"])
         ### NETWORK ###
 
 
@@ -64,7 +68,11 @@ class Main(threading.Thread):
 
 
         ### CONNECT TO CAMERA ###   
-
+    def run(self):
+        while True:
+            self.camera.take_capture("capture.png")
+            self.email.send(settings["to_field"],settings["image captured from %s" % (self.hostname)],settings["test"] )
+            time.sleep(300)
 
         ###  ###
 

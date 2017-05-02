@@ -15,14 +15,20 @@ sudo ./install_requirements.sh
 
 
 copy settings.py to remote computer
-scp -p settings.py pi@192.168.1.*:~/scripts/supercooler
+scp -p settings.py pi@192.168.1.*:~/
 
-post-install cleanup:
+post-install cleanup on local:
+cd supercooler
+scp -p settings.py pi@192.168.1.*:~/
+
+post-install cleanup on pi:
 sudo cp /home/pi/scripts/rc.local /etc/rc.local
 sudo mv ~/scripts/supercooler ~/supercooler
 sudo mv ~/scripts/thirtybirds-2.0 ~/thirtybirds_2_0 
 sudo mv ~/settings.py ~/supercooler/
-
+sudo /etc/rc.local
+cd ~/supercooler
+sudo git pull
 
 
 
