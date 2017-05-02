@@ -42,7 +42,7 @@ import time
 
 from thirtybirds_2_0.Network.manager import init as network_init
 from thirtybirds_2_0.Network.email_simple import init as email_init
-from thirtybirds_2_0.Adapters.elp import init as camera_init
+from thirtybirds_2_0.Adaptors.Cameras.elp import init as camera_init
 
 BASE_PATH = os.path.dirname(os.path.realpath(__file__))
 UPPER_PATH = os.path.split(os.path.dirname(os.path.realpath(__file__)))[0]
