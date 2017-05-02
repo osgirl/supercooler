@@ -72,7 +72,7 @@ class Main(threading.Thread):
         while True:
             self.camera.take_capture("capture.png")
             time.sleep(5)
-            self.email.send(settings.to_field, "camera capture from %s" % (self.hostname),"test", "/home/pi/Captures/capture.png")
+            self.email.send(settings.to_field, "camera capture from %s" % (self.hostname),"test", "/home/pi/supercooler/Captures/capture.png")
             time.sleep(120)
 
         ###  ###
