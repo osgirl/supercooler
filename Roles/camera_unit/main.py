@@ -39,6 +39,8 @@ import settings
 import sys
 import threading
 
+from thirtybirds_2_0.Network.manager import init as network_init
+
 BASE_PATH = os.path.dirname(os.path.realpath(__file__))
 UPPER_PATH = os.path.split(os.path.dirname(os.path.realpath(__file__)))[0]
 DEVICES_PATH = "%s/Hosts/" % (BASE_PATH )

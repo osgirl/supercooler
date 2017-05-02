@@ -41,8 +41,8 @@ import settings
 import yaml
 import json
 
-from thirtybirds.Logs.main import Exception_Collector
-from thirtybirds.Network.manager import init as network_init
+from thirtybirds_2_0.Logs.main import Exception_Collector
+from thirtybirds_2_0.Network.manager import init as network_init
 
 
 def network_status_handler(msg):
