@@ -56,7 +56,7 @@ class Main(threading.Thread):
     def __init__(self, hostname):
         threading.Thread.__init__(self)
         self.hostname = hostname
-        self.camera = camera_init("/home/pi/Captures/")
+        self.camera = camera_init("/home/pi/supercooler/Captures/")
         self.email = email_init(settings.from_field,settings.password_field)
         ### NETWORK ###
 
@@ -71,6 +71,7 @@ class Main(threading.Thread):
     def run(self):
         while True:
             self.camera.take_capture("capture.png")
+            time.sleep(5)
             self.email.send(settings.to_field, "camera capture from %s" % (self.hostname),"test", "/home/pi/Captures/capture.png")
             time.sleep(120)
 
