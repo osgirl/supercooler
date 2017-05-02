@@ -57,7 +57,7 @@ class Main(threading.Thread):
         threading.Thread.__init__(self)
         self.hostname = hostname
         self.camera = camera_init("/home/pi/Captures/")
-        self.email_init = email_init(settings["from_field"],settings["password_field"])
+        self.email_init = email_init(settings.from_field,settings.password_field)
         ### NETWORK ###
 
 
