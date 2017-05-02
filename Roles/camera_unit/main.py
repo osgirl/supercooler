@@ -67,14 +67,32 @@ class Main(threading.Thread):
         ###  ###
 
 
+def network_status_handler(msg):
+    print "network_status_handler", msg
 
+def network_message_handler(msg):
+    print "network_message_handler", msg
+    topic = msg[0]
+    #host, sensor, data = yaml.safe_load(msg[1])
+    if topic == "__heartbeat__":
+        print "heartbeat received", msg
 
+network = None # makin' it global
 
+def init(HOSTNAME):
+    global network
+    network = network_init(
+        hostname=HOSTNAME,
+        role="client",
+        discovery_multicastGroup=settings.discovery_multicastGroup,
+        discovery_multicastPort=settings.discovery_multicastPort,
+        discovery_responsePort=settings.discovery_responsePort,
+        pubsub_pubPort=settings.pubsub_pubPort,
+        message_callback=network_message_handler,
+        status_callback=network_status_handler
+    )
 
-
-
-
-def init(hostname):
-    main = Main(hostname)
-
-
+    network.subscribe_to_topic("system")  # subscribe to all system messages
+    #network.subscribe_to_topic("sensor_data")  
+    main = Main(HOSTNAME)
+    main.start()

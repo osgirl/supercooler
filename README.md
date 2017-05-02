@@ -18,8 +18,10 @@ copy settings.py to remote computer
 scp -p settings.py pi@192.168.1.*:~/scripts/supercooler
 
 post-install cleanup:
-mv ~/scripts/supercooler ~/supercooler
-mv ~/scripts/thirtybirds-2.0 ~/thirtybirds_2_0 
+sudo cp /home/pi/scripts/rc.local /etc/rc.local
+sudo mv ~/scripts/supercooler ~/supercooler
+sudo mv ~/scripts/thirtybirds-2.0 ~/thirtybirds_2_0 
+sudo mv ~/settings.py ~/supercooler/
 
 
 
