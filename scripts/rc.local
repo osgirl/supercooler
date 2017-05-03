@@ -11,6 +11,8 @@
 #
 # By default this script does nothing.
 
+sleep 20
+
 # Print the IP address
 _IP=$(hostname -I) || true
 if [ "$_IP" ]; then
