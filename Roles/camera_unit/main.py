@@ -78,6 +78,13 @@ class Main(threading.Thread):
         ###  ###
 
 
+def capture_img():
+    # fill this in later
+    return None
+
+def process_img(img):
+    return {'this':True, 'is':True, 'a':True, 'dummy':True, 'dict':True}
+
 def network_status_handler(msg):
     print "network_status_handler", msg
 
@@ -87,6 +94,16 @@ def network_message_handler(msg):
     #host, sensor, data = yaml.safe_load(msg[1])
     if topic == "__heartbeat__":
         print "heartbeat received", msg
+
+    elif topic == "reboot":
+        print "reboot!", os.system("sudo reboot now")
+
+    elif topic == "get_beer":
+        img = capture_img()
+        data = process_img(img)
+
+        network.send("found_beer", data)
+
 
 network = None # makin' it global
 
@@ -104,6 +121,8 @@ def init(HOSTNAME):
     )
 
     network.subscribe_to_topic("system")  # subscribe to all system messages
+    network.subscribe_to_topic("reboot")
+    network.subscribe_to_topic("get_beer")
     #network.subscribe_to_topic("sensor_data")  
     main = Main(HOSTNAME)
     main.start()

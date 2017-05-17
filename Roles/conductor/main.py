@@ -44,10 +44,16 @@ import json
 from thirtybirds_2_0.Logs.main import Exception_Collector
 from thirtybirds_2_0.Network.manager import init as network_init
 
+def request_beer_over_and_over():
+    threading.Timer(60, request_beer_over_and_over).start()
+    request_beer()
+
+def request_beer(hostname=None):
+    topic = "get_beer_" + hostname if hostname != None else "get_beer"
+    network.send(topic, "")
 
 def network_status_handler(msg):
     print "network_status_handler", msg
-
 
 def network_message_handler(msg):
     try:
@@ -56,6 +62,10 @@ def network_message_handler(msg):
         #print "topic", topic 
         if topic == "__heartbeat__":
             print "heartbeat received", msg
+
+        elif topic == "found_beer"
+            print "got beer", eval(msg)
+
     except Exception as e:
         print "exception in network_message_handler", e
 
@@ -74,8 +84,11 @@ def init(HOSTNAME):
         status_callback=network_status_handler
     )
     network.subscribe_to_topic("system")  # subscribe to all system messages
-    network.subscribe_to_topic("sensor_data")  
-    network.subscribe_to_topic("cell_data")
-    network.subscribe_to_topic("incubator_data")
-    network.subscribe_to_topic("algorithm_data")
+    #network.subscribe_to_topic("sensor_data")  
+    #network.subscribe_to_topic("cell_data")
+    #network.subscribe_to_topic("incubator_data")
+    #network.subscribe_to_topic("algorithm_data")
     
+    network.subscribe_to_topic("found_beer")
+
+    request_beer_over_and_over()
