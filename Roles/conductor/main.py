@@ -63,8 +63,8 @@ def network_message_handler(msg):
         if topic == "__heartbeat__":
             print "heartbeat received", msg
 
-        elif topic == "found_beer"
-            print "got beer", eval(msg)
+        elif topic == "found_beer":
+            print "got beer", eval(msg[1])
 
     except Exception as e:
         print "exception in network_message_handler", e
