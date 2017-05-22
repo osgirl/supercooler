@@ -44,6 +44,12 @@ import json
 from thirtybirds_2_0.Logs.main import Exception_Collector
 from thirtybirds_2_0.Network.manager import init as network_init
 
+# use wiringpi for software PWM
+import wiringpi as wpi
+
+# keep track of door status
+door_is_closed = True
+
 def request_beer_over_and_over():
     threading.Timer(60, request_beer_over_and_over).start()
     request_beer()
@@ -51,6 +57,58 @@ def request_beer_over_and_over():
 def request_beer(hostname=None):
     topic = "get_beer_" + hostname if hostname != None else "get_beer"
     network.send(topic, "")
+
+
+def io_init():
+    wpi.wiringPiSetup()
+
+    # configure pins 21-24 for software PWM
+    for i in [21, 22, 23, 24]:
+        wpi.pinMode(i, wpi.OUTPUT)
+        wpi.softPwmCreate(i, 0, 100)
+
+    # use pin 29 as door sensor (active LOW)
+    wpi.pinMode(29, wpi.INPUT)
+    wpi.pullUpDnControl(29, wpi.PUD_UP)
+
+    global door_is_closed
+    door_is_closed = get_door_closed()
+
+# set LED brightness, given a shelf id (0-3) and brightness value (0-100)
+def led_control(id, value):
+    mapping = [21, 22, 23, 24]
+    wpi.softPwmWrite(mapping[id], value)
+
+# quick test sequence to make sure LED control is working
+def test_leds():
+    for j in xrange(-100, 101):
+        for i in xrange(4): led_control(i, 100 - abs(j))
+        wpi.delay(10)    
+
+# returns TRUE if door is closed
+def get_door_closed():
+    return not wpi.digitalRead(29)
+
+# check the door status every dt seconds and trigger callback accordingly
+def monitor_door_status(fn_closed=lambda: None, fn_open=lambda: None, dt=0.5):
+    global door_is_closed
+
+    # hold on to the previous door status, then get new one
+    door_was_closed = door_is_closed
+    door_is_closed = get_door_closed()
+
+    # check for a change, and trigger the appropriate callback
+    if door_is_closed != door_was_closed:
+        fn_closed() if door_is_closed else fn_open()
+
+    # trigger the next door check
+    threading.Timer(dt, monitor_door_status, [fn_closed, fn_open, dt]).start()
+
+def door_closed_fn():
+    print 'door is closed!'
+
+def door_open_fn():
+    print 'door is open!'
 
 def network_status_handler(msg):
     print "network_status_handler", msg
@@ -72,6 +130,9 @@ def network_message_handler(msg):
 network = None
 
 def init(HOSTNAME):
+    # setup LED control and door sensor
+    io_init()
+
     global network
     network = network_init(
         hostname=HOSTNAME,
@@ -91,4 +152,9 @@ def init(HOSTNAME):
     
     network.subscribe_to_topic("found_beer")
 
-    request_beer_over_and_over()
+    print 'testing the lights.....'
+    test_leds()
+
+    print 'start monitoring door.....'
+    monitor_door_status(door_closed_fn, door_open_fn)
+    #request_beer_over_and_over()
