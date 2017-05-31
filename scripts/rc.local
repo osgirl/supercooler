@@ -1,4 +1,4 @@
-#!/bin/sh -e
+﻿#!/bin/sh -e
 #
 # rc.local
 #
@@ -11,14 +11,24 @@
 #
 # By default this script does nothing.
 
-sleep 20
+
+# Toggle for running WiFi test loop or not; set to 0 to disable
+_WiFiTest=1
+
+if [ "$_WiFiTest" != 0 ]; then
+  until [ $(hostname -I) ]
+  do
+    sudo ifdown wlan0
+    sleep 3
+    sudo ifup --force wlan0
+    sleep 15
+  done
+fi
 
 # Print the IP address
 _IP=$(hostname -I) || true
 if [ "$_IP" ]; then
-  printf "My IP address is %s\n" "$_IP"
+  printf "My IP address is %s\n" "$_IP"            
 fi
-
-sudo python /home/pi/supercooler/main.py -l quiet -u true &
-
+                                               
 exit 0
