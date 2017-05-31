@@ -50,6 +50,9 @@ import wiringpi as wpi
 # keep track of door status
 door_is_closed = True
 
+# DS18B20 temperature sensor IDs
+temp_ids = ['000008a9219f']
+
 def request_beer_over_and_over():
     threading.Timer(60, request_beer_over_and_over).start()
     request_beer()
@@ -110,6 +113,9 @@ def door_closed_fn():
 def door_open_fn():
     print 'door is open!'
 
+def send_update_command(cool=False, birds=False, update=False, upgrade=False):
+  network.send("remote_update", [cool, birds, update, upgrade])
+
 def network_status_handler(msg):
     print "network_status_handler", msg
 
@@ -119,10 +125,10 @@ def network_message_handler(msg):
         topic = msg[0]
         #print "topic", topic 
         if topic == "__heartbeat__":
-            print "heartbeat received", msg
+           # print "heartbeat received", msg
 
         elif topic == "found_beer":
-            print "got beer", eval(msg[1])
+            #print "got beer", eval(msg[1])
 
     except Exception as e:
         print "exception in network_message_handler", e
@@ -144,12 +150,7 @@ def init(HOSTNAME):
         message_callback=network_message_handler,
         status_callback=network_status_handler
     )
-    network.subscribe_to_topic("system")  # subscribe to all system messages
-    #network.subscribe_to_topic("sensor_data")  
-    #network.subscribe_to_topic("cell_data")
-    #network.subscribe_to_topic("incubator_data")
-    #network.subscribe_to_topic("algorithm_data")
-    
+    network.subscribe_to_topic("system")  # subscribe to all system messages    
     network.subscribe_to_topic("found_beer")
 
     print 'testing the lights.....'

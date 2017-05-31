@@ -104,6 +104,23 @@ def network_message_handler(msg):
 
         network.send("found_beer", data)
 
+    elif topic == "remote_update":
+        # this is my hacky way to update the repos, make this better later
+        print "remote update go!"
+
+        [cool, birds, update, upgrade] = eval(msg[1])
+        if cool:
+            subprocess.call(['cd', '~/supercooler'])
+            subprocess.call(['sudo', 'git', 'pull'])
+
+        if birds:
+            subprocess.call(['cd', '~/thirtybirds_2_0'])
+            subprocess.call(['sudo', 'git', 'pull'])
+
+        print "it's done!"
+
+        network_send("update_complete", HOSTNAME)
+
 
 network = None # makin' it global
 
@@ -123,6 +140,7 @@ def init(HOSTNAME):
     network.subscribe_to_topic("system")  # subscribe to all system messages
     network.subscribe_to_topic("reboot")
     network.subscribe_to_topic("get_beer")
+    network.subscribe_to_topic("remote_update")
     #network.subscribe_to_topic("sensor_data")  
     main = Main(HOSTNAME)
     main.start()
