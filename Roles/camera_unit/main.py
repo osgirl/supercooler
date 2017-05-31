@@ -39,6 +39,7 @@ import settings
 import sys
 import threading
 import time
+import subprocess
 
 from thirtybirds_2_0.Network.manager import init as network_init
 from thirtybirds_2_0.Network.email_simple import init as email_init
