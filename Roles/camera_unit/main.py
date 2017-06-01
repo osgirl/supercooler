@@ -53,6 +53,8 @@ THIRTYBIRDS_PATH = "%s/thirtybirds" % (UPPER_PATH )
 sys.path.append(BASE_PATH)
 sys.path.append(UPPER_PATH)
 
+hostname = None
+
 class Main(threading.Thread):
     def __init__(self, hostname):
         threading.Thread.__init__(self)
@@ -84,7 +86,7 @@ def capture_img():
     return None
 
 def process_img(img):
-    return {'this':True, 'is':True, 'a':True, 'dummy':True, 'dict':True}
+    return hostname
 
 def network_status_handler(msg):
     print "network_status_handler", msg
@@ -137,6 +139,9 @@ def init(HOSTNAME):
         message_callback=network_message_handler,
         status_callback=network_status_handler
     )
+
+    global hostname
+    hostname = HOSTNAME
 
     network.subscribe_to_topic("system")  # subscribe to all system messages
     network.subscribe_to_topic("reboot")
