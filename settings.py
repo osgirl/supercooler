@@ -62,6 +62,6 @@ camera_unit_names = [
 ]
 
 conductor_names = [
-    "supercooler_conductor",
+    "supercooler-conductor",
     "action",
 ]

@@ -120,7 +120,7 @@ def network_message_handler(msg):
 
         print "it's done!"
 
-        network.send("update_complete", HOSTNAME)
+        network.send("update_complete", hostname)
 
 
 network = None # makin' it global
