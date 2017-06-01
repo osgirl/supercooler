@@ -113,16 +113,14 @@ def network_message_handler(msg):
 
         [cool, birds, update, upgrade] = eval(msg[1])
         if cool:
-            subprocess.call(['cd', '~/supercooler'])
-            subprocess.call(['sudo', 'git', 'pull'])
+            subprocess.call(['sudo', 'git', 'pull'], cwd='/home/pi/supercooler')
 
         if birds:
-            subprocess.call(['cd', '~/thirtybirds_2_0'])
-            subprocess.call(['sudo', 'git', 'pull'])
+            subprocess.call(['sudo', 'git', 'pull'], cwd='home/pi/thirtybirds_2_0')
 
         print "it's done!"
 
-        network_send("update_complete", HOSTNAME)
+        network.send("update_complete", HOSTNAME)
 
 
 network = None # makin' it global
