@@ -132,10 +132,10 @@ def network_message_handler(msg):
             print "heartbeat received", msg
 
         elif topic == "found_beer":
-            print "got beer", eval(msg[1])
+            print "got beer", msg[1]
 
         elif topic == "update_complete":
-            print 'update complete for host: ', str(eval(msg[1]))
+            print 'update complete for host: ', msg[1]
 
     except Exception as e:
         print "exception in network_message_handler", e
@@ -159,6 +159,7 @@ def init(HOSTNAME):
     )
     network.subscribe_to_topic("system")  # subscribe to all system messages    
     network.subscribe_to_topic("found_beer")
+    network.subscribe_to_topic("update_complete")
 
     print 'testing the lights.....'
     test_leds()
