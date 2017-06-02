@@ -117,6 +117,9 @@ def door_open_fn():
 def send_update_command(cool=False, birds=False, update=False, upgrade=False):
   network.send("remote_update", [cool, birds, update, upgrade])
 
+def send_update_scripts_command():
+  network.send("remote_update_scripts", "")
+
 def send_reboot():
     network.send("reboot")
 
@@ -134,7 +137,7 @@ def network_message_handler(msg):
         elif topic == "found_beer":
             print "got beer", eval(msg[1])
 
-        elif topic == "update_complete"
+        elif topic == "update_complete":
             print 'update complete for host: ', str(eval(msg[1]))
 
     except Exception as e:
