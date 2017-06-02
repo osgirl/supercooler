@@ -137,7 +137,7 @@ def network_message_handler(msg):
         elif topic == "found_beer":
             print "got beer", eval(msg[1])
 
-        elif topic == "update_complete"
+        elif topic == "update_complete":
             print 'update complete for host: ', str(eval(msg[1]))
 
     except Exception as e:

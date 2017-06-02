@@ -120,14 +120,14 @@ def network_message_handler(msg):
             subprocess.call(['sudo', 'git', 'pull'], cwd='home/pi/thirtybirds_2_0')
 
         print "it's done!"
-        network.send("update_complete", HOSTNAME)
+        network.send("update_complete", hostname)
 
     elif topic == "remote_update_scripts":
         print "run update scripts"
         updates_init(BASE_PATH, False, True)
 
         print "it's done!"
-        network.send("update_complete", HOSTNAME)
+        network.send("update_complete", hostname)
 
 
 network = None # makin' it global
