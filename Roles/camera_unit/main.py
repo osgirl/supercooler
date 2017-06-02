@@ -124,7 +124,7 @@ def network_message_handler(msg):
 
     elif topic == "remote_update_scripts":
         print "run update scripts"
-        updates_init(BASE_PATH, False, True)
+        updates_init("/home/pi/supercooler", False, True)
 
         print "it's done!"
         network.send("update_complete", hostname)
