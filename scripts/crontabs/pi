@@ -24,4 +24,4 @@
 # 
 # m h  dom mon dow   command
 
-*/3 * * * * /supercooler/scripts/reup.sh
+*/3 * * * * /home/pi/supercooler/scripts/reup.sh
