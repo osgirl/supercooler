@@ -117,6 +117,9 @@ def door_open_fn():
 def send_update_command(cool=False, birds=False, update=False, upgrade=False):
   network.send("remote_update", [cool, birds, update, upgrade])
 
+def send_update_scripts_command():
+  network.send("remote_update_scripts", "")
+
 def send_reboot():
     network.send("reboot")
 
