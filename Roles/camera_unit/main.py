@@ -44,6 +44,7 @@ import subprocess
 from thirtybirds_2_0.Network.manager import init as network_init
 from thirtybirds_2_0.Network.email_simple import init as email_init
 from thirtybirds_2_0.Adaptors.Cameras.elp import init as camera_init
+from thirtybirds_2_0.Updates.manager import init as updates_init
 
 BASE_PATH = os.path.dirname(os.path.realpath(__file__))
 UPPER_PATH = os.path.split(os.path.dirname(os.path.realpath(__file__)))[0]
@@ -119,7 +120,13 @@ def network_message_handler(msg):
             subprocess.call(['sudo', 'git', 'pull'], cwd='home/pi/thirtybirds_2_0')
 
         print "it's done!"
+        network.send("update_complete", HOSTNAME)
 
+    elif topic == "remote_update_scripts":
+        print "run update scripts"
+        updates_init(BASE_PATH, False, True)
+
+        print "it's done!"
         network.send("update_complete", HOSTNAME)
 
 
