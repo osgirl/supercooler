@@ -62,7 +62,6 @@ def request_beer(hostname=None):
     topic = "get_beer_" + hostname if hostname != None else "get_beer"
     network.send(topic, "")
 
-
 def io_init():
     wpi.wiringPiSetup()
 
@@ -87,7 +86,10 @@ def led_control(id, value):
 def test_leds():
     for j in xrange(-100, 101):
         for i in xrange(4): led_control(i, 100 - abs(j))
-        wpi.delay(10)    
+        wpi.delay(10)
+
+def turn_off_leds():
+    for i in xrange(4): led_control(i, 0) # turn off the lights
 
 # returns TRUE if door is closed
 def get_door_closed():
@@ -110,6 +112,9 @@ def monitor_door_status(fn_closed=lambda: None, fn_open=lambda: None, dt=0.5):
 
 def door_closed_fn():
     print 'door is closed!'
+    for i in xrange(4): led_control(i, 100) # turn on the lights
+    request_beer()
+    threading.Timer(15, turn_off_leds).start()
 
 def door_open_fn():
     print 'door is open!'
@@ -122,6 +127,9 @@ def send_update_scripts_command():
 
 def send_reboot():
     network.send("reboot")
+
+def ping_nodes_go():
+    network.send("say_hello_to_node")
 
 def network_status_handler(msg):
     print "network_status_handler", msg
