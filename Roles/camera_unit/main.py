@@ -83,7 +83,7 @@ class Main(threading.Thread):
 
 
 def capture_img():
-    # fill this in later
+    self.camera.take_capture("capture.png")
     return None
 
 def process_img(img):
@@ -102,7 +102,7 @@ def network_message_handler(msg):
     elif topic == "reboot":
         print "reboot!", os.system("sudo reboot now")
 
-    elif topic == "get_beer":
+    elif topic == "get_beer": 
         img = capture_img()
         data = process_img(img)
 
@@ -124,7 +124,7 @@ def network_message_handler(msg):
 
     elif topic == "remote_update_scripts":
         print "run update scripts"
-        updates_init(BASE_PATH, False, True)
+        updates_init("/home/pi/supercooler", False, True)
 
         print "it's done!"
         network.send("update_complete", hostname)
