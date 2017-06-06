@@ -74,9 +74,10 @@ class Main(threading.Thread):
         ### CONNECT TO CAMERA ###   
     def run(self):
         while True:
+            filename = "capture" + hostname[-2:] + ".png"
             self.camera.take_capture("capture.png")
             time.sleep(5)
-            self.email.send("ac-smart-cooler@googlegroups.com", "camera capture from %s" % (self.hostname),"test", "/home/pi/supercooler/Captures/capture.png")
+            self.email.send("ac-smart-cooler@googlegroups.com", "camera capture from %s" % (self.hostname),"test", "/home/pi/supercooler/Captures/" + filename)
             time.sleep(7190)
 
         ###  ###
