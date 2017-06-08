@@ -55,6 +55,7 @@ sys.path.append(BASE_PATH)
 sys.path.append(UPPER_PATH)
 
 hostname = None
+main = None
 
 class Main(threading.Thread):
     def __init__(self, hostname):
@@ -158,6 +159,8 @@ def init(HOSTNAME):
     network.subscribe_to_topic("reboot")
     network.subscribe_to_topic("get_beer")
     network.subscribe_to_topic("remote_update")
-    #network.subscribe_to_topic("sensor_data")  
+    #network.subscribe_to_topic("sensor_data") 
+
+    global main 
     main = Main(HOSTNAME)
     main.start()
