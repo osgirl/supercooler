@@ -113,7 +113,7 @@ def network_message_handler(msg):
         time.sleep(5)
         main.email.send("ac-smart-cooler@googlegroups.com", "camera capture from %s" % (main.hostname),"test", "/home/pi/supercooler/Captures/" + filename)
 
-        network.send("found_beer", data)
+        network.send("found_beer", "")
 
     elif topic == "remote_update":
         # this is my hacky way to update the repos, make this better later
