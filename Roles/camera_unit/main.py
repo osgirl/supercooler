@@ -107,9 +107,9 @@ def network_message_handler(msg):
         #img = capture_img()
         #data = process_img(img)
         filename = "capture" + hostname[11:] + ".png"
-        self.camera.take_capture(filename)
+        main.camera.take_capture(filename)
         time.sleep(5)
-        self.email.send("ac-smart-cooler@googlegroups.com", "camera capture from %s" % (self.hostname),"test", "/home/pi/supercooler/Captures/" + filename)
+        main.email.send("ac-smart-cooler@googlegroups.com", "camera capture from %s" % (main.hostname),"test", "/home/pi/supercooler/Captures/" + filename)
         time.sleep(7190)
 
         network.send("found_beer", data)
