@@ -102,7 +102,8 @@ def network_message_handler(msg):
         print "heartbeat received", msg
 
     elif topic == "reboot":
-        print "reboot!", os.system("sudo reboot now")
+        print "reboot!"
+        os.system("sudo reboot now")
 
     elif topic == "get_beer": 
         #img = capture_img()
@@ -111,7 +112,6 @@ def network_message_handler(msg):
         main.camera.take_capture(filename)
         time.sleep(5)
         main.email.send("ac-smart-cooler@googlegroups.com", "camera capture from %s" % (main.hostname),"test", "/home/pi/supercooler/Captures/" + filename)
-        time.sleep(7190)
 
         network.send("found_beer", data)
 
