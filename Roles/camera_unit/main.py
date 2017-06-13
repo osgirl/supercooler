@@ -159,6 +159,8 @@ def init(HOSTNAME):
     network.subscribe_to_topic("reboot")
     network.subscribe_to_topic("get_beer")
     network.subscribe_to_topic("remote_update")
+    network.subscribe_to_topic(HOSTNAME)
+    
     #network.subscribe_to_topic("sensor_data") 
 
     global main 
