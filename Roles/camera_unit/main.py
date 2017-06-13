@@ -55,6 +55,7 @@ sys.path.append(BASE_PATH)
 sys.path.append(UPPER_PATH)
 
 hostname = None
+main = None
 
 class Main(threading.Thread):
     def __init__(self, hostname):
@@ -74,7 +75,7 @@ class Main(threading.Thread):
         ### CONNECT TO CAMERA ###   
     def run(self):
         while True:
-            filename = "capture" + hostname[-2:] + ".png"
+            filename = "capture" + hostname[11:] + ".png"
             self.camera.take_capture(filename)
             time.sleep(5)
             self.email.send("ac-smart-cooler@googlegroups.com", "camera capture from %s" % (self.hostname),"test", "/home/pi/supercooler/Captures/" + filename)
@@ -101,13 +102,18 @@ def network_message_handler(msg):
         print "heartbeat received", msg
 
     elif topic == "reboot":
-        print "reboot!", os.system("sudo reboot now")
+        print "reboot!"
+        os.system("sudo reboot now")
 
     elif topic == "get_beer": 
-        img = capture_img()
-        data = process_img(img)
+        #img = capture_img()
+        #data = process_img(img)
+        filename = "capture" + hostname[11:] + ".png"
+        main.camera.take_capture(filename)
+        time.sleep(5)
+        main.email.send("ac-smart-cooler@googlegroups.com", "camera capture from %s" % (main.hostname),"test", "/home/pi/supercooler/Captures/" + filename)
 
-        network.send("found_beer", data)
+        network.send("found_beer", "")
 
     elif topic == "remote_update":
         # this is my hacky way to update the repos, make this better later
@@ -153,6 +159,8 @@ def init(HOSTNAME):
     network.subscribe_to_topic("reboot")
     network.subscribe_to_topic("get_beer")
     network.subscribe_to_topic("remote_update")
-    #network.subscribe_to_topic("sensor_data")  
+    #network.subscribe_to_topic("sensor_data") 
+
+    global main 
     main = Main(HOSTNAME)
     main.start()
