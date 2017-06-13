@@ -1,2 +1,6 @@
 settings.py
 .DS_Store
+*.pyc
+Updates/version.pickle
+Logs
+Captures/*.png
