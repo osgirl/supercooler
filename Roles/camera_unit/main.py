@@ -40,6 +40,7 @@ import sys
 import threading
 import time
 import subprocess
+import base64
 
 from thirtybirds_2_0.Network.manager import init as network_init
 from thirtybirds_2_0.Network.email_simple import init as email_init
@@ -114,6 +115,18 @@ def network_message_handler(msg):
         main.email.send("ac-smart-cooler@googlegroups.com", "camera capture from %s" % (main.hostname),"test", "/home/pi/supercooler/Captures/" + filename)
 
         network.send("found_beer", "")
+
+    elif topic == hostname:
+        print "testing png file sending"
+
+        filename = "capture" + hostname[11:] + ".png"
+        main.camera.take_capture(filename)
+
+        time.sleep(5)
+
+        with open("/home/pi/supercooler/Captures/" + filename, "rb") as f:
+            data = f.read()
+            network.send("found_beer", base64.b64encode(data))
 
     elif topic == "remote_update":
         # this is my hacky way to update the repos, make this better later
