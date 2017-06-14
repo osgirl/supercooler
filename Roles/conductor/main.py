@@ -41,6 +41,7 @@ import settings
 import yaml
 import json
 import subprocess
+import base64
 
 from thirtybirds_2_0.Logs.main import Exception_Collector
 from thirtybirds_2_0.Network.manager import init as network_init
@@ -132,18 +133,28 @@ def ping_nodes_go():
     network.send("say_hello_to_node")
 
 def network_status_handler(msg):
-    print "network_status_handler", msg
+    #print "network_status_handler", msg
+    pass
 
 def network_message_handler(msg):
     try:
-        print "network_message_handler", msg
+        #print "network_message_handler", msg
         topic = msg[0]
         #print "topic", topic 
         if topic == "__heartbeat__":
             print "heartbeat received", msg
 
         elif topic == "found_beer":
-            print "got beer", msg[1]
+            if msg[1] != "":
+
+                data = msg[1]
+                print "found_beer: got %d bytes" % (len(data))
+
+                with open("/home/pi/supercooler/Captures/Capture.png", "wb") as f:
+                    f.write(base64.b64decode(data))
+                    print "saved capture"
+            else:
+                print "found_beer: empty message"
 
         elif topic == "update_complete":
             print 'update complete for host: ', msg[1]
