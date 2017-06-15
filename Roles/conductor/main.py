@@ -170,7 +170,7 @@ class WebInterface:
 
     def __upload_data(self, route, data):
         """ Only to be called from other methods """
-        endpoint_route = endpoint + route
+        endpoint_route = self.endpoint + route
         try:
             response = requests.get(endpoint, params=data)
             print('response: {} - {}'.format(response.text, response.status_code))
