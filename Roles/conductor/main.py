@@ -187,26 +187,26 @@ def init(HOSTNAME):
     # setup LED control and door sensor
     io_init()
 
-    # # global network
-    # network = network_init(
-    #     hostname=HOSTNAME,
-    #     role="server",
-    #     discovery_multicastGroup=settings.discovery_multicastGroup,
-    #     discovery_multicastPort=settings.discovery_multicastPort,
-    #     discovery_responsePort=settings.discovery_responsePort,
-    #     pubsub_pubPort=settings.pubsub_pubPort,
-    #     message_callback=network_message_handler,
-    #     status_callback=network_status_handler
-    # )
-    # network.subscribe_to_topic("system")  # subscribe to all system messages
-    # network.subscribe_to_topic("found_beer")
-    # network.subscribe_to_topic("update_complete")
+    # global network
+    network = network_init(
+        hostname=HOSTNAME,
+        role="server",
+        discovery_multicastGroup=settings.discovery_multicastGroup,
+        discovery_multicastPort=settings.discovery_multicastPort,
+        discovery_responsePort=settings.discovery_responsePort,
+        pubsub_pubPort=settings.pubsub_pubPort,
+        message_callback=network_message_handler,
+        status_callback=network_status_handler
+    )
+    network.subscribe_to_topic("system")  # subscribe to all system messages
+    network.subscribe_to_topic("found_beer")
+    network.subscribe_to_topic("update_complete")
 
-    # print 'testing the lights.....'
-    # test_leds()
+    print 'testing the lights.....'
+    test_leds()
 
-    # print 'start monitoring door.....'
-    # monitor_door_status(door_closed_fn, door_open_fn)
+    print 'start monitoring door.....'
+    monitor_door_status(door_closed_fn, door_open_fn)
 
     print 'testing web interface'
     web_interface_test()
