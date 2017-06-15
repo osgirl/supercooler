@@ -169,7 +169,7 @@ class WebInterface:
     endpoint = settings_private.web_endpoint
 
     def upload_data(route, data):
-        """Only to be called from other methods"""
+        """ Only to be called from other methods """
         endpoint_route = endpoint + route
         try:
             response = requests.get(endpoint, params=data)
@@ -179,7 +179,7 @@ class WebInterface:
             return(e)
             print('error: {}',format(e))
 
-    def send_test_report(upload=True):
+    def send_test_report():
         shelfs = ['A','B','C','D']
         data = []
         data.append({
@@ -191,19 +191,17 @@ class WebInterface:
         });
         package = {
             'data':json.dumps(data),
-            'upload': upload,
             'timestamp':int(time.time())
         }
         return upload_data('/upload', package)
 
-    def send_report(data, upload=True):
+    def send_report(data):
         try:
             data = json.dumps(data)
         except Exception as e:
             print('Cannot parse json: {}'.format(e))
         package = {
             'data':data,
-            'upload': upload,
             'timestamp':int(time.time())
         }
         if data:
@@ -218,7 +216,7 @@ class WebInterface:
 
 web_interface = WebInterface()
 def web_interface_test():
-    output = web_interface.send_test_report('')
+    output = web_interface.send_test_report()
     print('testing test report: {}'.format(output))
     test_data = {
         'upload': '', # falsy = will not upload
@@ -228,7 +226,7 @@ def web_interface_test():
             {"y": 23, "shelf": 3, "type": 2, "x": 9}\
         ]'
     }
-    output = web_interface.send_report(test_data, '')
+    output = web_interface.send_report(test_data)
     print('testing scan report: {}'.format(output))
     output = web_interface.send_door_open()
     print('testing door open: {}'.format(output))
