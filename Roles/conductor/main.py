@@ -209,10 +209,10 @@ class WebInterface:
         return None
 
     def send_door_open(self):
-        return self.__upload_data('/door_open')
+        return self.__upload_data('/door_open', {})
 
     def send_door_close(self):
-        return self.__upload_data('/door_close')
+        return self.__upload_data('/door_close', {})
 
 web_interface = WebInterface()
 def web_interface_test():
