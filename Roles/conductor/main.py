@@ -185,7 +185,8 @@ class WebInterface:
         data.append({
             # limits type to only first 10 product types
             'type': randint(1,10),
-            'shelf': shelfs[randint(0,3)],
+            # 'shelf': shelfs[randint(0,3)],
+            'shelf': randint(0,3),
             'x': uniform(0,565),
             'y': uniform(0,492)
         });
@@ -226,8 +227,8 @@ def web_interface_test():
             {"y": 23, "shelf": 3, "type": 2, "x": 9}\
         ]'
     }
-    output = web_interface.send_report(test_data)
-    print('testing scan report: {}'.format(output))
+    # output = web_interface.send_report(test_data)
+    # print('testing scan report: {}'.format(output))
     output = web_interface.send_door_open()
     print('testing door open: {}'.format(output))
     output = web_interface.send_door_close()
