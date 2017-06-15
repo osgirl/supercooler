@@ -262,4 +262,7 @@ def init(HOSTNAME):
 
     print 'start monitoring door.....'
     monitor_door_status(door_closed_fn, door_open_fn)
+
+    print 'testing web interface'
+    web_interface_test()
     #request_beer_over_and_over()
