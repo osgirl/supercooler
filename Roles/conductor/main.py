@@ -168,7 +168,7 @@ def network_message_handler(msg):
 class WebInterface:
     endpoint = settings_private.web_endpoint
 
-    def upload_data(self, route, data):
+    def __upload_data(self, route, data):
         """ Only to be called from other methods """
         endpoint_route = endpoint + route
         try:
@@ -193,7 +193,7 @@ class WebInterface:
             'data':json.dumps(data),
             'timestamp':int(time.time())
         }
-        return upload_data('/upload', package)
+        return self.__upload_data('/upload', package)
 
     def send_report(self, data):
         try:
@@ -205,14 +205,14 @@ class WebInterface:
             'timestamp':int(time.time())
         }
         if data:
-            return upload_data('/upload', package)
+            return self.__upload_data('/upload', package)
         return None
 
     def send_door_open(self):
-        return upload_data('/door_open')
+        return self.__upload_data('/door_open')
 
     def send_door_close(self):
-        return upload_data('/door_close')
+        return self.__upload_data('/door_close')
 
 web_interface = WebInterface()
 def web_interface_test():
