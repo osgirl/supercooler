@@ -166,6 +166,7 @@ def network_message_handler(msg):
         print "exception in network_message_handler", e
 
 class WebInterface:
+    # make sure web_endpoints.py is in the ./Roles/conductor on the raspberry pi
     endpoint = web_endpoint
 
     def __upload_data(self, route, data):
@@ -184,8 +185,7 @@ class WebInterface:
             data.append({
                 # limits type to only first 10 product types
                 'type': randint(1,10),
-                'shelf': randint(0,3),
-                'shelf': randint(0,3),
+                'shelf': shelfs[randint(0,3)],
                 'x': uniform(0,565),
                 'y': uniform(0,492)
             });
@@ -218,29 +218,21 @@ class WebInterface:
         return self.__upload_data('/door_close', {'timestamp': int(time.time())})
 
 web_interface = WebInterface()
+
 def web_interface_test():
-    data = [{"y": 14, "shelf": 1, "type": 1, "x": 17},{"y": 23, "shelf": 2, "type": 2, "x": 9}]
+    # test sending "real" data
+    data = [{"y": 14, "shelf": "A", "type": 1, "x": 17},{"y": 23, "shelf": "B", "type": 2, "x": 9}]
     output = web_interface.send_report(data)
-    print(type(output))
-    if type(output) == Exception:
-        print('error: {}'.format(output))
-    else:
-        print('testing scan report: {} - {}'.format(output.text, output.status_code))
+    print('testing scan report: {} - {}'.format(output.text, output.status_code))
+    # test mock data (this will be in the report)
     output = web_interface.send_test_report()
-    if type(output) == Exception:
-        print('error: {}'.format(output))
-    else:
-        print('testing test report: {} - {}'.format(output.text, output.status_code))
+    print('testing test report: {} - {}'.format(output.text, output.status_code))
+    # test door opening API call
     output = web_interface.send_door_open()
-    if type(output) == Exception:
-        print('error: {}'.format(output))
-    else:
-        print('testing door open: {} - {}'.format(output.text, output.status_code))
+    print('testing door open: {} - {}'.format(output.text, output.status_code))
+    # test door closing API call
     output = web_interface.send_door_close()
-    if type(output) == Exception:
-        print('error: {}'.format(output))
-    else:
-        print('testing door close: {} - {}'.format(output.text, output.status_code))
+    print('testing door close: {} - {}'.format(output.text, output.status_code))
 
 network = None
 
