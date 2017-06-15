@@ -173,11 +173,9 @@ class WebInterface:
         endpoint_route = self.endpoint + route
         try:
             response = requests.get(endpoint_route, params=data, timeout=5)
-            print('response: {} - {}'.format(response.text, response.status_code))
             return(response)
         except requests.exceptions.RequestException as e:
             return(e)
-            print('error: {}',format(e))
 
     def send_test_report(self):
         shelfs = ['A','B','C','D']
@@ -193,7 +191,7 @@ class WebInterface:
             });
 
         package = {
-            'data':json.dumps(data),
+            'data': json.dumps(data),
             'timestamp':int(time.time()),
             'upload': True
         }
@@ -214,22 +212,20 @@ class WebInterface:
         return None
 
     def send_door_open(self):
-        return self.__upload_data('/door_open', {})
+        return self.__upload_data('/door_open', {'timestamp': int(time.time())})
 
     def send_door_close(self):
-        return self.__upload_data('/door_close', {})
+        return self.__upload_data('/door_close', {'timestamp': int(time.time())})
 
 web_interface = WebInterface()
 def web_interface_test():
     output = web_interface.send_test_report()
     print('testing test report: {} - {}'.format(output.text, output.status_code))
+    data = [{"y": 14, "shelf": 1, "type": 1, "x": 17},{"y": 23, "shelf": 2, "type": 2, "x": 9}]
     test_data = {
         'upload': True,
-        'timestamp': 1495648288,
-        'data': '[\
-            {"y": 14, "shelf": 1, "type": 1, "x": 17},\
-            {"y": 23, "shelf": 2, "type": 2, "x": 9}\
-        ]'
+        'timestamp': int(time.time()),
+        'data': data
     }
     output = web_interface.send_report(test_data)
     print('testing scan report: {} - {}'.format(output.text, output.status_code))
