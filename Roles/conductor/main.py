@@ -192,7 +192,8 @@ class WebInterface:
         });
         package = {
             'data':json.dumps(data),
-            'timestamp':int(time.time())
+            'timestamp':int(time.time()),
+            'upload': True
         }
         return self.__upload_data('/update', package)
 
@@ -203,7 +204,8 @@ class WebInterface:
             print('Cannot parse json: {}'.format(e))
         package = {
             'data':data,
-            'timestamp':int(time.time())
+            'timestamp':int(time.time()),
+            'upload': True
         }
         if data:
             return self.__upload_data('/update', package)
