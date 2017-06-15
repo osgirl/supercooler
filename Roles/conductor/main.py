@@ -194,7 +194,7 @@ class WebInterface:
             'data':json.dumps(data),
             'timestamp':int(time.time())
         }
-        return self.__upload_data('/upload', package)
+        return self.__upload_data('/update', package)
 
     def send_report(self, data):
         try:
@@ -206,7 +206,7 @@ class WebInterface:
             'timestamp':int(time.time())
         }
         if data:
-            return self.__upload_data('/upload', package)
+            return self.__upload_data('/update', package)
         return None
 
     def send_door_open(self):
