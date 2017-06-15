@@ -13,7 +13,7 @@ TASKS:
         receive processed capture
         receive inventory for each camera_unit ( including coordinates )
         confirm receipt of all captures and inventories
-        
+
         disambiguate product identies
         produce inventory and map for bottles and cans
 
@@ -38,10 +38,13 @@ API for Dashboard:
 import time
 import threading
 import settings
+import settings_private
+import requests
 import yaml
 import json
 import subprocess
 import base64
+from random import randint, uniform
 
 from thirtybirds_2_0.Logs.main import Exception_Collector
 from thirtybirds_2_0.Network.manager import init as network_init
@@ -140,7 +143,7 @@ def network_message_handler(msg):
     try:
         #print "network_message_handler", msg
         topic = msg[0]
-        #print "topic", topic 
+        #print "topic", topic
         if topic == "__heartbeat__":
             print "heartbeat received", msg
 
@@ -162,6 +165,77 @@ def network_message_handler(msg):
     except Exception as e:
         print "exception in network_message_handler", e
 
+class WebInterface:
+    endpoint = settings_private.web_endpoint
+
+    def upload_data(route, data):
+        """Only to be called from other methods"""
+        endpoint_route = endpoint + route
+        try:
+            response = requests.get(endpoint, params=data)
+            print('response: {} - {}'.format(response.text, response.status_code))
+            return(response)
+        except requests.exceptions.RequestException as e:
+            return(e)
+            print('error: {}',format(e))
+
+    def send_test_report(upload=True):
+        shelfs = ['A','B','C','D']
+        data = []
+        data.append({
+            # limits type to only first 10 product types
+            'type': randint(1,10),
+            'shelf': shelfs[randint(0,3)],
+            'x': uniform(0,565),
+            'y': uniform(0,492)
+        });
+        package = {
+            'data':json.dumps(data),
+            'upload': upload,
+            'timestamp':int(time.time())
+        }
+        return upload_data('/upload', package)
+
+    def send_report(data, upload=True):
+        try:
+            data = json.dumps(data)
+        except Exception as e:
+            print('Cannot parse json: {}'.format(e))
+        package = {
+            'data':data,
+            'upload': upload,
+            'timestamp':int(time.time())
+        }
+        if data:
+            return upload_data('/upload', package)
+        return None
+
+    def send_door_open():
+        return upload_data('/door_open')
+
+    def send_door_close():
+        return upload_data('/door_close')
+
+web_interface = WebInterface()
+def web_interface_test():
+    output = web_interface.send_test_report('')
+    print('testing test report: {}'.format(output))
+    test_data = {
+        'upload': '', # falsy = will not upload
+        'timestamp': 1495648288,
+        'data': '[\
+            {"y": 14, "shelf": 4, "type": 1, "x": 17},\
+            {"y": 23, "shelf": 3, "type": 2, "x": 9}\
+        ]'
+    }
+    output = web_interface.send_report(test_data, '')
+    print('testing scan report: {}'.format(output))
+    output = web_interface.send_door_open()
+    print('testing door open: {}'.format(output))
+    output = web_interface.send_door_close()
+    print('testing door close: {}'.format(output))
+
+
 network = None
 
 def init(HOSTNAME):
@@ -179,7 +253,7 @@ def init(HOSTNAME):
         message_callback=network_message_handler,
         status_callback=network_status_handler
     )
-    network.subscribe_to_topic("system")  # subscribe to all system messages    
+    network.subscribe_to_topic("system")  # subscribe to all system messages
     network.subscribe_to_topic("found_beer")
     network.subscribe_to_topic("update_complete")
 
