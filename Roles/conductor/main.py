@@ -38,7 +38,6 @@ API for Dashboard:
 import time
 import threading
 import settings
-import settings_private
 import requests
 import yaml
 import json
@@ -48,6 +47,7 @@ from random import randint, uniform
 
 from thirtybirds_2_0.Logs.main import Exception_Collector
 from thirtybirds_2_0.Network.manager import init as network_init
+from web_endpoints import web_endpoint
 
 # use wiringpi for software PWM
 import wiringpi as wpi
@@ -166,7 +166,7 @@ def network_message_handler(msg):
         print "exception in network_message_handler", e
 
 class WebInterface:
-    endpoint = settings_private.web_endpoint
+    endpoint = web_endpoint
 
     def __upload_data(self, route, data):
         """ Only to be called from other methods """
