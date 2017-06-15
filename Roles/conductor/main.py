@@ -172,7 +172,7 @@ class WebInterface:
         """ Only to be called from other methods """
         endpoint_route = self.endpoint + route
         try:
-            response = requests.get(endpoint_route, params=data)
+            response = requests.get(endpoint_route, params=data, timeout=5)
             print('response: {} - {}'.format(response.text, response.status_code))
             return(response)
         except requests.exceptions.RequestException as e:
@@ -182,14 +182,16 @@ class WebInterface:
     def send_test_report(self):
         shelfs = ['A','B','C','D']
         data = []
-        data.append({
-            # limits type to only first 10 product types
-            'type': randint(1,10),
-            # 'shelf': shelfs[randint(0,3)],
-            'shelf': randint(0,3),
-            'x': uniform(0,565),
-            'y': uniform(0,492)
-        });
+        for i in range(25):
+            data.append({
+                # limits type to only first 10 product types
+                'type': randint(1,10),
+                'shelf': randint(0,3),
+                'shelf': randint(0,3),
+                'x': uniform(0,565),
+                'y': uniform(0,492)
+            });
+
         package = {
             'data':json.dumps(data),
             'timestamp':int(time.time()),
@@ -220,21 +222,21 @@ class WebInterface:
 web_interface = WebInterface()
 def web_interface_test():
     output = web_interface.send_test_report()
-    print('testing test report: {}'.format(output))
+    print('testing test report: {} - {}'.format(output.text, output.status_code))
     test_data = {
-        'upload': '', # falsy = will not upload
+        'upload': True,
         'timestamp': 1495648288,
         'data': '[\
-            {"y": 14, "shelf": 4, "type": 1, "x": 17},\
-            {"y": 23, "shelf": 3, "type": 2, "x": 9}\
+            {"y": 14, "shelf": 1, "type": 1, "x": 17},\
+            {"y": 23, "shelf": 2, "type": 2, "x": 9}\
         ]'
     }
-    # output = web_interface.send_report(test_data)
-    # print('testing scan report: {}'.format(output))
+    output = web_interface.send_report(test_data)
+    print('testing scan report: {} - {}'.format(output.text, output.status_code))
     output = web_interface.send_door_open()
-    print('testing door open: {}'.format(output))
+    print('testing door open: {} - {}'.format(output.text, output.status_code))
     output = web_interface.send_door_close()
-    print('testing door close: {}'.format(output))
+    print('testing door close: {} - {}'.format(output.text, output.status_code))
 
 
 network = None
