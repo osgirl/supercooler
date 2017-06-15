@@ -48,6 +48,7 @@ from random import randint, uniform
 from thirtybirds_2_0.Logs.main import Exception_Collector
 from thirtybirds_2_0.Network.manager import init as network_init
 from web_endpoints import web_endpoint
+from web_interface import WebInterface
 
 # use wiringpi for software PWM
 import wiringpi as wpi
@@ -165,103 +166,51 @@ def network_message_handler(msg):
     except Exception as e:
         print "exception in network_message_handler", e
 
-class WebInterface:
-    # make sure web_endpoints.py is in the ./Roles/conductor on the raspberry pi
-    endpoint = web_endpoint
-
-    def __upload_data(self, route, data):
-        """ Only to be called from other methods """
-        endpoint_route = self.endpoint + route
-        try:
-            response = requests.get(endpoint_route, params=data, timeout=5)
-            return(response)
-        except requests.exceptions.RequestException as e:
-            return(e)
-
-    def send_test_report(self):
-        shelfs = ['A','B','C','D']
-        data = []
-        for i in range(25):
-            data.append({
-                # limits type to only first 10 product types
-                'type': randint(1,10),
-                'shelf': shelfs[randint(0,3)],
-                'x': uniform(0,565),
-                'y': uniform(0,492)
-            });
-
-        package = {
-            'data': json.dumps(data),
-            'timestamp':int(time.time()),
-            'upload': True
-        }
-        return self.__upload_data('/update', package)
-
-    def send_report(self, data):
-        try:
-            data = json.dumps(data)
-        except Exception as e:
-            print('Cannot JSONify data: {}'.format(e))
-        package = {
-            'data':data,
-            'timestamp':int(time.time()),
-            'upload': True
-        }
-        if data:
-            return self.__upload_data('/update', package)
-        return None
-
-    def send_door_open(self):
-        return self.__upload_data('/door_open', {'timestamp': int(time.time())})
-
-    def send_door_close(self):
-        return self.__upload_data('/door_close', {'timestamp': int(time.time())})
-
-web_interface = WebInterface()
+web_int = WebInterface()
 
 def web_interface_test():
     # test sending "real" data
     data = [{"y": 14, "shelf": "A", "type": 1, "x": 17},{"y": 23, "shelf": "B", "type": 2, "x": 9}]
-    output = web_interface.send_report(data)
+    output = web_int.send_report(data)
     print('testing scan report: {} - {}'.format(output.text, output.status_code))
     # test mock data (this will be in the report)
-    output = web_interface.send_test_report()
+    output = web_int.send_test_report()
     print('testing test report: {} - {}'.format(output.text, output.status_code))
     # test door opening API call
-    output = web_interface.send_door_open()
+    output = web_int.send_door_open()
     print('testing door open: {} - {}'.format(output.text, output.status_code))
     # test door closing API call
-    output = web_interface.send_door_close()
+    output = web_int.send_door_close()
     print('testing door close: {} - {}'.format(output.text, output.status_code))
 
 network = None
 
 def init(HOSTNAME):
     # setup LED control and door sensor
-    # io_init()
+    io_init()
 
     # global network
-    # network = network_init(
-    #     hostname=HOSTNAME,
-    #     role="server",
-    #     discovery_multicastGroup=settings.discovery_multicastGroup,
-    #     discovery_multicastPort=settings.discovery_multicastPort,
-    #     discovery_responsePort=settings.discovery_responsePort,
-    #     pubsub_pubPort=settings.pubsub_pubPort,
-    #     message_callback=network_message_handler,
-    #     status_callback=network_status_handler
-    # )
-    # network.subscribe_to_topic("system")  # subscribe to all system messages
-    # network.subscribe_to_topic("found_beer")
-    # network.subscribe_to_topic("update_complete")
+    network = network_init(
+        hostname=HOSTNAME,
+        role="server",
+        discovery_multicastGroup=settings.discovery_multicastGroup,
+        discovery_multicastPort=settings.discovery_multicastPort,
+        discovery_responsePort=settings.discovery_responsePort,
+        pubsub_pubPort=settings.pubsub_pubPort,
+        message_callback=network_message_handler,
+        status_callback=network_status_handler
+    )
+    network.subscribe_to_topic("system")  # subscribe to all system messages
+    network.subscribe_to_topic("found_beer")
+    network.subscribe_to_topic("update_complete")
 
-    # print 'testing the lights.....'
-    # test_leds()
+    print 'testing the lights.....'
+    test_leds()
+
+    print 'start monitoring door.....'
+    monitor_door_status(door_closed_fn, door_open_fn)
 
     print 'testing web interface'
     web_interface_test()
-
-    # print 'start monitoring door.....'
-    # monitor_door_status(door_closed_fn, door_open_fn)
 
     #request_beer_over_and_over()
