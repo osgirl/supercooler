@@ -257,12 +257,13 @@ def init(HOSTNAME):
     network.subscribe_to_topic("found_beer")
     network.subscribe_to_topic("update_complete")
 
-    print 'testing the lights.....'
-    test_leds()
-
-    print 'start monitoring door.....'
-    monitor_door_status(door_closed_fn, door_open_fn)
+    # print 'testing the lights.....'
+    # test_leds()
 
     print 'testing web interface'
     web_interface_test()
+
+    # print 'start monitoring door.....'
+    # monitor_door_status(door_closed_fn, door_open_fn)
+
     #request_beer_over_and_over()
