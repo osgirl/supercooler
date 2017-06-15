@@ -219,16 +219,28 @@ class WebInterface:
 
 web_interface = WebInterface()
 def web_interface_test():
-    output = web_interface.send_test_report()
-    print('testing test report: {} - {}'.format(output.text, output.status_code))
     data = [{"y": 14, "shelf": 1, "type": 1, "x": 17},{"y": 23, "shelf": 2, "type": 2, "x": 9}]
     output = web_interface.send_report(data)
-    print('testing scan report: {} - {}'.format(output.text, output.status_code))
+    print(type(output))
+    if type(output) == Exception:
+        print('error: {}'.format(output))
+    else:
+        print('testing scan report: {} - {}'.format(output.text, output.status_code))
+    output = web_interface.send_test_report()
+    if type(output) == Exception:
+        print('error: {}'.format(output))
+    else:
+        print('testing test report: {} - {}'.format(output.text, output.status_code))
     output = web_interface.send_door_open()
-    print('testing door open: {} - {}'.format(output.text, output.status_code))
+    if type(output) == Exception:
+        print('error: {}'.format(output))
+    else:
+        print('testing door open: {} - {}'.format(output.text, output.status_code))
     output = web_interface.send_door_close()
-    print('testing door close: {} - {}'.format(output.text, output.status_code))
-
+    if type(output) == Exception:
+        print('error: {}'.format(output))
+    else:
+        print('testing door close: {} - {}'.format(output.text, output.status_code))
 
 network = None
 
