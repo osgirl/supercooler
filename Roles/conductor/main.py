@@ -172,7 +172,7 @@ class WebInterface:
         """ Only to be called from other methods """
         endpoint_route = self.endpoint + route
         try:
-            response = requests.get(endpoint, params=data)
+            response = requests.get(endpoint_route, params=data)
             print('response: {} - {}'.format(response.text, response.status_code))
             return(response)
         except requests.exceptions.RequestException as e:
