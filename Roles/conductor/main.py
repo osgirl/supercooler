@@ -168,7 +168,7 @@ def network_message_handler(msg):
 class WebInterface:
     endpoint = settings_private.web_endpoint
 
-    def upload_data(route, data):
+    def upload_data(self, route, data):
         """ Only to be called from other methods """
         endpoint_route = endpoint + route
         try:
@@ -179,7 +179,7 @@ class WebInterface:
             return(e)
             print('error: {}',format(e))
 
-    def send_test_report():
+    def send_test_report(self):
         shelfs = ['A','B','C','D']
         data = []
         data.append({
@@ -195,7 +195,7 @@ class WebInterface:
         }
         return upload_data('/upload', package)
 
-    def send_report(data):
+    def send_report(self, data):
         try:
             data = json.dumps(data)
         except Exception as e:
@@ -208,10 +208,10 @@ class WebInterface:
             return upload_data('/upload', package)
         return None
 
-    def send_door_open():
+    def send_door_open(self):
         return upload_data('/door_open')
 
-    def send_door_close():
+    def send_door_close(self):
         return upload_data('/door_close')
 
 web_interface = WebInterface()
