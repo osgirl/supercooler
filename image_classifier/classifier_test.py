@@ -68,7 +68,7 @@ def test_classifier(input_dir):
         best_guess = beer_info.guesses[0]
         if beer_info.beer_type != best_guess[0]:
             print("    %s classified as %s with %.2f percent confidence (%s)" %
-                    (beer_info.beer_type, best_guess[0], best_guess[1],
+                    (beer_info.beer_type, best_guess[0], best_guess[1] * 100,
                         beer_info.img_path))
 
     #TODO there might be other stats that it'd be nice to print, e.g. num
