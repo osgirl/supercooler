@@ -2,7 +2,11 @@ import os
 import sys
 
 import cv2
+import tensorflow as tf
+
 import beer_parser
+from classifier_combined import Classifier
+
 
 def crop_beers(img, beer_bounds):
     (img_height, img_width) = img.shape[:2]
@@ -37,7 +41,7 @@ if __name__== '__main__':
     d = os.path.dirname(__file__)
 
     in_dir   = os.path.join(d, '_data', 'ShelfB_Test_Images')
-    out_dir  = os.path.join(d, 'out')
+    out_dir  = os.path.join(d, 'parser_output')
 
     interactive  = True
     save_visuals = False
