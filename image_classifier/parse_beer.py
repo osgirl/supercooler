@@ -5,8 +5,7 @@ import cv2
 import tensorflow as tf
 
 import beer_parser
-from classifier_combined import Classifier
-
+import classifier_combined
 
 def crop_beers(img, beer_bounds):
     (img_height, img_width) = img.shape[:2]
@@ -83,8 +82,8 @@ if __name__== '__main__':
 
             else: print_usage(), sys.exit()
 
-    parser = beer_parser.Parser(
-        interactive=interactive, save_visuals=save_visuals, min_size=min_size)
+    parser     = beer_parser.Parser(interactive, save_visuals, min_size)
+    classifier = classifier_combined.Classifier()
 
     if use_average:
         in_dir_50 = os.path.join(in_dir,  '50')
@@ -127,11 +126,26 @@ if __name__== '__main__':
              cv2.imwrite(path, vis)
 
         count = 0
-        for cropped in beer_images:
-            
-            path = os.path.join(out_dir, '%s%s_%d.png' % (name, postfix, count))
-            
-            print 'writing cropped %s' % (path)
-            cv2.imwrite(path, cropped)
-            
-            count += 1
+        with tf.Session() as sess:
+
+            for cropped in beer_images:
+                image = '%s%s_%d.jpg' % (name, postfix, count)
+                image_path = os.path.join(out_dir, image)
+                
+                print 'writing cropped %s' % (image_path)
+                cv2.imwrite(image_path, cropped)
+                
+                guesses = classifier.guess_image(sess, image_path)
+                best_guess, confidence = guesses[0]
+                print 'best guess, confidence = %s, %f' % (best_guess, confidence)
+
+                beer_dir = best_guess.replace(" ", "_")
+                to_dir = os.path.join(out_dir, beer_dir)
+
+                if not os.path.isdir(to_dir): os.mkdir(to_dir)
+                to_path = os.path.join(to_dir, image)
+
+                print("move %s to %s" % (image_path, to_path))
+                os.rename(image_path, to_path)
+
+                count += 1
