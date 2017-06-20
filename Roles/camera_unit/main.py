@@ -106,19 +106,13 @@ def network_message_handler(msg):
         print "reboot!"
         os.system("sudo reboot now")
 
-    elif topic == "capture_high_light": 
+    elif topic == "get_beer": 
         #img = capture_img()
         #data = process_img(img)
-        filename = "capture" + hostname[11:] + "_high.png"
+        filename = "capture" + hostname[11:] + ".png"
         main.camera.take_capture(filename)
         time.sleep(5)
-
-        # send image to controller
-        network.send("captured_image_high_")
-
-
-        #main.email.send("ac-smart-cooler@googlegroups.com", "camera capture from %s" % (main.hostname),"test", "/home/pi/supercooler/Captures/" + filename)
-
+        main.email.send("ac-smart-cooler@googlegroups.com", "camera capture from %s" % (main.hostname),"test", "/home/pi/supercooler/Captures/" + filename)
 
         network.send("found_beer", "")
 
@@ -176,6 +170,7 @@ def init(HOSTNAME):
 
     network.subscribe_to_topic("system")  # subscribe to all system messages
     network.subscribe_to_topic("reboot")
+    network.subscribe_to_topic("process_images_and_report")
     network.subscribe_to_topic("get_beer")
     network.subscribe_to_topic("remote_update")
     network.subscribe_to_topic(HOSTNAME)
