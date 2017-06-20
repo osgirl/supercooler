@@ -70,15 +70,15 @@ capture_lock = threading.Lock()
 
 def request_beer_high():
     for i in xrange(4): led_control(i, 10) # full brightness
-    network.send("get_beer_high")
+    network.send("get_beer_high","")
 
 def request_beer_mid():
-    for i in xrange(4): led_control(i, 7.5) # full brightness
-    network.send("get_beer_mid")
+    for i in xrange(4): led_control(i, 7) # mid brightness
+    network.send("get_beer_mid","")
 
 def request_beer_low():
-    for i in xrange(4): led_control(i, 5) # full brightness
-    network.send("get_beer_low")
+    for i in xrange(4): led_control(i, 4) # low brightness
+    network.send("get_beer_low","")
 
 def io_init():
     wpi.wiringPiSetup()
@@ -101,6 +101,10 @@ def io_init():
 def led_control(id, value):
     mapping = [21, 22, 23, 24]
     wpi.softPwmWrite(mapping[id], value)
+
+# turn off LEDS
+def turn_off_leds():
+    for i in xrange(4): led_control(i, 0) # leds off
 
 # quick test sequence to make sure LED control is working
 def test_leds():
@@ -147,6 +151,9 @@ def door_closed_fn():
     request_beer_high()
     threading.Timer(5, request_beer_mid).start()
     threading.Timer(10, request_beer_low).start()
+
+    # turn off the lights after 15 seconds
+    threading.Timer(15, turn_off_leds).start()
     
 def door_open_fn():
     print 'door is open!'
@@ -170,12 +177,9 @@ def send_reboot():
 def ping_nodes_go():
     network.send("say_hello_to_node")
 
-def ping_nodes_check():
-
-
 def network_status_handler(msg):
-    #print "network_status_handler", msg
     pass
+    #print "network_status_handler", msg
 
 def network_message_handler(msg):
     try:
@@ -198,10 +202,7 @@ def network_message_handler(msg):
                 print "found_beer: empty message"
 
         elif topic == "update_complete":
-            print 'update complete for host: ', msg[1]
-
-        elif topic == "say_hello_to_conductor":
-            
+            print 'update complete for host: ', msg[1]        
 
     except Exception as e:
         print "exception in network_message_handler", e
@@ -226,10 +227,11 @@ def web_interface_test():
 network = None
 
 def init(HOSTNAME):
+    global network
+
     # setup LED control and door sensor
     io_init()
 
-    # global network
     network = network_init(
         hostname=HOSTNAME,
         role="server",
