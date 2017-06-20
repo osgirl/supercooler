@@ -57,14 +57,28 @@ door_is_closed = True
 # DS18B20 temperature sensor IDs
 temp_ids = ['000008a9219f']
 
-def request_beer_over_and_over():
-    threading.Timer(60, request_beer_over_and_over).start()
-    request_beer()
+processing_capture = False
+capture_lock = threading.Lock()
 
-def request_beer(hostname=None):
-    topic = "get_beer_" + hostname if hostname != None else "get_beer"
-    network.send(topic, "")
+# def request_beer_over_and_over():
+#     threading.Timer(60, request_beer_over_and_over).start()
+#     request_beer()
 
+# def request_beer(hostname=None):
+#     topic = "get_beer_" + hostname if hostname != None else "get_beer"
+#     network.send(topic, "")
+
+def request_beer_high():
+    for i in xrange(4): led_control(i, 10) # full brightness
+    network.send("get_beer_high")
+
+def request_beer_mid():
+    for i in xrange(4): led_control(i, 7.5) # full brightness
+    network.send("get_beer_mid")
+
+def request_beer_low():
+    for i in xrange(4): led_control(i, 5) # full brightness
+    network.send("get_beer_low")
 
 def io_init():
     wpi.wiringPiSetup()
@@ -72,7 +86,7 @@ def io_init():
     # configure pins 21-24 for software PWM
     for i in [21, 22, 23, 24]:
         wpi.pinMode(i, wpi.OUTPUT)
-        wpi.softPwmCreate(i, 0, 100)
+        wpi.softPwmCreate(i, 0, 10)
 
     # use pin 29 as door sensor (active LOW)
     wpi.pinMode(29, wpi.INPUT)
@@ -81,6 +95,8 @@ def io_init():
     global door_is_closed
     door_is_closed = get_door_closed()
 
+    reset_processing_capture()
+
 # set LED brightness, given a shelf id (0-3) and brightness value (0-100)
 def led_control(id, value):
     mapping = [21, 22, 23, 24]
@@ -88,9 +104,9 @@ def led_control(id, value):
 
 # quick test sequence to make sure LED control is working
 def test_leds():
-    for j in xrange(-100, 101):
-        for i in xrange(4): led_control(i, 100 - abs(j))
-        wpi.delay(10)    
+    for j in xrange(-10, 11):
+        for i in xrange(4): led_control(i, 10 - abs(j))
+        wpi.delay(100)    
 
 # returns TRUE if door is closed
 def get_door_closed():
@@ -112,10 +128,35 @@ def monitor_door_status(fn_closed=lambda: None, fn_open=lambda: None, dt=0.5):
     threading.Timer(dt, monitor_door_status, [fn_closed, fn_open, dt]).start()
 
 def door_closed_fn():
+    global processing_capture
+    
     print 'door is closed!'
 
+    # check for ongoing capture processing
+    capture_lock.acquire()
+    if processing_capture:
+        capture_lock.release()
+        return
+
+    # set flag to stop repeat triggers, turn off after 60 seconds
+    processing_capture = True
+    threading.Timer(60, reset_processing_capture).start()
+    capture_lock.release()
+
+    # send three capture requests at high/mid/low light
+    request_beer_high()
+    threading.Timer(5, request_beer_mid).start()
+    threading.Timer(10, request_beer_low).start()
+    
 def door_open_fn():
     print 'door is open!'
+
+def reset_processing_capture():
+    global processing_capture
+
+    capture_lock.acquire()
+    processing_capture = False
+    capture_lock.release()
 
 def send_update_command(cool=False, birds=False, update=False, upgrade=False):
   network.send("remote_update", [cool, birds, update, upgrade])
