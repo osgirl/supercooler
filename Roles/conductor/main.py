@@ -13,7 +13,7 @@ TASKS:
         receive processed capture
         receive inventory for each camera_unit ( including coordinates )
         confirm receipt of all captures and inventories
-        
+
         disambiguate product identies
         produce inventory and map for bottles and cans
 
@@ -41,9 +41,12 @@ import settings
 import yaml
 import json
 import subprocess
+import base64
 
 from thirtybirds_2_0.Logs.main import Exception_Collector
 from thirtybirds_2_0.Network.manager import init as network_init
+
+from web_interface import WebInterface
 
 # use wiringpi for software PWM
 import wiringpi as wpi
@@ -130,21 +133,31 @@ def ping_nodes_check():
 
 
 def network_status_handler(msg):
-    print "network_status_handler", msg
+    #print "network_status_handler", msg
+    pass
 
 def network_message_handler(msg):
     try:
-        print "network_message_handler", msg
+        #print "network_message_handler", msg
         topic = msg[0]
-        #print "topic", topic 
+        #print "topic", topic
         if topic == "__heartbeat__":
             print "heartbeat received", msg
 
         elif topic == "found_beer":
-            print "got beer", eval(msg[1])
+            if msg[1] != "":
+
+                data = msg[1]
+                print "found_beer: got %d bytes" % (len(data))
+
+                with open("/home/pi/supercooler/Captures/Capture.png", "wb") as f:
+                    f.write(base64.b64decode(data))
+                    print "saved capture"
+            else:
+                print "found_beer: empty message"
 
         elif topic == "update_complete":
-            print 'update complete for host: ', str(eval(msg[1]))
+            print 'update complete for host: ', msg[1]
 
         elif topic == "say_hello_to_conductor":
             
@@ -152,13 +165,30 @@ def network_message_handler(msg):
     except Exception as e:
         print "exception in network_message_handler", e
 
+web_int = WebInterface()
+
+def web_interface_test():
+    # test sending "real" data
+    data = [{"y": 14, "shelf": "A", "type": 1, "x": 17},{"y": 23, "shelf": "B", "type": 2, "x": 9}]
+    output = web_int.send_report(data)
+    print('testing scan report: {} - {}'.format(output.text, output.status_code))
+    # test mock data (this will be in the report)
+    output = web_int.send_test_report()
+    print('testing test report: {} - {}'.format(output.text, output.status_code))
+    # test door opening API call
+    output = web_int.send_door_open()
+    print('testing door open: {} - {}'.format(output.text, output.status_code))
+    # test door closing API call
+    output = web_int.send_door_close()
+    print('testing door close: {} - {}'.format(output.text, output.status_code))
+
 network = None
 
 def init(HOSTNAME):
     # setup LED control and door sensor
     io_init()
 
-    global network
+    # global network
     network = network_init(
         hostname=HOSTNAME,
         role="server",
@@ -169,12 +199,17 @@ def init(HOSTNAME):
         message_callback=network_message_handler,
         status_callback=network_status_handler
     )
-    network.subscribe_to_topic("system")  # subscribe to all system messages    
+    network.subscribe_to_topic("system")  # subscribe to all system messages
     network.subscribe_to_topic("found_beer")
+    network.subscribe_to_topic("update_complete")
 
     print 'testing the lights.....'
     test_leds()
 
     print 'start monitoring door.....'
     monitor_door_status(door_closed_fn, door_open_fn)
+
+    print 'testing web interface'
+    web_interface_test()
+
     #request_beer_over_and_over()

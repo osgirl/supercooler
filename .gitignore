@@ -1,2 +1,7 @@
-settings.py
 .DS_Store
+*.pyc
+Updates/version.pickle
+Logs
+Captures/*.png
+settings_private.py
+.vscode

@@ -5,7 +5,7 @@
 import importlib
 import json
 import os
-import settings 
+import settings
 import sys
 #import threading
 #import time
@@ -27,7 +27,7 @@ def get_hostname():
         pos = args.index("-n") # pull hostname from command line argument, if there is one
         hostname = args[pos+1]
     except Exception as E:
-        hostname = network_info.getHostName() 
+        hostname = network_info.getHostName()
     return hostname
 
 HOSTNAME = get_hostname()
@@ -64,19 +64,19 @@ result = updates_init(THIRTYBIRDS_PATH, True, True)
 print result
 result = updates_init(BASE_PATH, True, True)
 print result
-"""
+
 #except Exception as E:
 #    pass
-
+"""
 #########################
 ### LOAD DEVICE-SPECIFIC CODE ###
 #########################
 
 if HOSTNAME in settings.camera_unit_names:
     role = "camera_unit"
-if HOSTNAME in settings.conductor_names:
+else:
+#if HOSTNAME in settings.conductor_names:
     role = "conductor"
 
 host = importlib.import_module("Roles.%s.main" % (role))
 host.init(HOSTNAME)
-
