@@ -28,6 +28,13 @@ HOSTNAME = get_hostname()
 
 from thirtybirds_2_0.Network.manager import init as network_init
 
+
+def network_status_handler(msg):
+    print "network_status_handler", msg
+
+def network_message_handler(msg):
+    print "network_message_handler", msg
+
 network = network_init(
     hostname=HOSTNAME,
     role="server",
