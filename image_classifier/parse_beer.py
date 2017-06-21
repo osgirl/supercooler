@@ -83,7 +83,7 @@ if __name__== '__main__':
             else: print_usage(), sys.exit()
 
     parser     = beer_parser.Parser(interactive, save_visuals, min_size)
-    classifier = classifier_combined.Classifier()
+    #classifier = classifier_combined.Classifier()
 
     if use_average:
         in_dir_50 = os.path.join(in_dir,  '50')
@@ -124,7 +124,7 @@ if __name__== '__main__':
 
              print 'writing visualization %s' % (path)
              cv2.imwrite(path, vis)
-
+        """
         count = 0
         with tf.Session() as sess:
 
@@ -149,3 +149,4 @@ if __name__== '__main__':
                 os.rename(image_path, to_path)
 
                 count += 1
+        """
