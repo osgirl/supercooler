@@ -30,7 +30,6 @@ from thirtybirds_2_0.Network.manager import init as network_init
 
 
 def network_status_handler(msg):
-    msg = eval(msg)
     print "network_status_handler", msg
     print msg["hostname"]
     if msg["hostname"] == "supercoolerA0":
