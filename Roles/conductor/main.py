@@ -83,12 +83,12 @@ class Camera_Units():
 class Main(): # rules them all
     def __init__(self, network):
         self.network = network
+        self.web_interface = WebInterface()
         self.lights = Lights()
         self.door = Door(self.door_close_event_handler, self.door_open_event_handler)
         self.door.daemon = True
         self.door.start()
         self.camera_units = Camera_Units(self.network)
-        self.web_interface = WebInterface()
         self.camera_capture_delay = 3
 
     def door_open_event_handler(self):
