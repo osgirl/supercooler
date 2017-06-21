@@ -27,7 +27,7 @@ sys.path.append(BASE_PATH)
 sys.path.append(UPPER_PATH)
 
 class Thirtybirds_Client_Monitor_Client():
-    def __init__(self, network ):
+    def __init__(self, hostname, network ):
         pass
 
     def get_pickle_version(self):
@@ -42,8 +42,6 @@ class Thirtybirds_Client_Monitor_Client():
         git_timestamp = self. get_git_timestamp()
         network.send("client_monitor_response", (pickle_version, git_timestamp))
 
-
-
 class Main(threading.Thread):
     def __init__(self, hostname, network):
         threading.Thread.__init__(self)
@@ -53,7 +51,7 @@ class Main(threading.Thread):
         self.camera = camera_init(self.camera_path)
         self.queue = Queue.Queue()
         self.max_capture_age_to_use = 120  # seconds
-        self.thirtybirds_client_monitor_client = Thirtybirds_Client_Monitor_Client(network)
+        self.thirtybirds_client_monitor_client = Thirtybirds_Client_Monitor_Client(hostname, network)
 
     def add_to_queue(self, topic, msg):
         self.queue.put((topic, msg))
