@@ -56,13 +56,13 @@ THIRTYBIRDS_PATH = "%s/thirtybirds" % (UPPER_PATH )
 sys.path.append(BASE_PATH)
 sys.path.append(UPPER_PATH)
 
-
 class Main(threading.Thread):
     def __init__(self, hostname, network):
         threading.Thread.__init__(self)
         self.hostname = hostname
         self.network = network
-        self.camera = camera_init("/home/pi/supercooler/Captures/")
+        self.camera_path = "/home/pi/supercooler/Captures/"
+        self.camera = camera_init(self.camera_path)
         self.queue = Queue.Queue()
 
     def add_to_queue(self, topic, msg):
@@ -71,16 +71,22 @@ class Main(threading.Thread):
     def capture_image_and_save(self, filename):
         self.camera.take_capture(filename)
 
-
     def run(self):
         while True:
             topic, msg = self.queue.get(True)
             if topic == "capture_image":
                 filename = "{}_{}.png".format(self.hostname[11:], msg) 
                 self.capture_image_and_save(filename)
-
-
-        ###  ###
+            if topic == "process_images_and_report":
+                filenames = os.listdir( self.camera_path )
+                for filename in filenames:
+                    # send images back to server
+                    with open("{}{}".format(self.camera_path, filename), "rb") as image_file:
+                        image_data = [
+                            filename, 
+                            base64.b64encode(image_file.read())
+                        ]
+                        network.send("image_capture_from_camera_unit", image_data)
 
 
 def process_img(img):

@@ -157,6 +157,6 @@ def init(HOSTNAME):
     network.subscribe_to_topic("system")  # subscribe to all system messages
     network.subscribe_to_topic("found_beer")
     network.subscribe_to_topic("update_complete")
+    network.subscribe_to_topic("image_capture_from_camera_unit")
+
     main = Main(network)
-
-
