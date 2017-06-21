@@ -99,7 +99,7 @@ images = Images()
 
 
 class Thirtybirds_Client_Monitor_Server(threading.Thread):
-    def __init__(self, network, voice_1=60):
+    def __init__(self, network, update_period=60):
         threading.Thread.__init__(self)
         self.update_period = update_period
         self.clients = {}
