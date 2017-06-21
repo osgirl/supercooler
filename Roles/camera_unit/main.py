@@ -13,6 +13,8 @@ from thirtybirds_2_0.Network.manager import init as network_init
 from thirtybirds_2_0.Network.email_simple import init as email_init
 from thirtybirds_2_0.Adaptors.Cameras.elp import init as camera_init
 from thirtybirds_2_0.Updates.manager import init as updates_init
+from thirtybirds_2_0.Network.info import init as network_info_init
+network_info = network_info_init()
 
 BASE_PATH = os.path.dirname(os.path.realpath(__file__))
 UPPER_PATH = os.path.split(os.path.dirname(os.path.realpath(__file__)))[0]
@@ -21,6 +23,7 @@ THIRTYBIRDS_PATH = "%s/thirtybirds" % (UPPER_PATH )
 
 sys.path.append(BASE_PATH)
 sys.path.append(UPPER_PATH)
+
 
 class Main(threading.Thread):
     def __init__(self, hostname, network):
@@ -63,6 +66,7 @@ def network_status_handler(msg):
     print "network_status_handler", msg
 
 def network_message_handler(msg):
+    
     print "network_message_handler", msg
     topic = msg[0]
     data = msg[1]
@@ -88,7 +92,7 @@ def network_message_handler(msg):
 
     elif topic == "remote_update_scripts":
         updates_init("/home/pi/supercooler", False, True)
-        network.send("update_complete", hostname)
+        network.send("update_complete", network_info.getHostName())
 
     else: # [ "capture_image" ]
         main.add_to_queue(topic, data)
