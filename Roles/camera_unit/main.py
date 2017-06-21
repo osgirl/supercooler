@@ -1,4 +1,6 @@
+
 import base64
+import commands
 import importlib
 import json
 import os
@@ -33,7 +35,7 @@ class Main(threading.Thread):
         self.camera_path = "/home/pi/supercooler/Captures/"
         self.camera = camera_init(self.camera_path)
         self.queue = Queue.Queue()
-        self.max_capture_age_to_use = 120  # seconds
+        self.max_capture_age_to_use = 12z0  # seconds
 
     def add_to_queue(self, topic, msg):
         self.queue.put((topic, msg))
@@ -59,8 +61,24 @@ class Main(threading.Thread):
                             ]
                             network.send("image_capture_from_camera_unit", image_data)
 
-def process_img(img):
-    return hostname
+class Thirtybirds_Client_Monitor_Client():
+    def __init__(self, network, ):
+        pass
+
+    def get_pickle_version(self):
+        (updates, ghStatus, bsStatus) = updates_init("/home/pi/supercooler", False, False)
+        return updates.read_version_pickle()
+
+    def get_git_timestamp(self):
+        return commands.getstatusoutput("git log -1 --format=%cd")
+
+    def send_client_status(self):
+        pickle_version = self.get_pickle_version()
+        git_timestamp = self. get_git_timestamp()
+        network.send("client_monitor_response", (pickle_version, git_timestamp))
+
+thirtybirds_client_monitor_client = Thirtybirds_Client_Monitor_Client()
+
 
 def network_status_handler(msg):
     print "network_status_handler", msg
@@ -75,7 +93,6 @@ def network_message_handler(msg):
         print "heartbeat received", msg
 
     elif topic == "reboot":
-        print "reboot!"
         os.system("sudo reboot now")
 
     elif topic == "remote_update":
@@ -94,6 +111,9 @@ def network_message_handler(msg):
         updates_init("/home/pi/supercooler", False, True)
         network.send("update_complete", network_info.getHostName())
 
+    elif topic == "client_monitor_request":
+        network.send("client_monitor_response", thirtybirds_client_monitor_client.send_client_status())
+        
     else: # [ "capture_image" ]
         main.add_to_queue(topic, data)
         

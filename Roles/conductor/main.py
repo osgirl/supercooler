@@ -98,23 +98,35 @@ class Images():
 images = Images()
 
 
-class Thirty_Birds_Client_Monitor_Server(threading.Thread):
+class Thirtybirds_Client_Monitor_Server(threading.Thread):
     def __init__(self, network, voice_1=60):
+        threading.Thread.__init__(self)
         self.update_period = update_period
         self.clients = {}
         self.network = network
-        #git log -1 --format=%cd 
+        self.queue = Queue.Queue()
+        
 
     def add_to_queue(self, hostname, git_pull_date, pickle_version):
-
-
+        self.queue.put((hostname, git_pull_date, pickle_version, time.time()))
 
     def run(self):
         while True:
-            self.network.send("client_monitor_request")
+            self.network.send("client_monitor_request", "")
             time.sleep(self.update_period)
+            while not self.queue.empty():
+                [hostname, git_pull_date, pickle_version, timestamp] = self.queue.get(False)
+                self.clients[hostname]  = {
+                    "git_pull_date":git_pull_date,
+                    "pickle_version":pickle_version,
+                    "timestamp":timestamp,
+                }
+            for hostname in sorted(self.clients.iterkeys()):
+                print "%s: %s : %s: %s" % (hostname, self.clients[hostname]["timestamp"], self.clients[hostname]["pickle_version"], self.clients[hostname]["git_pull_date"])
 
-thirty_birds_client_monitor = Thirty_Birds_Client_Monitor()
+client_monitor_server = Thirtybirds_Client_Monitor_Server()
+client_monitor_server.daemon = True
+client_monitor_server.start()
 
 class Main(): # rules them all
     def __init__(self, network):
