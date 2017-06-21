@@ -97,14 +97,14 @@ def network_message_handler(msg):
     if topic == "__heartbeat__":
         print "heartbeat received", msg
 
-    if topic == "capture_image":
-        main.add_to_queue(topic, data)
-        
-
     elif topic == "reboot":
         print "reboot!"
         os.system("sudo reboot now")
 
+    else: # [ "capture_image" ]
+        main.add_to_queue(topic, data)
+        
+    """    
     elif topic == "get_beer": 
         #img = capture_img()
         #data = process_img(img)
@@ -147,6 +147,8 @@ def network_message_handler(msg):
 
         print "it's done!"
         network.send("update_complete", hostname)
+    """
+
 
 main = None
 
@@ -177,5 +179,4 @@ def init(HOSTNAME):
     network.subscribe_to_topic("get_beer")
     network.subscribe_to_topic("remote_update")
     network.subscribe_to_topic(HOSTNAME)
-    
     
