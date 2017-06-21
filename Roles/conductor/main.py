@@ -33,6 +33,7 @@ class Door(threading.Thread):
         while True:
             closed_temp =  wpi.digitalRead(self.door_pin_number)
             if self.closed != closed_temp:
+                print "Door.run self.closed=", self.closed
                 self.closed = closed_temp
                 if self.closed:
                     self.door_close_event_callback(True if self.last_closure + self.estmated_inventory_duration <= time.time() else False)
@@ -92,9 +93,11 @@ class Main(): # rules them all
         self.camera_capture_delay = 3
 
     def door_open_event_handler(self):
+        print "Main.door_open_event_handler"
         self.web_interface.send_door_open()
 
     def door_close_event_handler(self, start_inventory):
+        print "Main.door_close_event_handler , start_inventory= ", start_inventory
         self.web_interface.send_door_close()
         if not start_inventory: 
             return
