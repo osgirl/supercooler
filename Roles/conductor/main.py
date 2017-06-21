@@ -114,7 +114,8 @@ class Thirtybirds_Client_Monitor_Server(threading.Thread):
             self.network.send("client_monitor_request", "")
             time.sleep(self.update_period)
             while not self.queue.empty():
-                [hostname, git_pull_date, pickle_version, timestamp] = self.queue.get(False)
+                [hostname, git_pull_date, pickle_version, timestamp] = self.queue.get()
+                print ">>", hostname, git_pull_date, pickle_version, timestamp
                 self.clients[hostname]  = {
                     "git_pull_date":git_pull_date,
                     "pickle_version":pickle_version,
