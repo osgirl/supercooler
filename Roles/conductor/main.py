@@ -99,11 +99,10 @@ images = Images()
 
 
 class Thirty_Birds_Client_Monitor(threading.Thread):
-    def __init__(self, update_period=60)
+    def __init__(self, voice_1=60):
         self.update_period = update_period
         self.clients = {}
         #git log -1 --format=%cd 
-
 
     def run(self):
         while True:
