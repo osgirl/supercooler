@@ -49,7 +49,7 @@ class Lights():
         self.light_sequence_levels = [ 100, 50, 0]
         for pwm_pin in self.pwm_pins:
             wpi.pinMode(pwm_pin, wpi.OUTPUT)
-            wpi.softPwmCreate(pwm_pin, 0, 10)
+            wpi.softPwmCreate(pwm_pin, 0, 50)
 
     def set_level_shelf(self, id, value):
         wpi.softPwmWrite(self.pwm_pins[id], value)
@@ -96,6 +96,16 @@ class Images():
         image_result.write(image_64_decode)
 
 images = Images()
+
+
+class Thirty_Birds_Client_Monitor(threading.Thread):
+    def __init__(self, update_period=60)
+        self.update_period = update_period
+        self.clients = {}
+
+    def run(self):
+        while True:
+            time.sleep(self.update_period)
 
 
 class Main(): # rules them all
