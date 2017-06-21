@@ -36,7 +36,7 @@ class Thirtybirds_Client_Monitor_Client():
         return updates.read_version_pickle()
 
     def get_git_timestamp(self):
-        return commands.getstatusoutput("git log -1 --format=%cd")
+        return commands.getstatusoutput("git log -1 --format=%cd")[1]
 
     def send_client_status(self):
         pickle_version = self.get_pickle_version()
