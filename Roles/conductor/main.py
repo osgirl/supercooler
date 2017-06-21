@@ -128,13 +128,13 @@ def network_status_handler(msg):
 
 def network_message_handler(msg):
     try:
-        print "network_message_handler", msg
+        #print "network_message_handler", msg
         topic = msg[0]
         #print "topic", topic
         if topic == "__heartbeat__":
             print "heartbeat received", msg
         if topic == "image_capture_from_camera_unit":
-            images.receive_and_save()
+            images.receive_and_save(msg[1][0],msg[1][1])
 
         """
         if topic == "found_beer":
