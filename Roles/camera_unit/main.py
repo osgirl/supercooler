@@ -113,7 +113,7 @@ def network_message_handler(msg):
         network.send("update_complete", network_info.getHostName())
 
     elif topic == "client_monitor_request":
-        network.send("client_monitor_response", thirtybirds_client_monitor_client.send_client_status())
+        network.send("client_monitor_response", main.thirtybirds_client_monitor_client.send_client_status())
         
     else: # [ "capture_image" ]
         main.add_to_queue(topic, data)
