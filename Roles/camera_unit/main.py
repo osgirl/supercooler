@@ -1,37 +1,4 @@
-"""
-TASKS:
-    init:
-        listen to API
-        set up camera
-
-    runtime:
-        capture_image
-        parse_capture
-        classify_parsed_images
-        send inventory and captured image to conductor
-        send status data with attar
-
-API for Server:
-    capture_image
-    parse_capture
-    classify_parsed_images  ( sends images to Server when finished )
-    capture_parse_classify  ( macro process for all three )
-    send_status [ initialized | capture_image | parse_capture | classify_parsed_images | finished ]
-    send_captures
-    send_parsed_images
-    send_inventory
-    send_log ( loglevel )
-
-ATTAR:
-    writes to terminal, log file, and publishes to ZMQ
-    data types:
-        debug:
-        trace:
-        exceptions:
-        events: ( loaded, lost_connection, starting capture, finished can parse (10 found), etc )
-
-"""
-
+import base64
 import importlib
 import json
 import os
@@ -40,7 +7,6 @@ import sys
 import threading
 import time
 import subprocess
-import base64
 import Queue
 
 from thirtybirds_2_0.Network.manager import init as network_init
@@ -64,6 +30,7 @@ class Main(threading.Thread):
         self.camera_path = "/home/pi/supercooler/Captures/"
         self.camera = camera_init(self.camera_path)
         self.queue = Queue.Queue()
+        self.max_capture_age_to_use = 90  # seconds
 
     def add_to_queue(self, topic, msg):
         self.queue.put((topic, msg))
@@ -81,13 +48,13 @@ class Main(threading.Thread):
                 filenames = os.listdir( self.camera_path )
                 for filename in filenames:
                     # send images back to server
-                    with open("{}{}".format(self.camera_path, filename), "rb") as image_file:
-                        image_data = [
-                            filename, 
-                            base64.b64encode(image_file.read())
-                        ]
-                        network.send("image_capture_from_camera_unit", image_data)
-
+                    if time.time <=  os.path.getmtime(filename) + self.max_capture_age_to_use:
+                        with open("{}{}".format(self.camera_path, filename), "rb") as image_file:
+                            image_data = [
+                                filename, 
+                                base64.b64encode(image_file.read())
+                            ]
+                            network.send("image_capture_from_camera_unit", image_data)
 
 def process_img(img):
     return hostname
@@ -106,6 +73,18 @@ def network_message_handler(msg):
     elif topic == "reboot":
         print "reboot!"
         os.system("sudo reboot now")
+
+    elif topic == "remote_update":
+        [cool, birds, update, upgrade] = eval(msg[1])
+        if cool:
+            subprocess.call(['sudo', 'git', 'pull'], cwd='/home/pi/supercooler')
+        if birds:
+            subprocess.call(['sudo', 'git', 'pull'], cwd='/home/pi/thirtybirds_2_0')
+        network.send("update_complete", hostname)
+
+    elif topic == "remote_update_scripts":
+        updates_init("/home/pi/supercooler", False, True)
+        network.send("update_complete", hostname)
 
     else: # [ "capture_image" ]
         main.add_to_queue(topic, data)

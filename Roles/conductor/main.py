@@ -49,7 +49,7 @@ class Lights():
         self.light_sequence_levels = [ 100, 50, 0]
         for pwm_pin in self.pwm_pins:
             wpi.pinMode(pwm_pin, wpi.OUTPUT)
-            wpi.softPwmCreate(pwm_pin, 0, 100)
+            wpi.softPwmCreate(pwm_pin, 0, 10)
 
     def set_level_shelf(self, id, value):
         wpi.softPwmWrite(self.pwm_pins[id], value)
@@ -139,19 +139,6 @@ def network_message_handler(msg):
         if topic == "image_capture_from_camera_unit":
             images.receive_and_save(payload[0],payload[1])
 
-        """
-        if topic == "found_beer":
-            if msg[1] != "":
-
-                data = msg[1]
-                print "found_beer: got %d bytes" % (len(data))
-
-                with open("/home/pi/supercooler/Captures/Capture.png", "wb") as f:
-                    f.write(base64.b64decode(data))
-                    print "saved capture"
-            else:
-                print "found_beer: empty message"
-        """
         if topic == "update_complete":
             print 'update complete for host: ', msg[1]
 
