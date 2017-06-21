@@ -26,6 +26,23 @@ THIRTYBIRDS_PATH = "%s/thirtybirds" % (UPPER_PATH )
 sys.path.append(BASE_PATH)
 sys.path.append(UPPER_PATH)
 
+class Thirtybirds_Client_Monitor_Client():
+    def __init__(self, network ):
+        pass
+
+    def get_pickle_version(self):
+        (updates, ghStatus, bsStatus) = updates_init("/home/pi/supercooler", False, False)
+        return updates.read_version_pickle()
+
+    def get_git_timestamp(self):
+        return commands.getstatusoutput("git log -1 --format=%cd")
+
+    def send_client_status(self):
+        pickle_version = self.get_pickle_version()
+        git_timestamp = self. get_git_timestamp()
+        network.send("client_monitor_response", (pickle_version, git_timestamp))
+
+
 
 class Main(threading.Thread):
     def __init__(self, hostname, network):
@@ -35,7 +52,8 @@ class Main(threading.Thread):
         self.camera_path = "/home/pi/supercooler/Captures/"
         self.camera = camera_init(self.camera_path)
         self.queue = Queue.Queue()
-        self.max_capture_age_to_use = 12z0  # seconds
+        self.max_capture_age_to_use = 120  # seconds
+        self.thirtybirds_client_monitor_client = Thirtybirds_Client_Monitor_Client(network)
 
     def add_to_queue(self, topic, msg):
         self.queue.put((topic, msg))
@@ -61,23 +79,6 @@ class Main(threading.Thread):
                             ]
                             network.send("image_capture_from_camera_unit", image_data)
 
-class Thirtybirds_Client_Monitor_Client():
-    def __init__(self, network, ):
-        pass
-
-    def get_pickle_version(self):
-        (updates, ghStatus, bsStatus) = updates_init("/home/pi/supercooler", False, False)
-        return updates.read_version_pickle()
-
-    def get_git_timestamp(self):
-        return commands.getstatusoutput("git log -1 --format=%cd")
-
-    def send_client_status(self):
-        pickle_version = self.get_pickle_version()
-        git_timestamp = self. get_git_timestamp()
-        network.send("client_monitor_response", (pickle_version, git_timestamp))
-
-thirtybirds_client_monitor_client = Thirtybirds_Client_Monitor_Client()
 
 
 def network_status_handler(msg):

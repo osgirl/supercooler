@@ -124,9 +124,6 @@ class Thirtybirds_Client_Monitor_Server(threading.Thread):
             for hostname in sorted(self.clients.iterkeys()):
                 print "%s: %s : %s: %s" % (hostname, self.clients[hostname]["timestamp"], self.clients[hostname]["pickle_version"], self.clients[hostname]["git_pull_date"])
 
-client_monitor_server = Thirtybirds_Client_Monitor_Server()
-client_monitor_server.daemon = True
-client_monitor_server.start()
 
 class Main(): # rules them all
     def __init__(self, network):
@@ -138,7 +135,9 @@ class Main(): # rules them all
         self.door.start()
         self.camera_units = Camera_Units(self.network)
         self.camera_capture_delay = 3
-
+        self.client_monitor_server = Thirtybirds_Client_Monitor_Server(network)
+        self.client_monitor_server.daemon = True
+        self.client_monitor_server.start()
     def door_open_event_handler(self):
         print "Main.door_open_event_handler"
         self.web_interface.send_door_open()
