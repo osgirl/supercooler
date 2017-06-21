@@ -56,7 +56,6 @@ THIRTYBIRDS_PATH = "%s/thirtybirds" % (UPPER_PATH )
 sys.path.append(BASE_PATH)
 sys.path.append(UPPER_PATH)
 
-main = None
 
 class Main(threading.Thread):
     def __init__(self, hostname, network):
@@ -149,6 +148,8 @@ def network_message_handler(msg):
         print "it's done!"
         network.send("update_complete", hostname)
 
+main = None
+
 
 def init(HOSTNAME):
     global network
@@ -164,8 +165,9 @@ def init(HOSTNAME):
     )
 
     #global hostname
-    hostname = HOSTNAME
-    main = Main(hostname)
+    #hostname = HOSTNAME
+    global main 
+    main = Main(HOSTNAME,  network)
     main.daemon = True
     main.start()
 
@@ -176,8 +178,4 @@ def init(HOSTNAME):
     network.subscribe_to_topic("remote_update")
     network.subscribe_to_topic(HOSTNAME)
     
-    #network.subscribe_to_topic("sensor_data") 
-
-    global main 
-    main = Main(HOSTNAME, network)
-    main.start()
+    
