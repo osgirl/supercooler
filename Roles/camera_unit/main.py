@@ -75,10 +75,14 @@ def network_message_handler(msg):
         os.system("sudo reboot now")
 
     elif topic == "remote_update":
+        print "satarting remote_update"
         [cool, birds, update, upgrade] = eval(msg[1])
+        print repr([cool, birds, update, upgrade])
         if cool:
+            print "cool"
             subprocess.call(['sudo', 'git', 'pull'], cwd='/home/pi/supercooler')
         if birds:
+            print "birds"
             subprocess.call(['sudo', 'git', 'pull'], cwd='/home/pi/thirtybirds_2_0')
         network.send("update_complete", hostname)
 
