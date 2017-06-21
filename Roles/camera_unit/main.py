@@ -76,7 +76,7 @@ class Main(threading.Thread):
         while True:
             topic, msg = self.queue.get(True)
             if topic == "capture_image":
-                filename = "{}_{}.png".format(self.hostname[:11], msg) 
+                filename = "{}_{}.png".format(self.hostname[11:], msg) 
                 self.capture_image_and_save(filename)
 
 
