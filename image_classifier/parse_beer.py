@@ -2,7 +2,7 @@ import os
 import sys
 
 import cv2
-import tensorflow as tf
+#import tensorflow as tf
 
 import beer_parser
 import classifier_combined
