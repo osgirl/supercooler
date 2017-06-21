@@ -31,7 +31,7 @@ class Door(threading.Thread):
 
     def run(self):
         while True:
-            closed_temp =  wpi.digitalRead(self.door_pin_number)
+            closed_temp =  not wpi.digitalRead(self.door_pin_number)
             if self.closed != closed_temp:
                 print "Door.run self.closed=", self.closed
                 self.closed = closed_temp
