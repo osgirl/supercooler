@@ -41,6 +41,7 @@ import threading
 import time
 import subprocess
 import base64
+import Queue
 
 from thirtybirds_2_0.Network.manager import init as network_init
 from thirtybirds_2_0.Network.email_simple import init as email_init
@@ -55,39 +56,33 @@ THIRTYBIRDS_PATH = "%s/thirtybirds" % (UPPER_PATH )
 sys.path.append(BASE_PATH)
 sys.path.append(UPPER_PATH)
 
-hostname = None
 main = None
 
 class Main(threading.Thread):
-    def __init__(self, hostname):
+    def __init__(self, hostname, network):
         threading.Thread.__init__(self)
         self.hostname = hostname
+        self.network = network
         self.camera = camera_init("/home/pi/supercooler/Captures/")
-        self.email = email_init(settings.from_field,settings.password_field)
-        ### NETWORK ###
+        self.queue = Queue.Queue()
+
+    def add_to_queue(self, topic, msg):
+        self.queue.put((topic, msg))
+
+    def capture_image_and_save(self, filename):
+        self.camera.take_capture(filename)
 
 
-        ### SET UP SUBSCRIPTIONS AND LISTENERS ###
-
-
-        ### SET UP ATTAR ### so any exceptions can be reported
-
-
-        ### CONNECT TO CAMERA ###   
     def run(self):
         while True:
-            filename = "capture" + hostname[11:] + ".png"
-            self.camera.take_capture(filename)
-            time.sleep(5)
-            self.email.send("ac-smart-cooler@googlegroups.com", "camera capture from %s" % (self.hostname),"test", "/home/pi/supercooler/Captures/" + filename)
-            time.sleep(7190)
+            topic, msg = self.queue.get(True)
+            if topic == "capture_image":
+                filename = "{}_{}.png".format(self.hostname[:11], cap) 
+                self.capture_image_and_save(filename)
+
 
         ###  ###
 
-
-def capture_img():
-    self.camera.take_capture("capture.png")
-    return None
 
 def process_img(img):
     return hostname
@@ -98,9 +93,14 @@ def network_status_handler(msg):
 def network_message_handler(msg):
     print "network_message_handler", msg
     topic = msg[0]
+    data = msg[1]
     #host, sensor, data = yaml.safe_load(msg[1])
     if topic == "__heartbeat__":
         print "heartbeat received", msg
+
+    if topic == "capture_image":
+        main.add_to_queue(topic, data)
+        
 
     elif topic == "reboot":
         print "reboot!"
@@ -150,8 +150,6 @@ def network_message_handler(msg):
         network.send("update_complete", hostname)
 
 
-network = None # makin' it global
-
 def init(HOSTNAME):
     global network
     network = network_init(
@@ -165,8 +163,11 @@ def init(HOSTNAME):
         status_callback=network_status_handler
     )
 
-    global hostname
+    #global hostname
     hostname = HOSTNAME
+    main = Main(hostname)
+    main.daemon = True
+    main.start()
 
     network.subscribe_to_topic("system")  # subscribe to all system messages
     network.subscribe_to_topic("reboot")
@@ -178,5 +179,5 @@ def init(HOSTNAME):
     #network.subscribe_to_topic("sensor_data") 
 
     global main 
-    main = Main(HOSTNAME)
+    main = Main(HOSTNAME, network)
     main.start()
