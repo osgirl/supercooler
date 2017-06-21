@@ -87,11 +87,10 @@ class Camera_Units():
 
 class Images():
     def __init__(self):
-        self.directory = directory
+        self.directory = "/home/pi/supercooler/Captures/"
     def receive_and_save(self, filename, raw_data):
-        print filename
         image_64_decode = base64.decodestring(raw_data) 
-        image_result = open(filename, 'wb') # create a writable image and write the decoding result
+        image_result = open("{}{}".format(self.directory,filename), 'wb') # create a writable image and write the decoding result
         image_result.write(image_64_decode)
 
 class Main(): # rules them all
