@@ -88,7 +88,7 @@ def network_message_handler(msg):
         if birds:
             print "birds"
             subprocess.call(['sudo', 'git', 'pull'], cwd='/home/pi/thirtybirds_2_0')
-        network.send("update_complete", hostname)
+        network.send("update_complete", network_info.getHostName())
 
     elif topic == "remote_update_scripts":
         updates_init("/home/pi/supercooler", False, True)
