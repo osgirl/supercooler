@@ -70,6 +70,8 @@ class Lights():
 class Camera_Units():
     def __init__(self, network):
             self.network = network
+    def capture_image(self, light_level_sequence_position):
+        self.network.send("capture_image", light_level_sequence_position)
     def process_images_and_report(self):
         self.network.send("process_images_and_report", "")
     def send_update_command(self, cool=False, birds=False, update=False, upgrade=False):
