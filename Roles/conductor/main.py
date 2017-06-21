@@ -1,6 +1,8 @@
 """
 
 """
+
+import base64
 import time
 import threading
 import settings
@@ -82,6 +84,15 @@ class Camera_Units():
         self.network.send("reboot")
     #def ping_nodes_go(self):
     #   self.network.send("say_hello_to_node")
+
+class Images():
+    def __init__(self):
+        self.directory = directory
+    def receive_and_save(self, filename, raw_data):
+        print filename
+        image_64_decode = base64.decodestring(raw_data) 
+        image_result = open(filename, 'wb') # create a writable image and write the decoding result
+        image_result.write(image_64_decode)
 
 class Main(): # rules them all
     def __init__(self, network):
