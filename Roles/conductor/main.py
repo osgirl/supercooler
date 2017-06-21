@@ -9,7 +9,7 @@ import settings
 import yaml
 import json
 import subprocess
-import base64
+import Queue
 
 from thirtybirds_2_0.Network.manager import init as network_init
 
