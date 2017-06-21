@@ -176,7 +176,7 @@ def init(HOSTNAME):
     network.subscribe_to_topic("system")  # subscribe to all system messages
     network.subscribe_to_topic("reboot")
     network.subscribe_to_topic("process_images_and_report")
-    network.subscribe_to_topic("get_beer")
+    network.subscribe_to_topic("capture_image")
     network.subscribe_to_topic("remote_update")
     network.subscribe_to_topic(HOSTNAME)
     
