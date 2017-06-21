@@ -49,7 +49,7 @@ class Lights():
         self.light_sequence_levels = [ 100, 50, 0]
         for pwm_pin in self.pwm_pins:
             wpi.pinMode(pwm_pin, wpi.OUTPUT)
-            wpi.softPwmCreate(pwm_pin, 0, 50)
+            wpi.softPwmCreate(pwm_pin, 0, 100)
 
     def set_level_shelf(self, id, value):
         wpi.softPwmWrite(self.pwm_pins[id], value)

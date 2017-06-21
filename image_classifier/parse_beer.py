@@ -5,7 +5,7 @@ import cv2
 #import tensorflow as tf
 
 import beer_parser
-import classifier_combined
+#import classifier_combined
 
 def crop_beers(img, beer_bounds):
     (img_height, img_width) = img.shape[:2]
