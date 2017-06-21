@@ -53,7 +53,7 @@ class Lights():
 
     def set_level_all(self, value):
         for shelf_id in range(4):
-            self.set_level_shelf(shelf_id)
+            self.set_level_shelf(shelf_id, value)
 
     def play_sequence_step(self, step):
         self.set_level_all(self.light_sequence_levels[step])
