@@ -106,7 +106,6 @@ class Thirtybirds_Client_Monitor_Server(threading.Thread):
         self.network = network
         self.queue = Queue.Queue()
         
-
     def add_to_queue(self, hostname, git_pull_date, pickle_version):
         self.queue.put((hostname, git_pull_date, pickle_version, time.time()))
 
@@ -155,7 +154,8 @@ class Main(): # rules them all
         self.camera_units.process_images_and_report()
 
 def network_status_handler(msg):
-    print "network_status_handler", msg
+    pass
+    #print "network_status_handler", msg
 
 def network_message_handler(msg):
     try:
