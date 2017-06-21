@@ -1,4 +1,4 @@
-﻿server_hostname = "green"
+server_hostname = "green"
 discovery_multicastGroup = "224.3.29.71"
 discovery_multicastPort = 10010
 discovery_responsePort = 10011
