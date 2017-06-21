@@ -93,6 +93,9 @@ class Images():
         image_result = open("{}{}".format(self.directory,filename), 'wb') # create a writable image and write the decoding result
         image_result.write(image_64_decode)
 
+images = Images*()
+
+
 class Main(): # rules them all
     def __init__(self, network):
         self.network = network
@@ -130,6 +133,9 @@ def network_message_handler(msg):
         #print "topic", topic
         if topic == "__heartbeat__":
             print "heartbeat received", msg
+        if topic == "image_capture_from_camera_unit":
+            images.receive_and_save()
+
         """
         if topic == "found_beer":
             if msg[1] != "":
