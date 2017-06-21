@@ -98,16 +98,23 @@ class Images():
 images = Images()
 
 
-class Thirty_Birds_Client_Monitor(threading.Thread):
-    def __init__(self, voice_1=60):
+class Thirty_Birds_Client_Monitor_Server(threading.Thread):
+    def __init__(self, network, voice_1=60):
         self.update_period = update_period
         self.clients = {}
+        self.network = network
         #git log -1 --format=%cd 
+
+    def add_to_queue(self, hostname, git_pull_date, pickle_version):
+
+
 
     def run(self):
         while True:
+            self.network.send("client_monitor_request")
             time.sleep(self.update_period)
 
+thirty_birds_client_monitor = Thirty_Birds_Client_Monitor()
 
 class Main(): # rules them all
     def __init__(self, network):
@@ -153,6 +160,10 @@ def network_message_handler(msg):
         if topic == "update_complete":
             print 'update complete for host: ', msg[1]
 
+        if topic == "client_monitor_response":
+            print '"client_monitor_response"', msg[1]
+        
+
     except Exception as e:
         print "exception in network_message_handler", e
 
@@ -175,5 +186,6 @@ def init(HOSTNAME):
     network.subscribe_to_topic("found_beer")
     network.subscribe_to_topic("update_complete")
     network.subscribe_to_topic("image_capture_from_camera_unit")
+    network.subscribe_to_topic("client_monitor_response")
 
     main = Main(network)

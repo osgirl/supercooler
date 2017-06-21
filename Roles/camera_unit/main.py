@@ -33,7 +33,7 @@ class Main(threading.Thread):
         self.camera_path = "/home/pi/supercooler/Captures/"
         self.camera = camera_init(self.camera_path)
         self.queue = Queue.Queue()
-        self.max_capture_age_to_use = 90  # seconds
+        self.max_capture_age_to_use = 120  # seconds
 
     def add_to_queue(self, topic, msg):
         self.queue.put((topic, msg))
@@ -51,7 +51,7 @@ class Main(threading.Thread):
                 filenames = os.listdir( self.camera_path )
                 for filename in filenames:
                     # send images back to server
-                    if time.time <=  os.path.getmtime(filename) + self.max_capture_age_to_use:
+                    if time.time()z <=  os.path.getmtime(filename) + self.max_capture_age_to_use:
                         with open("{}{}".format(self.camera_path, filename), "rb") as image_file:
                             image_data = [
                                 filename, 
@@ -66,7 +66,7 @@ def network_status_handler(msg):
     print "network_status_handler", msg
 
 def network_message_handler(msg):
-    
+
     print "network_message_handler", msg
     topic = msg[0]
     data = msg[1]
@@ -172,4 +172,6 @@ def init(HOSTNAME):
     network.subscribe_to_topic("capture_image")
     network.subscribe_to_topic("remote_update")
     network.subscribe_to_topic(HOSTNAME)
+    network.subscribe_to_topic("client_monitor_request")
+
     
