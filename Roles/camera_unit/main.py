@@ -53,7 +53,7 @@ class Main(threading.Thread):
                 filenames = os.listdir( self.camera_path )
                 for filename in filenames:
                     # send images back to server
-                    if time.time()z <=  os.path.getmtime(filename) + self.max_capture_age_to_use:
+                    if time.time() <=  os.path.getmtime(filename) + self.max_capture_age_to_use:
                         with open("{}{}".format(self.camera_path, filename), "rb") as image_file:
                             image_data = [
                                 filename, 
