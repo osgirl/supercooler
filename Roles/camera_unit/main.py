@@ -28,7 +28,8 @@ sys.path.append(UPPER_PATH)
 
 class Thirtybirds_Client_Monitor_Client():
     def __init__(self, hostname, network ):
-        pass
+        self.network = network
+        self.hostname = hostname
 
     def get_pickle_version(self):
         (updates, ghStatus, bsStatus) = updates_init("/home/pi/supercooler", False, False)
@@ -40,7 +41,7 @@ class Thirtybirds_Client_Monitor_Client():
     def send_client_status(self):
         pickle_version = self.get_pickle_version()
         git_timestamp = self. get_git_timestamp()
-        network.send("client_monitor_response", (pickle_version, git_timestamp))
+        self.network.send("client_monitor_response", (self.hostname,pickle_version, git_timestamp))
 
 class Main(threading.Thread):
     def __init__(self, hostname, network):
