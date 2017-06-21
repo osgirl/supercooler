@@ -93,7 +93,7 @@ class Images():
         image_result = open("{}{}".format(self.directory,filename), 'wb') # create a writable image and write the decoding result
         image_result.write(image_64_decode)
 
-images = Images*()
+images = Images()
 
 
 class Main(): # rules them all
