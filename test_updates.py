@@ -32,8 +32,7 @@ from thirtybirds_2_0.Network.manager import init as network_init
 def network_status_handler(msg):
     print "network_status_handler", msg
     print msg["hostname"]
-    if msg["hostname"] == "supercoolerA0":
-        camera_units.send_update_command(cool=True, birds=True, update=True, upgrade=True)
+    #if msg["hostname"] == "supercoolerA0":
 
 
 def network_message_handler(msg):
@@ -65,9 +64,9 @@ class Camera_Units():
         self.network.send("reboot")
 
 camera_units = Camera_Units(network)
+time.sleep(120)
 
 camera_units.send_update_command(cool=True, birds=True, update=True, upgrade=True)
-
 
 
 

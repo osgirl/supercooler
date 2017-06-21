@@ -62,7 +62,7 @@ def mask_blobs(gray):
     mask = np.zeros(gray.shape[:2], dtype='uint8')
 
     # detect blobs
-    mser = cv2.MSER_create(_delta=4, _min_area=65, _max_area=14400, _max_variation=1.0)
+    mser = cv2.MSER(_delta=4, _min_area=65, _max_area=14400, _max_variation=1.0)
     blobs, _ = mser.detectRegions(gray)
 
     # find circular blobs
