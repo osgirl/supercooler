@@ -15,6 +15,7 @@ import yaml
 from thirtybirds_2_0.Network.manager import init as network_init
 
 from web_interface import WebInterface
+from classifier import Classifier
 
 # use wiringpi for software PWM
 import wiringpi as wpi
@@ -89,7 +90,9 @@ class Camera_Units():
 class Images():
     def __init__(self):
         self.capture_path = "/home/pi/supercooler/Captures/"
-        #self.parsed_capture_path = "/home/pi/supercooler/ParsedCaptures/"
+        self.dir_classify = "/home/pi/supercooler/Captures/"
+        self.dir_stitch = "/home/pi/supercooler/Captures_Stitching/"
+        self.captures = {}
     def receive_and_save(self, filename, raw_data):
         file_path = "{}{}".format(self.capture_path,filename)
         print "receive_and_save", file_path
@@ -100,6 +103,38 @@ class Images():
         previous_filenames = [ previous_filename for previous_filename in os.listdir(self.capture_path) if previous_filename.endswith(".png") ]
         for previous_filename in previous_filenames:
             os.remove(   "{}{}".format(self.capture_path,  previous_filename) )
+
+
+    def receive_parsed_image_data(self, payload):
+      
+      # iterate through cropped images and save to directory
+      for i, img_raw in enumerate(payload["images"]):
+
+        # use id, light level, and enum to construct filename for cropped img
+        filename = payload["camera_id"] + "_" + payload["light_level"] + "_" + str(i) + ".jpg"
+        filepath = "{}{}".format(self.dir_classification, filename)
+
+        # decode image and save to file
+        with open(filepath, 'wb') as img_file:
+          img_file.write(base64.decodestring(img_raw))
+
+        # store cropped capture information in list of all cropped captures
+        cropped_capture = {
+          "camera_id"   : payload["camera_id"],
+          "shelf_id"    : payload["camera_id"][0],
+          "light_level" : payload["light_level"],
+          "filename"    : filename
+        }
+
+        self.cropped_captures.append(cropped_capture)
+
+      # use id and light levelt o construct filename for parent img
+      filename_parent = payload["camera_id"] + "_" + payload["light_level"] + ".jpg"
+      filepath_parent = "{}{}".format(self.dir_stitching, filename)
+
+      # decode parent image and save to file
+      with open(filepath_parent, 'wb') as img_file:
+        img_file.write(base64.decodestring(payload["image_b64"]))
 
 
 images = Images()
@@ -147,6 +182,9 @@ class Main(): # rules them all
         self.client_monitor_server = Thirtybirds_Client_Monitor_Server(network)
         self.client_monitor_server.daemon = True
         self.client_monitor_server.start()
+
+
+        self.classifier = Classifier()
     def door_open_event_handler(self):
         print "Main.door_open_event_handler"
         self.web_interface.send_door_open()
@@ -164,6 +202,43 @@ class Main(): # rules them all
             time.sleep(self.camera_capture_delay)
         self.lights.all_off()
         self.camera_units.process_images_and_report()
+
+        # pause while conductor waits for captures, then start classification
+        time.sleep(90)
+        self.classify_images()
+
+    def classify_images(self):
+        # for convenience
+        classifier = self.classifier
+        images = self.images
+        inventory = self.inventory
+
+        # if the best guess falls below this threshold, assume no match
+        confidence_threshold = 0.6
+
+        # start tensorflow session, necessary to run classifier
+        with tf.Session() as sess:
+            for i, image in enumerate(images.cropped_captures):
+
+                # report progress every ten images
+                if (i%10) == 0:
+                    print 'processing %dth image' % i
+                    time.sleep(1)
+
+                # constuct filepath from image filename and cropped capture directory
+                filepath = images.dir_classify + filename
+
+                # get a list of guesses w/ confidence in this format:
+                # guesses = [(best guess, confidence), (next guess, confidence), ...]
+                guesses = classifier.guess_image(sess, filepath)
+                best_guess, confidence = guesses[0]
+
+                # if we beat the threshold, then update the inventory accordingly
+                if confidence > confidence_threshold:
+                    inventory[best_guess] += 1
+
+                # TODO: move the temp sensing out of guess_image and into here
+
 
 def network_status_handler(msg):
     pass
@@ -184,8 +259,10 @@ def network_message_handler(msg):
             print 'update complete for host: ', msg[1]
 
         if topic == "client_monitor_response":
-            print '"client_monitor_response"', msg[1]
-        
+            print '"client_monitor_response"', msg[1] 
+
+        if topic == "receive_parsed_image_data":
+            images.receive_parsed_image_data(payload)       
 
     except Exception as e:
         print "exception in network_message_handler", e
