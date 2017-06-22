@@ -66,22 +66,28 @@ class Main(threading.Thread):
 
     def process_images_and_report(self):
         # send images back to server
+        print "process_images_and_report 1"
         filenames = [ filename for filename in os.listdir(self.capture_path) if filename.endswith(".png") ]
+        print "process_images_and_report 2", filenames
         for filename in filenames:
+            print "process_images_and_report 3", filename
             with open("{}{}".format(self.capture_path, filename), "rb") as image_file:
                 image_data = [
                     filename, 
                     base64.b64encode(image_file.read())
                 ]
                 network.send("image_capture_from_camera_unit", image_data)
-
+        print "process_images_and_report 4"
         # clear previous parsed capture files
         previous_parsed_capture_filenames = [ previous_parsed_capture_filename for previous_parsed_capture_filename in os.listdir(self.parsed_capture_path) if previous_parsed_capture_filename.endswith(".png") ]
+        print "process_images_and_report 5", previous_parsed_capture_filenames
         for previous_parsed_capture_filename in previous_parsed_capture_filenames:
+            print "process_images_and_report 6", previous_parsed_capture_filename
             os.remove(previous_parsed_capture_filename)
 
         # loop through images
         for filename in filenames:
+            print "process_images_and_report 7", filename
             bounds = image_detection_bottles_and_cans.detect_bounds( filename, min_size )
             print filename, bounds
 
