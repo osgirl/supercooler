@@ -23,8 +23,8 @@ UPPER_PATH = os.path.split(os.path.dirname(os.path.realpath(__file__)))[0]
 DEVICES_PATH = "%s/Hosts/" % (BASE_PATH )
 THIRTYBIRDS_PATH = "%s/thirtybirds" % (UPPER_PATH )
 
-import image_detection_bottles_and_cans
-import image_parser
+#import image_detection_bottles_and_cans
+#import image_parser
 
 sys.path.append(BASE_PATH)
 sys.path.append(UPPER_PATH)
