@@ -23,6 +23,9 @@ UPPER_PATH = os.path.split(os.path.dirname(os.path.realpath(__file__)))[0]
 DEVICES_PATH = "%s/Hosts/" % (BASE_PATH )
 THIRTYBIRDS_PATH = "%s/thirtybirds" % (UPPER_PATH )
 
+import image_detection_bottles_and_cans
+import image_parser
+
 sys.path.append(BASE_PATH)
 sys.path.append(UPPER_PATH)
 
@@ -40,7 +43,7 @@ class Thirtybirds_Client_Monitor_Client():
 
     def send_client_status(self):
         pickle_version = self.get_pickle_version()
-        git_timestamp = self. get_git_timestamp()
+        git_timestamp = self.get_git_timestamp()
         self.network.send("client_monitor_response", (self.hostname,pickle_version, git_timestamp))
 
 class Main(threading.Thread):
@@ -48,8 +51,9 @@ class Main(threading.Thread):
         threading.Thread.__init__(self)
         self.hostname = hostname
         self.network = network
-        self.camera_path = "/home/pi/supercooler/Captures/"
-        self.camera = camera_init(self.camera_path)
+        self.capture_path = "/home/pi/supercooler/Captures/"
+        self.parsed_capture_path = "/home/pi/supercooler/ParsedCaptures/"
+        self.camera = camera_init(self.capture_path)
         self.queue = Queue.Queue()
         self.max_capture_age_to_use = 120  # seconds
         self.thirtybirds_client_monitor_client = Thirtybirds_Client_Monitor_Client(hostname, network)
@@ -60,24 +64,47 @@ class Main(threading.Thread):
     def capture_image_and_save(self, filename):
         self.camera.take_capture(filename)
 
+    def process_images_and_report(self):
+        # send images back to server
+        filenames = [ filename for filename in os.listdir(self.capture_path) if filename.endswith(".png") ]
+        for filename in filenames:
+            with open("{}{}".format(self.capture_path, filename), "rb") as image_file:
+                image_data = [
+                    filename, 
+                    base64.b64encode(image_file.read())
+                ]
+                network.send("image_capture_from_camera_unit", image_data)
+
+        # clear previous parsed capture files
+        previous_parsed_capture_filenames = [ previous_parsed_capture_filename for previous_parsed_capture_filename in os.listdir(self.parsed_capture_path) if previous_parsed_capture_filename.endswith(".png") ]
+        for previous_parsed_capture_filename in previous_parsed_capture_filenames:
+            os.remove(previous_parsed_capture_filename)
+
+        # loop through images
+        # for filename in filenames:
+
+            #bounds = image_detection_bottles_and_cans.detect_bounds( filename, min_size )
+            #print filename, bounds
+
+            #image_metadata = map(__some_process__, bounds)
+            #for image in image_metadata:
+            #    filename = ""
+            #    image_parser.parse( filename )
+        # copy directory to conductor
+        # copy metadata to conductor
+
     def run(self):
         while True:
             topic, msg = self.queue.get(True)
             if topic == "capture_image":
+                if msg in [0, "0"]: # on request 0, empty directory
+                previous_filenames = [ previous_filename for previous_filename in os.listdir(self.capture_path) if previous_filename.endswith(".png") ]
+                for previous_filename in previous_filenames:
+                    os.remove(previous_filename)
                 filename = "{}_{}.png".format(self.hostname[11:], msg) 
                 self.capture_image_and_save(filename)
             if topic == "process_images_and_report":
-                filenames = os.listdir( self.camera_path )
-                for filename in filenames:
-                    # send images back to server
-                    if time.time() <=  os.path.getmtime(filename) + self.max_capture_age_to_use:
-                        with open("{}{}".format(self.camera_path, filename), "rb") as image_file:
-                            image_data = [
-                                filename, 
-                                base64.b64encode(image_file.read())
-                            ]
-                            network.send("image_capture_from_camera_unit", image_data)
-
+                self.process_images_and_report()
 
 
 def network_status_handler(msg):

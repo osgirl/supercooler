@@ -93,7 +93,7 @@ if __name__== '__main__':
     print 'reading input images from %s' % (in_dir)
     files = [f for f in os.listdir(in_dir) if f.endswith('jpg') | f.endswith('png')]
 
-    if                  not os.path.isdir(out_dir): os.mkdir(out_dir)
+    if not os.path.isdir(out_dir): os.mkdir(out_dir)
     if save_visuals and not os.path.isdir(vis_dir): os.mkdir(vis_dir)
 
     for f in files:
