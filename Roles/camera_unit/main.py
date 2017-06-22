@@ -4,7 +4,6 @@ import commands
 import cv2
 import importlib
 import json
-import matplotlib.pyplot as plt
 import numpy as np
 import os
 import Queue

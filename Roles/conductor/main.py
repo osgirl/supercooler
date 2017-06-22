@@ -3,13 +3,14 @@
 """
 
 import base64
+import json
+import os
+import Queue
+import subprocess
 import time
 import threading
 import settings
 import yaml
-import json
-import subprocess
-import Queue
 
 from thirtybirds_2_0.Network.manager import init as network_init
 
@@ -88,18 +89,21 @@ class Camera_Units():
 
 class Images():
     def __init__(self):
+        self.capture_path = "/home/pi/supercooler/Captures/"
         self.dir_classify = "/home/pi/supercooler/Captures/"
         self.dir_stitch = "/home/pi/supercooler/Captures_Stitching/"
-
-        # hold references to parsed captures from camera units
         self.captures = {}
-
     def receive_and_save(self, filename, raw_data):
-        file_path = "{}{}".format(self.directory,filename)
+        file_path = "{}{}".format(self.capture_path,filename)
         print "receive_and_save", file_path
         image_64_decode = base64.decodestring(raw_data) 
         image_result = open(file_path, 'wb') # create a writable image and write the decoding result
         image_result.write(image_64_decode)
+    def clear_captures(self):
+        previous_filenames = [ previous_filename for previous_filename in os.listdir(self.capture_path) if previous_filename.endswith(".png") ]
+        for previous_filename in previous_filenames:
+            os.remove(   "{}{}".format(self.capture_path,  previous_filename) )
+
 
     def receive_parsed_image_data(self, payload):
 
@@ -168,6 +172,8 @@ class Thirtybirds_Client_Monitor_Server(threading.Thread):
 class Main(): # rules them all
     def __init__(self, network):
         self.network = network
+        self.capture_path = "/home/pi/supercooler/Captures/"
+        self.parsed_capture_path = "/home/pi/supercooler/ParsedCaptures/"
         self.web_interface = WebInterface()
         self.lights = Lights()
         self.door = Door(self.door_close_event_handler, self.door_open_event_handler)
@@ -175,9 +181,9 @@ class Main(): # rules them all
         self.door.start()
         self.camera_units = Camera_Units(self.network)
         self.camera_capture_delay = 3
-        self.client_monitor_server = Thirtybirds_Client_Monitor_Server(network)
-        self.client_monitor_server.daemon = True
-        self.client_monitor_server.start()
+        #self.client_monitor_server = Thirtybirds_Client_Monitor_Server(network)
+        #self.client_monitor_server.daemon = True
+        #self.client_monitor_server.start()
 
         # initialize inventory -- this will be recalculated on door close events
         self.inventory = {
