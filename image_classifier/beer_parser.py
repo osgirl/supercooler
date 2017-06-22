@@ -63,8 +63,8 @@ def mask_blobs(gray):
 
     # detect blobs
     mser = cv2.MSER(_delta=4, _min_area=65, _max_area=14400, _max_variation=1.0)
-    blobs, _ = mser.detectRegions(gray)
-
+    blobs =  mser.detect(gray) 
+    # return
     # find circular blobs
 
     for blob in blobs:
@@ -120,7 +120,7 @@ class Parser():
         return mask
 
     def find_beers(self, mask, vis):
-        _, contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        contours = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)[0]
         result = []
 
         for contour in contours:
