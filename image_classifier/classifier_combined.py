@@ -1,6 +1,8 @@
 import sys
 import tensorflow as tf
 import os
+import time
+import subprocess
 
 class Classifier():
 
@@ -36,4 +38,13 @@ class Classifier():
 
         scores = [(self.label_lines[node_id], predictions[0][node_id]) for node_id in top_k]
 
+        # throttle to prevent overheating
+        while get_temp_celcius() > 55:
+            time.sleep(1)
+        
         return scores
+
+# get value from RPi onboard temp sensor, parse & convert to float
+def get_temp_celcius():
+    temp_cmd = '/opt/vc/bin/vcgencmd measure_temp'
+    return float(subprocess.check_output(temp_cmd, shell=True)[5:9])
