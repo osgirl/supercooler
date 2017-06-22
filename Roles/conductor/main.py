@@ -102,6 +102,8 @@ class Images():
         image_result.write(image_64_decode)
 
     def receive_parsed_image_data(self, payload):
+
+      df
       
       # iterate through cropped images and save to directory
       for i, img_raw in enumerate(payload["images"]):
