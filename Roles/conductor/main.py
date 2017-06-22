@@ -177,8 +177,26 @@ class Main(): # rules them all
         self.client_monitor_server.daemon = True
         self.client_monitor_server.start()
 
+        # initialize inventory -- this will be recalculated on door close events
+        self.inventory = {
+            "can busch"                 : 0,
+            "bottle shocktop raspberry" : 0,   
+            "bottle ultra"              : 0,
+            "bottle hoegaarden"         : 0,
+            "bottle bud light"          : 0,
+            "can bud light"             : 0,
+            "bottle bud america"        : 0,
+            "can natty"                 : 0,
+            "can bud america"           : 0,
+            "bottle shocktop pretzel"   : 0,
+            "bottle becks"              : 0,
+            "other"                     : 0,
+            "can bud ice"               : 0,
+            "bottle platinum"           : 0,
+            "bottle stella"             : 0,
+            "bottle corona"             : 0
+        }
 
-        self.classifier = Classifier()
     def door_open_event_handler(self):
         print "Main.door_open_event_handler"
         self.web_interface.send_door_open()
@@ -188,6 +206,10 @@ class Main(): # rules them all
         self.web_interface.send_door_close()
         if not start_inventory: 
             return
+
+        # clear inventory (will be populated after classification)
+        for i in self.inventory: self.inventory[i] = 0
+
         for light_level_sequence_position in range(3):
             self.lights.play_sequence_step(light_level_sequence_position)
             self.camera_units.capture_image(light_level_sequence_position)
