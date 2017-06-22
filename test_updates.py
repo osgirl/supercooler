@@ -69,7 +69,7 @@ time.sleep(120)
 camera_units.send_update_command(cool=True, birds=True, update=True, upgrade=True)
 time.sleep(60)
 
-camera_units.send_update_command()
+camera_units.send_update_scripts_command()
 
 
 
