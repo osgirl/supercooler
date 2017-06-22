@@ -81,10 +81,9 @@ class Main(threading.Thread):
             os.remove(previous_parsed_capture_filename)
 
         # loop through images
-        # for filename in filenames:
-
-            #bounds = image_detection_bottles_and_cans.detect_bounds( filename, min_size )
-            #print filename, bounds
+        for filename in filenames:
+            bounds = image_detection_bottles_and_cans.detect_bounds( filename, min_size )
+            print filename, bounds
 
             #image_metadata = map(__some_process__, bounds)
             #for image in image_metadata:
@@ -98,11 +97,11 @@ class Main(threading.Thread):
             topic, msg = self.queue.get(True)
             if topic == "capture_image":
                 if msg in [0, "0"]: # on request 0, empty directory
-                previous_filenames = [ previous_filename for previous_filename in os.listdir(self.capture_path) if previous_filename.endswith(".png") ]
-                for previous_filename in previous_filenames:
-                    os.remove(previous_filename)
-                filename = "{}_{}.png".format(self.hostname[11:], msg) 
-                self.capture_image_and_save(filename)
+                    previous_filenames = [ previous_filename for previous_filename in os.listdir(self.capture_path) if previous_filename.endswith(".png") ]
+                    for previous_filename in previous_filenames:
+                        os.remove(previous_filename)
+                    filename = "{}_{}.png".format(self.hostname[11:], msg) 
+                    self.capture_image_and_save(filename)
             if topic == "process_images_and_report":
                 self.process_images_and_report()
 
