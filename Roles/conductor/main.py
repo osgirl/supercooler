@@ -179,9 +179,9 @@ class Main(): # rules them all
         self.door.start()
         self.camera_units = Camera_Units(self.network)
         self.camera_capture_delay = 3
-        self.client_monitor_server = Thirtybirds_Client_Monitor_Server(network)
-        self.client_monitor_server.daemon = True
-        self.client_monitor_server.start()
+        #self.client_monitor_server = Thirtybirds_Client_Monitor_Server(network)
+        #self.client_monitor_server.daemon = True
+        #self.client_monitor_server.start()
 
 
         self.classifier = Classifier()
