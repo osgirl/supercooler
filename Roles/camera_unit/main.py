@@ -40,7 +40,7 @@ class Thirtybirds_Client_Monitor_Client():
 
     def send_client_status(self):
         pickle_version = self.get_pickle_version()
-        git_timestamp = self. get_git_timestamp()
+        git_timestamp = self.get_git_timestamp()
         self.network.send("client_monitor_response", (self.hostname,pickle_version, git_timestamp))
 
 class Main(threading.Thread):
