@@ -7,5 +7,8 @@ scripts = {
     ],
     "0.02":[
         "cp /home/pi/supercooler/scripts/wpa_supplicant.conf /etc/wpa_supplicant/wpa_supplicant.conf",
+    ],
+    "0.03":[
+    	"sudo dpkg -i /home/pi/supercooler/packages/opencv_3.2.0-1_armhf.deb",
     ]
 }
