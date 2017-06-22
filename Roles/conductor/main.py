@@ -87,13 +87,50 @@ class Camera_Units():
 
 class Images():
     def __init__(self):
-        self.directory = "/home/pi/supercooler/Captures/"
+        self.dir_classification = "/home/pi/supercooler/Captures/"
+        self.dir_stitching = "/home/pi/supercooler/Captures_Stitching/"
+
+        # hold references to parsed captures from camera units
+        self.captures = {}
+
     def receive_and_save(self, filename, raw_data):
         file_path = "{}{}".format(self.directory,filename)
         print "receive_and_save", file_path
         image_64_decode = base64.decodestring(raw_data) 
         image_result = open(file_path, 'wb') # create a writable image and write the decoding result
         image_result.write(image_64_decode)
+
+    def receive_parsed_image_data(self, payload):
+      
+      # iterate through cropped images and save to directory
+      for i, img_raw in enumerate(payload["images"]):
+
+        # use id, light level, and enum to construct filename for cropped img
+        filename = payload["camera_id"] + "_" + payload["light_level"] + "_" + str(i) + ".png"
+        filepath = "{}{}".format(self.dir_classification, filename)
+
+        # decode image and save to file
+        with open(filepath, 'wb') as img_file:
+          img_file.write(base64.decodestring(img_raw))
+
+        # store cropped capture information in list of all cropped captures
+        cropped_capture = {
+          "camera_id"   : payload["camera_id"],
+          "shelf_id"    : payload["camera_id"][0],
+          "light_level" : payload["light_level"],
+          "filename"    : filename
+        }
+
+        self.cropped_captures.append(cropped_capture)
+
+      # use id and light levelt o construct filename for parent img
+      filename_parent = payload["camera_id"] + "_" + payload["light_level"] + ".png"
+      filepath_parent = "{}{}".format(self.dir_stitching, filename)
+
+      # decode parent image and save to file
+      with open(filepath_parent, 'wb') as img_file:
+        img_file.write(base64.decodestring(payload["image_b64"]))
+
 
 images = Images()
 
@@ -173,8 +210,10 @@ def network_message_handler(msg):
             print 'update complete for host: ', msg[1]
 
         if topic == "client_monitor_response":
-            print '"client_monitor_response"', msg[1]
-        
+            print '"client_monitor_response"', msg[1] 
+
+        if topic == "receive_parsed_image_data":
+            images.receive_parsed_image_data(payload)       
 
     except Exception as e:
         print "exception in network_message_handler", e
