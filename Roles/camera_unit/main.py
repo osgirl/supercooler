@@ -106,7 +106,7 @@ class Main(threading.Thread):
                 if msg in [0, "0"]: # on request 0, empty directory
                     previous_filenames = [ previous_filename for previous_filename in os.listdir(self.capture_path) if previous_filename.endswith(".png") ]
                     for previous_filename in previous_filenames:
-                        os.remove(previous_filename)
+                        os.remove(   "{}{}".format(self.capture_path   previous_filename) )
                     filename = "{}_{}.png".format(self.hostname[11:], msg) 
                     self.capture_image_and_save(filename)
             if topic == "process_images_and_report":
