@@ -1,15 +1,18 @@
 
 import base64
 import commands
+import cv2
 import importlib
 import json
+import matplotlib.pyplot as plt
+import numpy as np
 import os
+import Queue
 import settings 
 import sys
+import subprocess
 import threading
 import time
-import subprocess
-import Queue
 
 from thirtybirds_2_0.Network.manager import init as network_init
 from thirtybirds_2_0.Network.email_simple import init as email_init
@@ -22,9 +25,6 @@ BASE_PATH = os.path.dirname(os.path.realpath(__file__))
 UPPER_PATH = os.path.split(os.path.dirname(os.path.realpath(__file__)))[0]
 DEVICES_PATH = "%s/Hosts/" % (BASE_PATH )
 THIRTYBIRDS_PATH = "%s/thirtybirds" % (UPPER_PATH )
-
-#import image_detection_bottles_and_cans
-#import image_parser
 
 sys.path.append(BASE_PATH)
 sys.path.append(UPPER_PATH)
@@ -45,6 +45,84 @@ class Thirtybirds_Client_Monitor_Client():
         pickle_version = self.get_pickle_version()
         git_timestamp = self.get_git_timestamp()
         self.network.send("client_monitor_response", (self.hostname,pickle_version, git_timestamp))
+
+class Image_Parser():
+    def __init__(self, hostname, network, min_size=65):
+        self.hostname = hostname
+        self.network = network
+        self.min_size = min_size
+        self.distortion = np.array([[-6.0e-5, 0.0, 0.0, 0.0]], np.float64)
+        self.max_confdence = 1.0
+    
+    def mask_beers(self, img):
+        # create masks to accumulate blobs detected by each pass
+        mask_distorted = np.zeros(img.shape[:2], dtype = 'uint8')
+        mask = np.zeros(img.shape[:2], dtype = 'uint8')
+        
+        # distorted:
+
+        # CLAHE and Otsu threshold
+        equalized = equalize_histogram(cv2.cvtColor(img, cv2.COLOR_BGR2GRAY))
+        mask_distorted += mask_blobs(equalized)
+
+        # adaptive threshold
+        processed = process_split(img)
+        mask_distorted += mask_blobs(processed)
+
+        # undistorted:
+
+        img_out = cv2.undistort(img, self.cam, self.distortion )
+
+        # CLAHE and Otsu threshold
+        equalized = equalize_histogram(cv2.cvtColor(img_out, cv2.COLOR_BGR2GRAY))
+        mask += mask_blobs(equalized)
+
+        # adaptive threshold
+        processed = process_split(img_out)
+        mask += mask_blobs  (processed)
+        
+        # undistort results from distorted image; sum with undistorted results
+        mask += cv2.undistort(mask_distorted, self.cam, self.distortion )
+
+        return mask
+
+    def find_beers(self, mask, vis):
+        _, contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        result = []
+
+        for contour in contours:
+            x, y, w, h = cv2.boundingRect(contour)
+
+            if max(w, h) < self.min_size: continue
+
+            (cx,cy), radius = cv2.minEnclosingCircle(contour)
+            center = (int(cx),int(cy))
+            radius = int(radius)
+
+            circlePoints = cv2.ellipse2Poly(center, (radius,radius), 0, 0, 360, 1)
+            confidence = cv2.matchShapes(contour, circlePoints, 1, 0.0)
+
+            if confidence > self.max_confdence: continue
+                
+            result.append((x, y, w, h))
+
+            if self.interactive | self.save_visuals:
+                cv2.polylines(vis, [contour], 0, (0,0,255), 1)
+                cv2.rectangle(vis, (x,y), (x+w,y+h), (0,255,0), 2)
+                cv2.circle(vis, center, radius, (0,255,0), 2)                      
+                cv2.putText(vis, '%.3f' % confidence, center, cv2.FONT_HERSHEY_SIMPLEX, 0.8, (255,0,255), 2)
+        
+        if self.interactive: plt.imshow(vis), plt.show()
+        return (result, vis)
+
+    def parse(self, filename, filename_50=None, filename_0=None):
+        img = cv2.imread(filename)
+        img_weighted = img.copy()
+        self.cam = calc_camera_matrix(img.shape[:2])
+        mask_final = self.mask_beers(img)
+        img_out = cv2.undistort(img, self.cam, self.distortion )
+        beer_bounds, vis = self.find_beers(mask_final, img_out.copy())
+        return beer_bounds, vis, img_out
 
 class Main(threading.Thread):
     def __init__(self, hostname, network):
@@ -88,9 +166,9 @@ class Main(threading.Thread):
         # loop through images
         for filename in filenames:
             print "process_images_and_report 7", filename
-            bounds = image_detection_bottles_and_cans.detect_bounds( filename, min_size )
-            print filename, bounds
-
+            parser = Parser()
+            bounds, vis, img_out = parser.parse(camera, os.path.join(self.capture_path, filename))
+            print filename, bounds, vis, img_out
             #image_metadata = map(__some_process__, bounds)
             #for image in image_metadata:
             #    filename = ""
