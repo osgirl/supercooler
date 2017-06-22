@@ -35,6 +35,6 @@ if [ "$_IP" ]; then
   printf "My IP address is %s\n" "$_IP"
 fi
 
-sudo python /home/pi/supercooler/main.py -l quiet -u true &
+sudo stdbuf -i0 -o0 -e0 python /home/pi/supercooler/main.py -l quiet -u true  > /home/pi/supercooler.log &
 
 exit 0
