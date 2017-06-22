@@ -23,8 +23,8 @@ UPPER_PATH = os.path.split(os.path.dirname(os.path.realpath(__file__)))[0]
 DEVICES_PATH = "%s/Hosts/" % (BASE_PATH )
 THIRTYBIRDS_PATH = "%s/thirtybirds" % (UPPER_PATH )
 
-import image_detection_bottles_and_cans
-import image_parser
+#import image_detection_bottles_and_cans
+#import image_parser
 
 sys.path.append(BASE_PATH)
 sys.path.append(UPPER_PATH)
@@ -66,25 +66,30 @@ class Main(threading.Thread):
 
     def process_images_and_report(self):
         # send images back to server
+        print "process_images_and_report 1"
         filenames = [ filename for filename in os.listdir(self.capture_path) if filename.endswith(".png") ]
+        print "process_images_and_report 2", filenames
         for filename in filenames:
+            print "process_images_and_report 3", filename
             with open("{}{}".format(self.capture_path, filename), "rb") as image_file:
                 image_data = [
                     filename, 
                     base64.b64encode(image_file.read())
                 ]
                 network.send("image_capture_from_camera_unit", image_data)
-
+        print "process_images_and_report 4"
         # clear previous parsed capture files
         previous_parsed_capture_filenames = [ previous_parsed_capture_filename for previous_parsed_capture_filename in os.listdir(self.parsed_capture_path) if previous_parsed_capture_filename.endswith(".png") ]
+        print "process_images_and_report 5", previous_parsed_capture_filenames
         for previous_parsed_capture_filename in previous_parsed_capture_filenames:
+            print "process_images_and_report 6", previous_parsed_capture_filename
             os.remove(previous_parsed_capture_filename)
 
         # loop through images
-        # for filename in filenames:
-
-            #bounds = image_detection_bottles_and_cans.detect_bounds( filename, min_size )
-            #print filename, bounds
+        for filename in filenames:
+            print "process_images_and_report 7", filename
+            bounds = image_detection_bottles_and_cans.detect_bounds( filename, min_size )
+            print filename, bounds
 
             #image_metadata = map(__some_process__, bounds)
             #for image in image_metadata:
@@ -93,16 +98,17 @@ class Main(threading.Thread):
         # copy directory to conductor
         # copy metadata to conductor
 
+
     def run(self):
         while True:
             topic, msg = self.queue.get(True)
             if topic == "capture_image":
                 if msg in [0, "0"]: # on request 0, empty directory
-                previous_filenames = [ previous_filename for previous_filename in os.listdir(self.capture_path) if previous_filename.endswith(".png") ]
-                for previous_filename in previous_filenames:
-                    os.remove(previous_filename)
-                filename = "{}_{}.png".format(self.hostname[11:], msg) 
-                self.capture_image_and_save(filename)
+                    previous_filenames = [ previous_filename for previous_filename in os.listdir(self.capture_path) if previous_filename.endswith(".png") ]
+                    for previous_filename in previous_filenames:
+                        os.remove(   "{}{}".format(self.capture_path,  previous_filename) )
+                    filename = "{}_{}.png".format(self.hostname[11:], msg) 
+                    self.capture_image_and_save(filename)
             if topic == "process_images_and_report":
                 self.process_images_and_report()
 

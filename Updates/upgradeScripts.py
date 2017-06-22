@@ -11,7 +11,7 @@ scripts = {
     "0.03":[
     	"sudo dpkg -i /home/pi/supercooler/packages/opencv_3.2.0-1_armhf.deb",
     ],
-    "0.04":[
+    "0.05":[
         "sudo cp /home/pi/supercooler/scripts/rc.local /etc/rc.local",
         "sudo chmod 755 /etc/rc.local",
     ]
