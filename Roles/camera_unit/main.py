@@ -92,6 +92,7 @@ class Main(threading.Thread):
         # copy directory to conductor
         # copy metadata to conductor
 
+
     def run(self):
         while True:
             topic, msg = self.queue.get(True)
