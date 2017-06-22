@@ -14,6 +14,7 @@ import Queue
 from thirtybirds_2_0.Network.manager import init as network_init
 
 from web_interface import WebInterface
+from classifier import Classifier
 
 # use wiringpi for software PWM
 import wiringpi as wpi
@@ -87,8 +88,8 @@ class Camera_Units():
 
 class Images():
     def __init__(self):
-        self.dir_classification = "/home/pi/supercooler/Captures/"
-        self.dir_stitching = "/home/pi/supercooler/Captures_Stitching/"
+        self.dir_classify = "/home/pi/supercooler/Captures/"
+        self.dir_stitch = "/home/pi/supercooler/Captures_Stitching/"
 
         # hold references to parsed captures from camera units
         self.captures = {}
@@ -106,7 +107,7 @@ class Images():
       for i, img_raw in enumerate(payload["images"]):
 
         # use id, light level, and enum to construct filename for cropped img
-        filename = payload["camera_id"] + "_" + payload["light_level"] + "_" + str(i) + ".png"
+        filename = payload["camera_id"] + "_" + payload["light_level"] + "_" + str(i) + ".jpg"
         filepath = "{}{}".format(self.dir_classification, filename)
 
         # decode image and save to file
@@ -124,7 +125,7 @@ class Images():
         self.cropped_captures.append(cropped_capture)
 
       # use id and light levelt o construct filename for parent img
-      filename_parent = payload["camera_id"] + "_" + payload["light_level"] + ".png"
+      filename_parent = payload["camera_id"] + "_" + payload["light_level"] + ".jpg"
       filepath_parent = "{}{}".format(self.dir_stitching, filename)
 
       # decode parent image and save to file
@@ -175,6 +176,9 @@ class Main(): # rules them all
         self.client_monitor_server = Thirtybirds_Client_Monitor_Server(network)
         self.client_monitor_server.daemon = True
         self.client_monitor_server.start()
+
+
+        self.classifier = Classifier()
     def door_open_event_handler(self):
         print "Main.door_open_event_handler"
         self.web_interface.send_door_open()
@@ -190,6 +194,43 @@ class Main(): # rules them all
             time.sleep(self.camera_capture_delay)
         self.lights.all_off()
         self.camera_units.process_images_and_report()
+
+        # pause while conductor waits for captures, then start classification
+        time.sleep(90)
+        self.classify_images()
+
+    def classify_images(self):
+        # for convenience
+        classifier = self.classifier
+        images = self.images
+        inventory = self.inventory
+
+        # if the best guess falls below this threshold, assume no match
+        confidence_threshold = 0.6
+
+        # start tensorflow session, necessary to run classifier
+        with tf.Session() as sess:
+            for i, image in enumerate(images.cropped_captures):
+
+                # report progress every ten images
+                if (i%10) == 0:
+                    print 'processing %dth image' % i
+                    time.sleep(1)
+
+                # constuct filepath from image filename and cropped capture directory
+                filepath = images.dir_classify + filename
+
+                # get a list of guesses w/ confidence in this format:
+                # guesses = [(best guess, confidence), (next guess, confidence), ...]
+                guesses = classifier.guess_image(sess, filepath)
+                best_guess, confidence = guesses[0]
+
+                # if we beat the threshold, then update the inventory accordingly
+                if confidence > confidence_threshold:
+                    inventory[best_guess] += 1
+
+                # TODO: move the temp sensing out of guess_image and into here
+
 
 def network_status_handler(msg):
     pass
