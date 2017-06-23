@@ -19,19 +19,17 @@ class Classifier():
             _ = tf.import_graph_def(graph_def, name='')
 
 
-    def guess_images(self, input_dir):
-        input_images = sorted([f for f in os.listdir(input_dir) if f.endswith(".jpg")])
-        with tf.Session() as sess:
-            return [(i, guess_image(sess, i)) for i in input_images]
+    # def guess_images(self, input_dir):
+    #     input_images = sorted([f for f in os.listdir(input_dir) if f.endswith(".jpg")])
+    #     with tf.Session() as sess:
+    #         return [(i, guess_image(sess, i)) for i in input_images]
 
-    def guess_image(self, tf_session, image_path):
-        image_data = tf.gfile.FastGFile(image_path, 'rb').read()
-
+    def guess_image(self, tf_session, image):
         # Feed the image_data as input to the graph and get first prediction
         softmax_tensor = tf_session.graph.get_tensor_by_name('final_result:0')
         
         predictions = tf_session.run(softmax_tensor, \
-                 {'DecodeJpeg:0': image_data})
+                 {'DecodeJpeg:0': image})
         
         # Sort to show labels of first prediction in order of confidence
         top_k = predictions[0].argsort()[-len(predictions[0]):][::-1]
