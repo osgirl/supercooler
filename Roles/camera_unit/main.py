@@ -179,7 +179,6 @@ class Main(threading.Thread):
     def process_images_and_report(self):
         # # send images back to server
         # print "process_images_and_report 1"
-        filenames = [ filename for filename in os.listdir(self.capture_path) if filename.endswith(".png") ]
         # print "process_images_and_report 2", filenames
         # #for filename in filenames:
         # #    print "process_images_and_report 3", filename
@@ -212,6 +211,8 @@ class Main(threading.Thread):
         # # copy directory to conductor
         # # copy metadata to conductor
 
+        print "getting ready to send images..."
+        filenames = [ filename for filename in os.listdir(self.capture_path) if filename.endswith(".png") ]
 
         # collect capture data to be send to conductor
         for filename in filenames:
