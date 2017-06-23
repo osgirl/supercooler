@@ -321,7 +321,10 @@ def network_message_handler(msg):
             print '"client_monitor_response"', msg[1] 
 
         if topic == "receive_parsed_image_data":
-            images.receive_parsed_image_data(payload)       
+            images.receive_parsed_image_data(payload)   
+
+        if topic == "receive_image_data":
+            images.receive_image_data(payload)       
 
     except Exception as e:
         print "exception in network_message_handler", e
@@ -346,6 +349,9 @@ def init(HOSTNAME):
     network.subscribe_to_topic("update_complete")
     network.subscribe_to_topic("image_capture_from_camera_unit")
     network.subscribe_to_topic("client_monitor_response")
+
+
+    network.subscribe_to_topic("receive_image_data")
 
     main = Main(network)
     return main
