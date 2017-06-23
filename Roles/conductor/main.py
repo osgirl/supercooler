@@ -179,8 +179,8 @@ class Thirtybirds_Client_Monitor_Server(threading.Thread):
                     "pickle_version":pickle_version,
                     "timestamp":timestamp,
                 }
-                self.remembered_clients[hostname]  = client_data
-                self.current_clients[hostname]  = client_data
+                self.remembered_clients[hostname]  = dict(client_data)
+                self.current_clients[hostname]  = dict(client_data)
             self.print_remembered_clients()
             self.print_current_clients()
 
