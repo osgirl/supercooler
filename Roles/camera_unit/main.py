@@ -202,13 +202,16 @@ def network_message_handler(msg):
     print "network_message_handler", msg
     topic = msg[0]
     data = msg[1]
+    print "network_message_handler 0"
     #host, sensor, data = yaml.safe_load(msg[1])
     if topic == "__heartbeat__":
         print "heartbeat received", msg
 
+    print "network_message_handler 1"
     if topic == "reboot":
         os.system("sudo reboot now")
 
+    print "network_message_handler 2"
     if topic == "remote_update":
         print "satarting remote_update"
         [cool, birds, update, upgrade] = eval(msg[1])
@@ -221,19 +224,24 @@ def network_message_handler(msg):
             subprocess.call(['sudo', 'git', 'pull'], cwd='/home/pi/thirtybirds_2_0')
         network.send("update_complete", network_info.getHostName())
 
+    print "network_message_handler 3"
     if topic == "remote_update_scripts":
         updates_init("/home/pi/supercooler", False, True)
         network.send("update_complete", network_info.getHostName())
 
+    print "network_message_handler 4"
     if topic == "client_monitor_request":
         network.send("client_monitor_response", main.thirtybirds_client_monitor_client.send_client_status())
 
+    print "network_message_handler 5"
     if topic == "process_images_and_report":
         main.add_to_queue(topic, data)
 
+    print "network_message_handler 6"
     if topic == "capture_image":
         main.add_to_queue(topic, data)
 
+    print "network_message_handler 7"
     """    
     elif topic == "get_beer": 
         #img = capture_img()
