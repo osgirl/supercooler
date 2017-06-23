@@ -119,7 +119,7 @@ class Image_Parser():
     def parse(self, filename, camera_matrix):
         img = cv2.imread(filename)
         img_weighted = img.copy()
-        camera_matrix = calc_camera_matrix(img.shape[:2])
+        camera_matrix = self.calc_camera_matrix(img.shape[:2])
         mask_final = self.mask_beers(img, camera_matrix)
         img_out = cv2.undistort(img, camera_matrix, self.distortion )
         beer_bounds, vis = self.find_beers(mask_final, img_out.copy())
