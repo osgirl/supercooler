@@ -160,13 +160,13 @@ class Image_Parser():
                 
             result.append((x, y, w, h))
 
-            if self.interactive | self.save_visuals:
-                cv2.polylines(vis, [contour], 0, (0,0,255), 1)
-                cv2.rectangle(vis, (x,y), (x+w,y+h), (0,255,0), 2)
-                cv2.circle(vis, center, radius, (0,255,0), 2)                      
-                cv2.putText(vis, '%.3f' % confidence, center, cv2.FONT_HERSHEY_SIMPLEX, 0.8, (255,0,255), 2)
+            #if self.interactive | self.save_visuals:
+            #    cv2.polylines(vis, [contour], 0, (0,0,255), 1)
+            #    cv2.rectangle(vis, (x,y), (x+w,y+h), (0,255,0), 2)
+            #    cv2.circle(vis, center, radius, (0,255,0), 2)                      
+            #    cv2.putText(vis, '%.3f' % confidence, center, cv2.FONT_HERSHEY_SIMPLEX, 0.8, (255,0,255), 2)
         
-        if self.interactive: plt.imshow(vis), plt.show()
+        #if self.interactive: plt.imshow(vis), plt.show()
         return (result, vis)
 
     def parse(self, filename, camera_matrix):
