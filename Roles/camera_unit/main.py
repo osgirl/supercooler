@@ -196,8 +196,12 @@ class Main(threading.Thread):
     def capture_image_and_save(self, filename):
         self.camera.take_capture(filename)
 
-    def retur_env_data(self):
-        
+    def retur_env_data(self, filename):
+        shelf_id = filename[:-4][:1]
+        camera_id = filename[1:-6]
+        light_level = filename[:-4][-1:]
+        print shelf_id, camera_id, light_level
+
 
     def process_images_and_report(self):
         # send images back to server
