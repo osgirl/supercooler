@@ -30,7 +30,6 @@ class Door(threading.Thread):
         self.closed = True
         self.door_pin_number = 29
         self.last_closure = time.time()
-        self.estmated_inventory_duration = 60
         self.door_close_event_callback = door_close_event_callback
         self.door_open_event_callback = door_open_event_callback
         # use pin 29 as door sensor (active LOW)
@@ -44,7 +43,7 @@ class Door(threading.Thread):
                 print "Door.run self.closed=", self.closed
                 self.closed = closed_temp
                 if self.closed:
-                    self.door_close_event_callback(True if self.last_closure + self.estmated_inventory_duration <= time.time() else False)
+                    self.door_close_event_callback()
                 else: 
                     self.door_open_event_callback()
             time.sleep(0.5)
@@ -218,11 +217,9 @@ class Main(): # rules them all
         print "Main.door_open_event_handler"
         self.web_interface.send_door_open()
 
-    def door_close_event_handler(self, start_inventory):
+    def door_close_event_handler(self):
         print "Main.door_close_event_handler , start_inventory= ", start_inventory
         self.web_interface.send_door_close()
-        if not start_inventory: 
-            return
 
         # clear inventory (will be populated after classification)
         for i in self.inventory: self.inventory[i] = 0
