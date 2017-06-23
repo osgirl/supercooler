@@ -202,7 +202,6 @@ class Main(threading.Thread):
         light_level = filename[:-4][-1:]
         print shelf_id, camera_id, light_level
 
-
     def process_images_and_report(self):
         # send images back to server
         print "process_images_and_report 1"
