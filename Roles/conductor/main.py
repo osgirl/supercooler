@@ -244,7 +244,7 @@ class Main(): # rules them all
         self.classify_images()
 
         print "update web interface"
-        for item in inventory:
+        for item in self.inventory:
             self.web_interface.send_report(item)
 
         print "done updating"
