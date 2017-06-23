@@ -348,3 +348,4 @@ def init(HOSTNAME):
     network.subscribe_to_topic("client_monitor_response")
 
     main = Main(network)
+    return main
