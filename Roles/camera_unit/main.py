@@ -116,7 +116,7 @@ class Image_Parser():
         if self.interactive: plt.imshow(vis), plt.show()
         return (result, vis)
 
-    def parse(self, filename):
+    def parse(self, filename, camera_matrix):
         img = cv2.imread(filename)
         img_weighted = img.copy()
         camera_matrix = calc_camera_matrix(img.shape[:2])
