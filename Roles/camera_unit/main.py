@@ -136,7 +136,6 @@ class Main(threading.Thread):
         self.thirtybirds_client_monitor_client = Thirtybirds_Client_Monitor_Client(hostname, network)
 
     def add_to_queue(self, topic, msg):
-        print "main.add_to_queue", topic, msg
         self.queue.put((topic, msg))
 
     def capture_image_and_save(self, filename):
@@ -154,7 +153,7 @@ class Main(threading.Thread):
                     filename, 
                     base64.b64encode(image_file.read())
                 ]
-                network.send_blob("image_capture_from_camera_unit", image_data)
+                network.send("image_capture_from_camera_unit", image_data)
         print "process_images_and_report 4"
         # clear previous parsed capture files
         previous_parsed_capture_filenames = [ previous_parsed_capture_filename for previous_parsed_capture_filename in os.listdir(self.parsed_capture_path) if previous_parsed_capture_filename.endswith(".png") ]
@@ -182,14 +181,13 @@ class Main(threading.Thread):
     def run(self):
         while True:
             topic, msg = self.queue.get(True)
-            print "main.run",topic, msg
             if topic == "capture_image":
-                #if msg in [0, "0"]: # on request 0, empty directory
-                #    previous_filenames = [ previous_filename for previous_filename in os.listdir(self.capture_path) if previous_filename.endswith(".png") ]
-                #    for previous_filename in previous_filenames:
-                #        os.remove(   "{}{}".format(self.capture_path,  previous_filename) )
-                filename = "{}_{}.png".format(self.hostname[11:], msg) 
-                self.capture_image_and_save(filename)
+                if msg in [0, "0"]: # on request 0, empty directory
+                    previous_filenames = [ previous_filename for previous_filename in os.listdir(self.capture_path) if previous_filename.endswith(".png") ]
+                    for previous_filename in previous_filenames:
+                        os.remove(   "{}{}".format(self.capture_path,  previous_filename) )
+                    filename = "{}_{}.png".format(self.hostname[11:], msg) 
+                    self.capture_image_and_save(filename)
             if topic == "process_images_and_report":
                 self.process_images_and_report()
 
@@ -202,17 +200,14 @@ def network_message_handler(msg):
     print "network_message_handler", msg
     topic = msg[0]
     data = msg[1]
-    print "network_message_handler 0"
     #host, sensor, data = yaml.safe_load(msg[1])
     if topic == "__heartbeat__":
         print "heartbeat received", msg
 
-    print "network_message_handler 1"
-    if topic == "reboot":
+    elif topic == "reboot":
         os.system("sudo reboot now")
 
-    print "network_message_handler 2"
-    if topic == "remote_update":
+    elif topic == "remote_update":
         print "satarting remote_update"
         [cool, birds, update, upgrade] = eval(msg[1])
         print repr([cool, birds, update, upgrade])
@@ -224,24 +219,16 @@ def network_message_handler(msg):
             subprocess.call(['sudo', 'git', 'pull'], cwd='/home/pi/thirtybirds_2_0')
         network.send("update_complete", network_info.getHostName())
 
-    print "network_message_handler 3"
-    if topic == "remote_update_scripts":
+    elif topic == "remote_update_scripts":
         updates_init("/home/pi/supercooler", False, True)
         network.send("update_complete", network_info.getHostName())
 
-    print "network_message_handler 4"
-    if topic == "client_monitor_request":
+    elif topic == "client_monitor_request":
         network.send("client_monitor_response", main.thirtybirds_client_monitor_client.send_client_status())
-
-    print "network_message_handler 5"
-    if topic == "process_images_and_report":
+        
+    else: # [ "capture_image" ]
         main.add_to_queue(topic, data)
-
-    print "network_message_handler 6"
-    if topic == "capture_image":
-        main.add_to_queue(topic, data)
-
-    print "network_message_handler 7"
+        
     """    
     elif topic == "get_beer": 
         #img = capture_img()
