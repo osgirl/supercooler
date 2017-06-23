@@ -45,6 +45,8 @@ class Thirtybirds_Client_Monitor_Client():
         git_timestamp = self.get_git_timestamp()
         self.network.send("client_monitor_response", (self.hostname,pickle_version, git_timestamp))
 
+
+
 class Image_Parser():
     def __init__(self, hostname, network, min_size=65):
         self.hostname = hostname
@@ -53,36 +55,36 @@ class Image_Parser():
         self.distortion = np.array([[-6.0e-5, 0.0, 0.0, 0.0]], np.float64)
         self.max_confdence = 1.0
     
-    def mask_beers(self, img):
+    def calc_camera_matrix((height,width)):
+        cam = np.eye(3, dtype=np.float32) # assume unit matrix for camera
+        cam[0, 2] = width  / 2.0  # center x
+        cam[1, 2] = height / 2.0  # center y
+        cam[0, 0] = 10.0          # focal length x
+        cam[1, 1] = 10.0          # focal length y
+        return cam
+
+    def mask_beers(self, img, camera_matrix):
         # create masks to accumulate blobs detected by each pass
         mask_distorted = np.zeros(img.shape[:2], dtype = 'uint8')
         mask = np.zeros(img.shape[:2], dtype = 'uint8')
         
         # distorted:
-
         # CLAHE and Otsu threshold
         equalized = equalize_histogram(cv2.cvtColor(img, cv2.COLOR_BGR2GRAY))
         mask_distorted += mask_blobs(equalized)
-
         # adaptive threshold
         processed = process_split(img)
         mask_distorted += mask_blobs(processed)
-
         # undistorted:
-
-        img_out = cv2.undistort(img, self.cam, self.distortion )
-
+        img_out = cv2.undistort(img, camera_matrix, self.distortion )
         # CLAHE and Otsu threshold
         equalized = equalize_histogram(cv2.cvtColor(img_out, cv2.COLOR_BGR2GRAY))
         mask += mask_blobs(equalized)
-
         # adaptive threshold
         processed = process_split(img_out)
         mask += mask_blobs  (processed)
-        
         # undistort results from distorted image; sum with undistorted results
-        mask += cv2.undistort(mask_distorted, self.cam, self.distortion )
-
+        mask += cv2.undistort(mask_distorted, camera_matrix, self.distortion )
         return mask
 
     def find_beers(self, mask, vis):
@@ -114,12 +116,12 @@ class Image_Parser():
         if self.interactive: plt.imshow(vis), plt.show()
         return (result, vis)
 
-    def parse(self, filename, filename_50=None, filename_0=None):
+    def parse(self, filename):
         img = cv2.imread(filename)
         img_weighted = img.copy()
-        self.cam = calc_camera_matrix(img.shape[:2])
-        mask_final = self.mask_beers(img)
-        img_out = cv2.undistort(img, self.cam, self.distortion )
+        camera_matrix = calc_camera_matrix(img.shape[:2])
+        mask_final = self.mask_beers(img, camera_matrix)
+        img_out = cv2.undistort(img, camera_matrix, self.distortion )
         beer_bounds, vis = self.find_beers(mask_final, img_out.copy())
         return beer_bounds, vis, img_out
 
