@@ -55,7 +55,7 @@ class Image_Parser():
         self.distortion = np.array([[-6.0e-5, 0.0, 0.0, 0.0]], np.float64)
         self.max_confdence = 1.0
     
-    def calc_camera_matrix((height,width)):
+    def calc_camera_matrix(self, (height,width)):
         cam = np.eye(3, dtype=np.float32) # assume unit matrix for camera
         cam[0, 2] = width  / 2.0  # center x
         cam[1, 2] = height / 2.0  # center y
