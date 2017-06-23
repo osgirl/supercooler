@@ -16,6 +16,6 @@ scripts = {
         "sudo chmod 755 /etc/rc.local",
     ],
     "0.06":[
-        "cp /home/pi/supercooler/scripts/wpa_supplicant.conf /etc/wpa_supplicant/wpa_supplicant.conf",
+        "sudo cp /home/pi/supercooler/scripts/wpa_supplicant.conf /etc/wpa_supplicant/wpa_supplicant.conf",
     ]
 }
