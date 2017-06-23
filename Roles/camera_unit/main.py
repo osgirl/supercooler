@@ -4,7 +4,6 @@ import commands
 import cv2
 import importlib
 import json
-import matplotlib.pyplot as plt
 import numpy as np
 import os
 import Queue
@@ -166,9 +165,11 @@ class Main(threading.Thread):
         # loop through images
         for filename in filenames:
             print "process_images_and_report 7", filename
-            parser = Parser()
+            parser = Image_Parser()
+
             bounds, vis, img_out = parser.parse(camera, os.path.join(self.capture_path, filename))
-            print filename, bounds, vis, img_out
+            print "bounds: ", bounds 
+            #print filename, bounds, vis, img_out
             #image_metadata = map(__some_process__, bounds)
             #for image in image_metadata:
             #    filename = ""
