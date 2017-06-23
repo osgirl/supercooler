@@ -230,7 +230,10 @@ class Main(): # rules them all
         self.camera_units.process_images_and_report()
 
         # pause while conductor waits for captures, then start classification
+        print "waiting for captures... see you in 90 seconds!"
         time.sleep(90)
+
+        print "begin classification process"
         self.classify_images()
 
     def classify_images(self, threshold=0.6):
