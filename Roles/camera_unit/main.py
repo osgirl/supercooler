@@ -153,7 +153,7 @@ class Main(threading.Thread):
                     filename, 
                     base64.b64encode(image_file.read())
                 ]
-                network.send("image_capture_from_camera_unit", image_data)
+                #network.send("image_capture_from_camera_unit", image_data)
         print "process_images_and_report 4"
         # clear previous parsed capture files
         previous_parsed_capture_filenames = [ previous_parsed_capture_filename for previous_parsed_capture_filename in os.listdir(self.parsed_capture_path) if previous_parsed_capture_filename.endswith(".png") ]
@@ -166,7 +166,7 @@ class Main(threading.Thread):
         for filename in filenames:
             print "process_images_and_report 7", filename
             parser = Image_Parser()
-
+            print "process_images_and_report 8", filename
             bounds, vis, img_out = parser.parse(camera, os.path.join(self.capture_path, filename))
             print "bounds: ", bounds 
             #print filename, bounds, vis, img_out
@@ -176,8 +176,6 @@ class Main(threading.Thread):
             #    image_parser.parse( filename )
         # copy directory to conductor
         # copy metadata to conductor
-
-
     def run(self):
         while True:
             topic, msg = self.queue.get(True)
@@ -230,48 +228,15 @@ def network_message_handler(msg):
         main.add_to_queue(topic, data)
         
     """    
-    elif topic == "get_beer": 
-        #img = capture_img()
-        #data = process_img(img)
-        filename = "capture" + hostname[11:] + ".png"
-        main.camera.take_capture(filename)
-        time.sleep(5)
-        main.email.send("ac-smart-cooler@googlegroups.com", "camera capture from %s" % (main.hostname),"test", "/home/pi/supercooler/Captures/" + filename)
-
-        network.send("found_beer", "")
-
     elif topic == hostname:
         print "testing png file sending"
 
         filename = "capture" + hostname[11:] + ".png"
         main.camera.take_capture(filename)
 
-        time.sleep(5)
-
         with open("/home/pi/supercooler/Captures/" + filename, "rb") as f:
             data = f.read()
             network.send("found_beer", base64.b64encode(data))
-
-    elif topic == "remote_update":
-        # this is my hacky way to update the repos, make this better later
-        print "remote update go!"
-
-        [cool, birds, update, upgrade] = eval(msg[1])
-        if cool:
-            subprocess.call(['sudo', 'git', 'pull'], cwd='/home/pi/supercooler')
-
-        if birds:
-            subprocess.call(['sudo', 'git', 'pull'], cwd='home/pi/thirtybirds_2_0')
-
-        print "it's done!"
-        network.send("update_complete", hostname)
-
-    elif topic == "remote_update_scripts":
-        print "run update scripts"
-        updates_init("/home/pi/supercooler", False, True)
-
-        print "it's done!"
-        network.send("update_complete", hostname)
     """
 
 
