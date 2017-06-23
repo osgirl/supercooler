@@ -196,54 +196,53 @@ class Main(threading.Thread):
     def capture_image_and_save(self, filename):
         self.camera.take_capture(filename)
 
-    def retur_env_data(self, filename):
+    def return_env_data(self, filename):
         shelf_id = filename[:-4][:1]
         camera_id = filename[1:-6]
         light_level = filename[:-4][-1:]
-        print shelf_id, camera_id, light_level
+        return shelf_id, camera_id, light_level
 
     def process_images_and_report(self):
-        # send images back to server
-        print "process_images_and_report 1"
-        filenames = [ filename for filename in os.listdir(self.capture_path) if filename.endswith(".png") ]
-        print "process_images_and_report 2", filenames
-        #for filename in filenames:
-        #    print "process_images_and_report 3", filename
-        #    with open("{}{}".format(self.capture_path, filename), "rb") as image_file:
-        #        image_data = [
-        #            filename, 
-        #            base64.b64encode(image_file.read())
-        #        ]
-        #        #network.send("image_capture_from_camera_unit", image_data)
-        print "process_images_and_report 4"
-        # clear previous parsed capture files
-        previous_parsed_capture_filenames = [ previous_parsed_capture_filename for previous_parsed_capture_filename in os.listdir(self.parsed_capture_path) if previous_parsed_capture_filename.endswith(".png") ]
-        print "process_images_and_report 5", previous_parsed_capture_filenames
-        #for previous_parsed_capture_filename in previous_parsed_capture_filenames:
-        #    print "process_images_and_report 6", previous_parsed_capture_filename
-        #    os.remove(previous_parsed_capture_filename)
+        # # send images back to server
+        # print "process_images_and_report 1"
+        # filenames = [ filename for filename in os.listdir(self.capture_path) if filename.endswith(".png") ]
+        # print "process_images_and_report 2", filenames
+        # #for filename in filenames:
+        # #    print "process_images_and_report 3", filename
+        # #    with open("{}{}".format(self.capture_path, filename), "rb") as image_file:
+        # #        image_data = [
+        # #            filename, 
+        # #            base64.b64encode(image_file.read())
+        # #        ]
+        # #        #network.send("image_capture_from_camera_unit", image_data)
+        # print "process_images_and_report 4"
+        # # clear previous parsed capture files
+        # previous_parsed_capture_filenames = [ previous_parsed_capture_filename for previous_parsed_capture_filename in os.listdir(self.parsed_capture_path) if previous_parsed_capture_filename.endswith(".png") ]
+        # print "process_images_and_report 5", previous_parsed_capture_filenames
+        # #for previous_parsed_capture_filename in previous_parsed_capture_filenames:
+        # #    print "process_images_and_report 6", previous_parsed_capture_filename
+        # #    os.remove(previous_parsed_capture_filename)
 
-        # loop through images
-        for filename in filenames:
-            print "process_images_and_report 7", filename
-            parser = Image_Parser(self.hostname, self.network)
-            print "process_images_and_report 8", filename
-            bounds, vis, img_out = parser.parse(os.path.join(self.capture_path, filename), self.camera)
-            print "bounds: ", bounds 
-            #print filename, bounds, vis, img_out
-            #image_metadata = map(__some_process__, bounds)
-            #for image in image_metadata:
-            #    filename = ""
-            #    image_parser.parse( filename )
-        # copy directory to conductor
-        # copy metadata to conductor
+        # # loop through images
+        # for filename in filenames:
+        #     print "process_images_and_report 7", filename
+        #     parser = Image_Parser(self.hostname, self.network)
+        #     print "process_images_and_report 8", filename
+        #     bounds, vis, img_out = parser.parse(os.path.join(self.capture_path, filename), self.camera)
+        #     print "bounds: ", bounds 
+        #     #print filename, bounds, vis, img_out
+        #     #image_metadata = map(__some_process__, bounds)
+        #     #for image in image_metadata:
+        #     #    filename = ""
+        #     #    image_parser.parse( filename )
+        # # copy directory to conductor
+        # # copy metadata to conductor
 
 
         # collect capture data to be send to conductor
         for filename in filenames:
 
-            camera_id = get_id_from_filename(filename)
-            light_level = get_light_level_from_filename(filename)
+            shelf_id, camera_id, light_level = return_env_data(filename)
 
             # run parser, get image bounds and undistorted image
             bounds, _, img_out = parser.parse(os.path.join(self.capture_path, filename), self.camera)
@@ -253,6 +252,7 @@ class Main(threading.Thread):
 
             # collect all fields in dictionary and string-ify
             to_send = str({
+                "shelf_id"      : shelf_id,
                 "camera_id"     : camera_id,
                 "light_level"   : light_level,
                 "bounds"        : bounds,
