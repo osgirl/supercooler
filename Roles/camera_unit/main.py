@@ -154,7 +154,7 @@ class Main(threading.Thread):
                     filename, 
                     base64.b64encode(image_file.read())
                 ]
-                network.send("image_capture_from_camera_unit", image_data)
+                network.send_blob("image_capture_from_camera_unit", image_data)
         print "process_images_and_report 4"
         # clear previous parsed capture files
         previous_parsed_capture_filenames = [ previous_parsed_capture_filename for previous_parsed_capture_filename in os.listdir(self.parsed_capture_path) if previous_parsed_capture_filename.endswith(".png") ]
