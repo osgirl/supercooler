@@ -21,6 +21,7 @@ from classifier import Classifier
 # use wiringpi for software PWM
 import wiringpi as wpi
 
+import tensorflow as tf
 import numpy as np
 
 class Door(threading.Thread):
@@ -95,8 +96,8 @@ class Images():
         # self.capture_path = "/home/pi/supercooler/Captures/"
         # self.dir_classify = "/home/pi/supercooler/Captures/"
         # self.dir_stitch = "/home/pi/supercooler/Captures_Stitching/"
-        self.captures = {}
-        self.cropped_captures = {}
+        self.captures = []
+        self.cropped_captures = []
 
     def receive_and_save(self, filename, raw_data):
         file_path = "{}{}".format(self.capture_path,filename)
@@ -115,10 +116,10 @@ class Images():
         img_arr = np.fromstring(base64.decodestring(payload["image"]), np.uint8)
         img = cv2.imdecode(img_arr, cv2.IMREAD_COLOR)
         self.captures.append(img)
-        index = self.captures.length - 1    # store reference to index for crops
+        index = len(self.captures) - 1    # store reference to index for crops
 
         # iterate through list of image bounds, store cropped capture info
-        for i, bounds in payload["bounds"]:
+        for i, bounds in enumerate(payload["bounds"]):
             cropped_capture = {
               "camera_id"   : payload["camera_id"],
               "shelf_id"    : payload["camera_id"][0],
@@ -191,6 +192,8 @@ class Main(): # rules them all
         self.client_monitor_server.daemon = True
     	self.client_monitor_server.start()
 
+        self.classifier = Classifier()
+
         # initialize inventory -- this will be recalculated on door close events
         self.inventory = {
             "can busch"                 : 0,
@@ -238,7 +241,7 @@ class Main(): # rules them all
     def classify_images(self, threshold=0.6):
         # for convenience
         classifier = self.classifier
-        images = self.images
+        #images = self.images
         inventory = self.inventory
 
         # if the best guess falls below this threshold, assume no match
@@ -254,9 +257,9 @@ class Main(): # rules them all
                     time.sleep(1)
 
                 # crop image and encode as jpeg (classifier expects jpeg)
-                x, y, w, h = cropped_capture.bounds
-                img_crop = images.captures[cropped_capture.img_index][y:y+h, x:x+w]
-                img_jpg = cv2.imencode('.jpg', img_crp).tobytes()
+                x, y, w, h = cropped_capture["bounds"]
+                img_crop = images.captures[cropped_capture["img_index"]][y:y+h, x:x+w]
+                img_jpg = cv2.imencode('.jpg', img_crop)[1].tobytes()
 
                 # get a list of guesses w/ confidence in this format:
                 # guesses = [(best guess, confidence), (next guess, confidence), ...]
@@ -270,7 +273,7 @@ class Main(): # rules them all
                 # TODO: move the temp sensing out of guess_image and into here
 
 
-    def test_classification():
+    def test_classification(self):
 
         # read in a test image for parsing/classification
         with open("/home/pi/supercooler/Roles/conductor/test_img.png", "rb") as f:
@@ -295,7 +298,7 @@ class Main(): # rules them all
         for i in self.inventory: self.inventory[i] = 0
 
         images.receive_image_data(payload)  # store image data from payload
-        classify_images(threshold=0.1)      # classify images
+        self.classify_images(threshold=0.1)      # classify images
 
         print self.inventory
 
