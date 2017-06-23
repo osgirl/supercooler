@@ -133,30 +133,46 @@ images = Images()
 
 
 class Thirtybirds_Client_Monitor_Server(threading.Thread):
-    def __init__(self, network, update_period=60):
+    def __init__(self, network, update_period=120):
         threading.Thread.__init__(self)
         self.update_period = update_period
-        self.clients = {}
+        self.current_clients = {}
+        self.remembered_clients = {}
         self.network = network
         self.queue = Queue.Queue()
         
     def add_to_queue(self, hostname, git_pull_date, pickle_version):
         self.queue.put((hostname, git_pull_date, pickle_version, time.time()))
 
+    def print_remembered_clients(self):
+        print ""
+        print "REMEMBERED CLIENTS:"
+        for hostname in sorted(self.remembered_clients.iterkeys()):
+            print "%s: %s : %s: %s" % (hostname, self.remembered_clients[hostname]["timestamp"], self.remembered_clients[hostname]["pickle_version"], self.remembered_clients[hostname]["git_pull_date"])
+
+    def print_current_clients(self):
+        print ""
+        print "CURRENT CLIENTS:"
+        for hostname in sorted(self.current_clients.iterkeys()):
+            print "%s: %s : %s: %s" % (hostname, self.current_clients[hostname]["timestamp"], self.current_clients[hostname]["pickle_version"], self.current_clients[hostname]["git_pull_date"])
+
     def run(self):
         while True:
             self.network.send("client_monitor_request", "")
             time.sleep(self.update_period)
+            self.current_clients = {}
             while not self.queue.empty():
                 [hostname, git_pull_date, pickle_version, timestamp] = self.queue.get()
-                print ">>", hostname, git_pull_date, pickle_version, timestamp
-                self.clients[hostname]  = {
+                #print ">>", hostname, git_pull_date, pickle_version, timestamp
+                client_data = {
                     "git_pull_date":git_pull_date,
                     "pickle_version":pickle_version,
                     "timestamp":timestamp,
                 }
-            for hostname in sorted(self.clients.iterkeys()):
-                print "%s: %s : %s: %s" % (hostname, self.clients[hostname]["timestamp"], self.clients[hostname]["pickle_version"], self.clients[hostname]["git_pull_date"])
+                self.remembered_clients[hostname]  = dict(client_data)
+                self.current_clients[hostname]  = dict(client_data)
+            self.print_remembered_clients()
+            self.print_current_clients()
 
 
 class Main(): # rules them all
