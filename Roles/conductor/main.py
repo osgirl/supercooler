@@ -215,7 +215,7 @@ class Main(): # rules them all
         self.web_interface.send_door_open()
 
     def door_close_event_handler(self):
-        print "Main.door_close_event_handler , start_inventory= ", start_inventory
+        print "Main.door_close_event_handler"
         self.web_interface.send_door_close()
 
         # clear inventory (will be populated after classification)
