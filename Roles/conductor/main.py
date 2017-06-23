@@ -11,6 +11,7 @@ import time
 import threading
 import settings
 import yaml
+import cv2
 
 from thirtybirds_2_0.Network.manager import init as network_init
 
@@ -19,6 +20,8 @@ from classifier import Classifier
 
 # use wiringpi for software PWM
 import wiringpi as wpi
+
+import numpy as np
 
 class Door(threading.Thread):
     def __init__(self, door_close_event_callback, door_open_event_callback):
@@ -89,54 +92,41 @@ class Camera_Units():
 
 class Images():
     def __init__(self):
-        self.capture_path = "/home/pi/supercooler/Captures/"
-        self.dir_classify = "/home/pi/supercooler/Captures/"
-        self.dir_stitch = "/home/pi/supercooler/Captures_Stitching/"
+        # self.capture_path = "/home/pi/supercooler/Captures/"
+        # self.dir_classify = "/home/pi/supercooler/Captures/"
+        # self.dir_stitch = "/home/pi/supercooler/Captures_Stitching/"
         self.captures = {}
-    def receive_and_save(self, filename, raw_data):
-        file_path = "{}{}".format(self.capture_path,filename)
-        print "receive_and_save", file_path
-        image_64_decode = base64.decodestring(raw_data) 
-        image_result = open(file_path, 'wb') # create a writable image and write the decoding result
-        image_result.write(image_64_decode)
-    def clear_captures(self):
-        previous_filenames = [ previous_filename for previous_filename in os.listdir(self.capture_path) if previous_filename.endswith(".png") ]
-        for previous_filename in previous_filenames:
-            os.remove(   "{}{}".format(self.capture_path,  previous_filename) )
+        self.cropped_captures = {}
 
+    # def receive_and_save(self, filename, raw_data):
+    #     file_path = "{}{}".format(self.capture_path,filename)
+    #     print "receive_and_save", file_path
+    #     image_64_decode = base64.decodestring(raw_data) 
+    #     image_result = open(file_path, 'wb') # create a writable image and write the decoding result
+    #     image_result.write(image_64_decode)
+    # def clear_captures(self):
+    #     previous_filenames = [ previous_filename for previous_filename in os.listdir(self.capture_path) if previous_filename.endswith(".png") ]
+    #     for previous_filename in previous_filenames:
+    #         os.remove(   "{}{}".format(self.capture_path,  previous_filename) )
 
-    def receive_parsed_image_data(self, payload):
+    def receive_image_data(self, payload):
 
-      df
-      
-      # iterate through cropped images and save to directory
-      for i, img_raw in enumerate(payload["images"]):
+        # decode and store image as numpy array
+        img_arr = np.fromstring(base64.decodestring(payload["image"]), np.uint8)
+        img = cv2.imdecode(img_arr, cv2.IMREAD_COLOR)
+        self.captures.append(img)
+        index = self.captures.length - 1    # store reference to index for crops
 
-        # use id, light level, and enum to construct filename for cropped img
-        filename = payload["camera_id"] + "_" + payload["light_level"] + "_" + str(i) + ".jpg"
-        filepath = "{}{}".format(self.dir_classification, filename)
-
-        # decode image and save to file
-        with open(filepath, 'wb') as img_file:
-          img_file.write(base64.decodestring(img_raw))
-
-        # store cropped capture information in list of all cropped captures
-        cropped_capture = {
-          "camera_id"   : payload["camera_id"],
-          "shelf_id"    : payload["camera_id"][0],
-          "light_level" : payload["light_level"],
-          "filename"    : filename
-        }
-
-        self.cropped_captures.append(cropped_capture)
-
-      # use id and light levelt o construct filename for parent img
-      filename_parent = payload["camera_id"] + "_" + payload["light_level"] + ".jpg"
-      filepath_parent = "{}{}".format(self.dir_stitching, filename)
-
-      # decode parent image and save to file
-      with open(filepath_parent, 'wb') as img_file:
-        img_file.write(base64.decodestring(payload["image_b64"]))
+        # iterate through list of image bounds, store cropped capture info
+        for i, bounds in payload["bounds"]:
+            cropped_capture = {
+              "camera_id"   : payload["camera_id"],
+              "shelf_id"    : payload["camera_id"][0],
+              "light_level" : payload["light_level"],
+              "img_index"   : index,
+              "bounds"      : bounds
+            }
+            self.cropped_captures.append(cropped_capture)
 
 
 images = Images()
@@ -245,30 +235,32 @@ class Main(): # rules them all
         time.sleep(90)
         self.classify_images()
 
-    def classify_images(self):
+    def classify_images(self, threshold=0.6):
         # for convenience
         classifier = self.classifier
         images = self.images
         inventory = self.inventory
 
         # if the best guess falls below this threshold, assume no match
-        confidence_threshold = 0.6
+        confidence_threshold = threshold
 
         # start tensorflow session, necessary to run classifier
         with tf.Session() as sess:
-            for i, image in enumerate(images.cropped_captures):
+            for i, cropped_capture in enumerate(images.cropped_captures):
 
                 # report progress every ten images
                 if (i%10) == 0:
                     print 'processing %dth image' % i
                     time.sleep(1)
 
-                # constuct filepath from image filename and cropped capture directory
-                filepath = images.dir_classify + filename
+                # crop image and encode as jpeg (classifier expects jpeg)
+                x, y, w, h = cropped_capture.bounds
+                img_crop = images.captures[cropped_capture.img_index][y:y+h, x:x+w]
+                img_jpg = cv2.imencode('.jpg', img_crp).tobytes()
 
                 # get a list of guesses w/ confidence in this format:
                 # guesses = [(best guess, confidence), (next guess, confidence), ...]
-                guesses = classifier.guess_image(sess, filepath)
+                guesses = classifier.guess_image(sess, img_jpg)
                 best_guess, confidence = guesses[0]
 
                 # if we beat the threshold, then update the inventory accordingly
@@ -277,6 +269,35 @@ class Main(): # rules them all
 
                 # TODO: move the temp sensing out of guess_image and into here
 
+
+    def test_classification():
+
+        # read in a test image for parsing/classification
+        with open("/home/pi/supercooler/Roles/conductor/test_img.png", "rb") as f:
+            img = base64.b64encode(f.read())
+
+        # clear inventory (will be populated after classification)
+        for i in self.inventory: self.inventory[i] = 0
+
+        # an example payload -- this is what the camera units send over
+        payload = {
+            "camera_id"     : "A02",
+            "light_level"   : 2,
+            "image"         : img,
+            "bounds"        : [
+                (0, 0, 100, 200),
+                (250, 250, 200, 100),
+                (0, 200, 150, 150)
+            ]
+        }
+
+        # clear inventory (will be populated after classification)
+        for i in self.inventory: self.inventory[i] = 0
+
+        images.receive_image_data(payload)  # store image data from payload
+        classify_images(threshold=0.1)      # classify images
+
+        print self.inventory
 
 def network_status_handler(msg):
     pass
