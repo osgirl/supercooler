@@ -238,6 +238,31 @@ class Main(threading.Thread):
             #    image_parser.parse( filename )
         # copy directory to conductor
         # copy metadata to conductor
+
+
+        # collect capture data to be send to conductor
+        for filename in filenames:
+
+            camera_id = get_id_from_filename(filename)
+            light_level = get_light_level_from_filename(filename)
+
+            # run parser, get image bounds and undistorted image
+            bounds, _, img_out = parser.parse(os.path.join(self.capture_path, filename), self.camera)
+
+            # convert image to jpeg and base64-encode
+            image = base64.b64encode(cv2.imencode('.jpg', img_crop)[1].tobytes())
+
+            # collect all fields in dictionary and string-ify
+            to_send = str({
+                "camera_id"     : camera_id,
+                "light_level"   : light_level,
+                "bounds"        : bounds,
+                "image"         : image
+            })
+
+            # send to conductor for cropping and classification
+            network.send("receive_image_data", to_send)
+
     def run(self):
         while True:
             topic, msg = self.queue.get(True)
