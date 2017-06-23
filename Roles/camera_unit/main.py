@@ -169,7 +169,7 @@ class Main(threading.Thread):
             print "process_images_and_report 7", filename
             parser = Image_Parser(self.hostname, self.network)
             print "process_images_and_report 8", filename
-            bounds, vis, img_out = parser.parse(self.camera, os.path.join(self.capture_path, filename))
+            bounds, vis, img_out = parser.parse(os.path.join(self.capture_path, filename), self.camera)
             print "bounds: ", bounds 
             #print filename, bounds, vis, img_out
             #image_metadata = map(__some_process__, bounds)
