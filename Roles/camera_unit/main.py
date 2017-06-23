@@ -165,7 +165,7 @@ class Main(threading.Thread):
         # loop through images
         for filename in filenames:
             print "process_images_and_report 7", filename
-            parser = Image_Parser()
+            parser = Image_Parser(self.hostname, self.network)
             print "process_images_and_report 8", filename
             bounds, vis, img_out = parser.parse(camera, os.path.join(self.capture_path, filename))
             print "bounds: ", bounds 
