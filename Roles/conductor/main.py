@@ -128,9 +128,7 @@ class Images():
             }
             self.cropped_captures.append(cropped_capture)
 
-
 images = Images()
-
 
 class Thirtybirds_Client_Monitor_Server(threading.Thread):
     def __init__(self, network, update_period=120):

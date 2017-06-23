@@ -167,6 +167,7 @@ class Main(threading.Thread):
         self.queue.put((topic, msg))
 
     def capture_image_and_save(self, filename):
+        print "Main.capture_image_and_save", filename
         self.camera.take_capture(filename)
 
     def retur_env_data(self, filename):
