@@ -80,7 +80,7 @@ else:
 
 host = importlib.import_module("Roles.%s.main" % (role))
 
-if role == "conductor"
+if role == "conductor":
     conductor = host.init(HOSTNAME)
 else
     host.init(HOSTNAME)
