@@ -179,7 +179,6 @@ class Main(threading.Thread):
     def process_images_and_report(self):
         # # send images back to server
         # print "process_images_and_report 1"
-        filenames = [ filename for filename in os.listdir(self.capture_path) if filename.endswith(".png") ]
         # print "process_images_and_report 2", filenames
         # #for filename in filenames:
         # #    print "process_images_and_report 3", filename
@@ -212,17 +211,20 @@ class Main(threading.Thread):
         # # copy directory to conductor
         # # copy metadata to conductor
 
+        print "getting ready to parse images..."
+        parser = Image_Parser(self.hostname, self.network)
+        filenames = [ filename for filename in os.listdir(self.capture_path) if filename.endswith(".png") ]
 
         # collect capture data to be send to conductor
         for filename in filenames:
 
-            shelf_id, camera_id, light_level = return_env_data(filename)
+            shelf_id, camera_id, light_level = self.return_env_data(filename)
 
             # run parser, get image bounds and undistorted image
             bounds, _, img_out = parser.parse(os.path.join(self.capture_path, filename), self.camera)
 
             # convert image to jpeg and base64-encode
-            image = base64.b64encode(cv2.imencode('.jpg', img_crop)[1].tobytes())
+            image = base64.b64encode(cv2.imencode('.jpg', img_out)[1].tostring())
 
             # collect all fields in dictionary and string-ify
             to_send = str({
@@ -234,6 +236,7 @@ class Main(threading.Thread):
             })
 
             # send to conductor for cropping and classification
+            print "parse ok, sending image..."
             network.send("receive_image_data", to_send)
 
     def run(self):
@@ -330,5 +333,7 @@ def init(HOSTNAME):
     network.subscribe_to_topic("remote_update")
     network.subscribe_to_topic(HOSTNAME)
     network.subscribe_to_topic("client_monitor_request")
+
+    return main
 
     

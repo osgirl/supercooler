@@ -51,10 +51,10 @@ class Door(threading.Thread):
 class Lights():
     def __init__(self):
         self.pwm_pins = [21, 22, 23, 24]
-        self.light_sequence_levels = [ 100, 50, 0]
+        self.light_sequence_levels = [ 10, 5, 0]
         for pwm_pin in self.pwm_pins:
             wpi.pinMode(pwm_pin, wpi.OUTPUT)
-            wpi.softPwmCreate(pwm_pin, 0, 100)
+            wpi.softPwmCreate(pwm_pin, 0, 10)
 
     def set_level_shelf(self, id, value):
         wpi.softPwmWrite(self.pwm_pins[id], value)
@@ -67,9 +67,9 @@ class Lights():
         self.set_level_all(self.light_sequence_levels[step])
 
     def play_test_sequence(self):
-        for j in xrange(-100, 101):
-            for i in xrange(4): self.set_level_shelf(i, 100 - abs(j))
-            wpi.delay(10)
+        for j in xrange(-10, 11):
+            for i in xrange(4): self.set_level_shelf(i, 10 - abs(j))
+            wpi.delay(200)
 
     def all_off(self):
         for i in xrange(4): self.set_level_shelf(i, 0) # turn off the lights
@@ -104,6 +104,7 @@ class Images():
         image_64_decode = base64.decodestring(raw_data) 
         image_result = open(file_path, 'wb') # create a writable image and write the decoding result
         image_result.write(image_64_decode)
+
     # def clear_captures(self):
     #     previous_filenames = [ previous_filename for previous_filename in os.listdir(self.capture_path) if previous_filename.endswith(".png") ]
     #     for previous_filename in previous_filenames:
@@ -200,23 +201,26 @@ class Main(): # rules them all
         self.classifier = Classifier()
 
         # initialize inventory -- this will be recalculated on door close events
-        self.inventory = {
+        self.inventory = []
+
+        # map tensorflow labels to corresponding ints for web interface
+        self.label_lookup = {
             "can busch"                 : 0,
-            "bottle shocktop raspberry" : 0,   
-            "bottle ultra"              : 0,
-            "bottle hoegaarden"         : 0,
-            "bottle bud light"          : 0,
-            "can bud light"             : 0,
-            "bottle bud america"        : 0,
-            "can natty"                 : 0,
-            "can bud america"           : 0,
-            "bottle shocktop pretzel"   : 0,
-            "bottle becks"              : 0,
-            "other"                     : 0,
-            "can bud ice"               : 0,
-            "bottle platinum"           : 0,
-            "bottle stella"             : 0,
-            "bottle corona"             : 0
+            "bottle shocktop raspberry" : 1,
+            "bottle ultra"              : 2,
+            "bottle hoegaarden"         : 3,
+            "bottle bud light"          : 4,
+            "can bud light"             : 5,
+            "bottle bud america"        : 6,
+            "can natty"                 : 7,
+            "can bud america"           : 8,
+            "bottle shocktop pretzel"   : 9,
+            "bottle becks"              : 10,
+            "can bud ice"               : 11,
+            "bottle platinum"           : 12,
+            "bottle stella"             : 13,
+            "bottle corona"             : 14,
+            "other"                     : 15
         }
 
     def door_open_event_handler(self):
@@ -228,13 +232,16 @@ class Main(): # rules them all
         self.web_interface.send_door_close()
 
         # clear inventory (will be populated after classification)
-        for i in self.inventory: self.inventory[i] = 0
+        self.inventory = []
 
+        # tell camera units to captures images at each light level
         for light_level_sequence_position in range(3):
             self.lights.play_sequence_step(light_level_sequence_position)
             self.camera_units.capture_image(light_level_sequence_position)
             time.sleep(self.camera_capture_delay)
         self.lights.all_off()
+
+        # tell camera units to parse images and send back the data
         self.camera_units.process_images_and_report()
 
         # pause while conductor waits for captures, then start classification
@@ -243,6 +250,13 @@ class Main(): # rules them all
 
         print "begin classification process"
         self.classify_images()
+
+        print "update web interface"
+        for item in self.inventory:
+            self.web_interface.send_report(item)
+
+        print "done updating"
+
 
     def classify_images(self, threshold=0.6):
         # for convenience
@@ -274,7 +288,12 @@ class Main(): # rules them all
 
                 # if we beat the threshold, then update the inventory accordingly
                 if confidence > confidence_threshold:
-                    inventory[best_guess] += 1
+                    inventory.append({
+                        "type"  : self.label_lookup[best_guess],
+                        "shelf" : cropped_capture["shelf_id"],
+                        "x"     : x + w/2,
+                        "y"     : y + h/2,
+                    })
 
                 # TODO: move the temp sensing out of guess_image and into here
 
@@ -286,7 +305,7 @@ class Main(): # rules them all
             img = base64.b64encode(f.read())
 
         # clear inventory (will be populated after classification)
-        for i in self.inventory: self.inventory[i] = 0
+        self.inventory = []
 
         # an example payload -- this is what the camera units send over
         payload = {
@@ -299,9 +318,6 @@ class Main(): # rules them all
                 (0, 200, 150, 150)
             ]
         }
-
-        # clear inventory (will be populated after classification)
-        for i in self.inventory: self.inventory[i] = 0
 
         images.receive_image_data(payload)  # store image data from payload
         self.classify_images(threshold=0.1)      # classify images
@@ -320,17 +336,15 @@ def network_message_handler(msg):
         #print "topic", topic
         if topic == "__heartbeat__":
             print "heartbeat received", msg
-        if topic == "image_capture_from_camera_unit":
-            images.receive_and_save(payload[0],payload[1])
+
+        # if topic == "image_capture_from_camera_unit":
+        #     images.receive_and_save(payload[0],payload[1])
 
         if topic == "update_complete":
             print 'update complete for host: ', msg[1]
 
         if topic == "client_monitor_response":
             print '"client_monitor_response"', msg[1] 
-
-        if topic == "receive_parsed_image_data":
-            images.receive_parsed_image_data(payload)   
 
         if topic == "receive_image_data":
             images.receive_image_data(payload)       
