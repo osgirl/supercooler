@@ -133,7 +133,7 @@ class Images():
                 self.cropped_captures.append(cropped_capture)
 
 images = Images()
-
+    
 class Thirtybirds_Client_Monitor_Server(threading.Thread):
     def __init__(self, network, hostnames, update_period=120):
         threading.Thread.__init__(self)
@@ -236,6 +236,8 @@ class Main(): # rules them all
     def door_close_event_handler(self):
         print "Main.door_close_event_handler"
         self.web_interface.send_door_close()
+
+        images.clear_captures()
 
         # clear inventory (will be populated after classification)
         self.inventory = []
