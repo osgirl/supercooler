@@ -373,10 +373,12 @@ def network_message_handler(msg):
         print "exception in network_message_handler", e
 
 def init(HOSTNAME):
+    print ">>>>>>> 1"
     # setup LED control and door sensor
     #io_init()
     wpi.wiringPiSetup()
     # global network
+    print ">>>>>>> 2"
     network = network_init(
         hostname=HOSTNAME,
         role="server",
@@ -387,14 +389,17 @@ def init(HOSTNAME):
         message_callback=network_message_handler,
         status_callback=network_status_handler
     )
+
+    print ">>>>>>> 3"
     network.subscribe_to_topic("system")  # subscribe to all system messages
     network.subscribe_to_topic("found_beer")
     network.subscribe_to_topic("update_complete")
     network.subscribe_to_topic("image_capture_from_camera_unit")
     network.subscribe_to_topic("client_monitor_response")
-
-
     network.subscribe_to_topic("receive_image_data")
 
+    print ">>>>>>> 4"
     main = Main(network)
+
+    print ">>>>>>> 5"
     return main
