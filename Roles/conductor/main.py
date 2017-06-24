@@ -288,10 +288,11 @@ class Main(): # rules them all
         with tf.Session() as sess:
             for i, cropped_capture in enumerate(images.cropped_captures):
 
+                print "processing_img"
                 # report progress every ten images
-                if (i%10) == 0:
-                    print 'processing %dth image' % i
-                    time.sleep(1)
+                #if (i%10) == 0:
+                #    print 'processing %dth image' % i
+                #    time.sleep(1)
 
                 # crop image and encode as jpeg (classifier expects jpeg)
                 x, y, w, h = cropped_capture["bounds"]

@@ -38,6 +38,7 @@ class Classifier():
 
         # throttle to prevent overheating
         while get_temp_celcius() > 55:
+            print "it's hot!", get_temp_celcius()
             time.sleep(1)
         
         return scores
