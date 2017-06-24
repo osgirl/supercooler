@@ -236,10 +236,10 @@ class Main(threading.Thread):
             })
 
             # send to conductor for cropping and classification
-            print "parse ok"
+            print "parse ok for image at light level " + light_level
 
             # for now, only send max brightness image
-            if light_level == 0:
+            if light_level == "0":
                 print "sending image..."
                 network.send("receive_image_data", to_send)
                 print "sent image ok"
