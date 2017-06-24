@@ -362,10 +362,9 @@ def network_message_handler(msg):
             print 'update complete for host: ', msg[1]
 
         if topic == "client_monitor_response":
-           # if payload == None:
-           #     return
-           # client_monitor_server.add_to_queue(payload[0],payload[2],payload[1])
-
+            if payload == None:
+                return
+            client_monitor_server.add_to_queue(payload[0],payload[2],payload[1])
             print '"client_monitor_response"', msg[1] 
 
         if topic == "receive_image_data":
