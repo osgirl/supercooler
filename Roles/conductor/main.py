@@ -163,9 +163,13 @@ class Thirtybirds_Client_Monitor_Server(threading.Thread):
 
     def run(self):
         while True:
+            print "Thirtybirds_Client_Monitor_Server 0"
             self.empty_host_list()
+            print "Thirtybirds_Client_Monitor_Server 1"
             self.network.send("client_monitor_request", "")
+            print "Thirtybirds_Client_Monitor_Server 2"
             time.sleep(self.update_period)
+            print "Thirtybirds_Client_Monitor_Server 3"
             while not self.queue.empty(True):
                 [hostname, git_pull_date, pickle_version, timestamp] = self.queue.get()
                 #print ">>", hostname, git_pull_date, pickle_version, timestamp
@@ -173,36 +177,53 @@ class Thirtybirds_Client_Monitor_Server(threading.Thread):
                 self.hosts[hostname]["timestamp"] = timestamp
                 self.hosts[hostname]["pickle_version"] = pickle_version
                 self.hosts[hostname]["git_pull_date"] = git_pull_date
+            print "Thirtybirds_Client_Monitor_Server 4"
             self.print_current_clients()
+            print "Thirtybirds_Client_Monitor_Server  5"
 
 
 class Main(): # rules them all
     def __init__(self, network):
         self.network = network
+        print "main 0"
         self.capture_path = "/home/pi/supercooler/Captures/"
+        print "main 1"
         self.parsed_capture_path = "/home/pi/supercooler/ParsedCaptures/"
+        print "main 2"
         self.web_interface = WebInterface()
+        print "main 3"
         self.lights = Lights()
+        print "main 4"
         self.door = Door(self.door_close_event_handler, self.door_open_event_handler)
+        print "main 5"
         self.door.daemon = True
+        print "main 6"
         self.door.start()
+        print "main 7"
         self.camera_units = Camera_Units(self.network)
+        print "main 8"
         self.camera_capture_delay = 3
+        print "main 9"
         hostnames = [
             "supercoolerA0","supercoolerA1","supercoolerA2","supercoolerA3","supercoolerA4","supercoolerA5","supercoolerA6","supercoolerA7","supercoolerA8","supercoolerA9","supercoolerA10","supercoolerA11",
             "supercoolerB0","supercoolerB1","supercoolerB2","supercoolerB3","supercoolerB4","supercoolerB5","supercoolerB6","supercoolerB7","supercoolerB8","supercoolerB9","supercoolerB10","supercoolerB11",
             "supercoolerC0","supercoolerC1","supercoolerC2","supercoolerC3","supercoolerC4","supercoolerC5","supercoolerC6","supercoolerC7","supercoolerC8","supercoolerC9","supercoolerC10","supercoolerC11",
             "supercoolerD0","supercoolerD1","supercoolerD2","supercoolerD3","supercoolerD4","supercoolerD5","supercoolerD6","supercoolerD7","supercoolerD8","supercoolerD9","supercoolerD10","supercoolerD11"
         ]
+        print "main 10"
         self.client_monitor_server = Thirtybirds_Client_Monitor_Server(network, hostnames)
+        print "main 11"
         self.client_monitor_server.daemon = True
+        print "main 12"
         self.client_monitor_server.start()
-
+        print "main 13"
         self.classifier = Classifier()
 
+        print "main 14"
         # initialize inventory -- this will be recalculated on door close events
         self.inventory = []
 
+        print "main 15"
         # map tensorflow labels to corresponding ints for web interface
         self.label_lookup = {
             "can busch"                 : 0,
@@ -221,7 +242,7 @@ class Main(): # rules them all
             "bottle stella"             : 13,
             "bottle corona"             : 14,
             "other"                     : 15
-        }
+        }   
 
     def door_open_event_handler(self):
         print "Main.door_open_event_handler"
