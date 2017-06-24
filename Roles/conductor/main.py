@@ -183,7 +183,6 @@ class Thirtybirds_Client_Monitor_Server(threading.Thread):
             self.print_current_clients()
             print "Thirtybirds_Client_Monitor_Server  5"
 
-"""
 hostnames = [
     "supercoolerA0","supercoolerA1","supercoolerA2","supercoolerA3","supercoolerA4","supercoolerA5","supercoolerA6","supercoolerA7","supercoolerA8","supercoolerA9","supercoolerA10","supercoolerA11",
     "supercoolerB0","supercoolerB1","supercoolerB2","supercoolerB3","supercoolerB4","supercoolerB5","supercoolerB6","supercoolerB7","supercoolerB8","supercoolerB9","supercoolerB10","supercoolerB11",
@@ -193,7 +192,7 @@ hostnames = [
 client_monitor_server = Thirtybirds_Client_Monitor_Server(network, hostnames)
 client_monitor_server.daemon = True
 client_monitor_server.start()
-"""
+
 class Main(): # rules them all
     def __init__(self, network):
         self.network = network
