@@ -127,7 +127,10 @@ class Images():
               "img_index"   : index,
               "bounds"      : bounds
             }
-            self.cropped_captures.append(cropped_capture)
+
+            # for now, only add images from shelf D (for sake of time)
+            if payload["shelf_id"] == "D":
+                self.cropped_captures.append(cropped_capture)
 
 images = Images()
 
@@ -294,6 +297,19 @@ class Main(): # rules them all
                 img_crop = images.captures[cropped_capture["img_index"]][y:y+h, x:x+w]
                 img_jpg = cv2.imencode('.jpg', img_crop)[1].tobytes()
                 print "cropped image, w,h = ", w, h
+
+                # ---------------------------------------------------------------------
+                # TODO: remove this later -- this is just so we can see what's going on
+
+                # create filename from img data
+                filename = cropped_capture["shelf_id"]+cropped_capture["camera_id"]+\
+                    "_" + str(x) + "_" + str(y) + ".jpg"
+                filepath = "/home/pi/supercooler/ParsedCaptures/" + filename
+
+                # write to file
+                with open(filepath, 'wb') as f:
+                    f.write(img_jpg)
+                # ---------------------------------------------------------------------
 
                 # get a list of guesses w/ confidence in this format:
                 # guesses = [(best guess, confidence), (next guess, confidence), ...]
