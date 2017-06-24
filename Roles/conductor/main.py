@@ -229,7 +229,9 @@ class Main(): # rules them all
             "bottle stella"             : 13,
             "bottle corona"             : 14,
             "other"                     : 15
-        }   
+        }
+
+        self.web_interface.send_test_report()   
 
 
 
@@ -263,11 +265,12 @@ class Main(): # rules them all
 
         if len(self.inventory) == 0:
             print "empty... add dummy beer"
-            self.inventory[0] = {"type":1,"shelf":1,"x":10,"y":10}
+            self.inventory[0] = {"type":1,"shelf":"A","x":10,"y":10}
 
         print "update web interface"
-        for item in self.inventory:
-            self.web_interface.send_report(item)
+        self.web_interface.send_report(inventory)
+        #for item in self.inventory:
+        #    self.web_interface.send_report(item)
 
         print "done updating"
 
@@ -304,7 +307,7 @@ class Main(): # rules them all
                 if confidence > confidence_threshold:
                     inventory.append({
                         "type"  : self.label_lookup[best_guess],
-                        "shelf" : cropped_capture["shelf_id"],
+                        "shelf" : "D",
                         "x"     : x + w/2,
                         "y"     : y + h/2,
                     })

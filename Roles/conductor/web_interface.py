@@ -16,7 +16,7 @@ class WebInterface:
         endpoint_route = self.endpoint + route
         print endpoint_route
         try:
-            print params
+            print data
             response = requests.get(endpoint_route, params=data, timeout=5)
             return(response)
         except requests.exceptions.RequestException as e:
