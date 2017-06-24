@@ -131,45 +131,47 @@ class Images():
 images = Images()
 
 class Thirtybirds_Client_Monitor_Server(threading.Thread):
-    def __init__(self, network, update_period=120):
+    def __init__(self, network, hostnames, update_period=120):
         threading.Thread.__init__(self)
         self.update_period = update_period
         self.current_clients = {}
         self.remembered_clients = {}
         self.network = network
+        self.hostnames = hostnames
         self.queue = Queue.Queue()
-        
+        self.hosts = []
+
+    def empty_host_list(self):
+        self.hosts = []
+        for hostname in self.hostnames:
+            self.hosts[hostname] = {
+                "present":False,
+                "timestamp":False,
+                "pickle_version":False,
+                "git_pull_date":False
+            }
+
     def add_to_queue(self, hostname, git_pull_date, pickle_version):
         self.queue.put((hostname, git_pull_date, pickle_version, time.time()))
-
-    def print_remembered_clients(self):
-        print ""
-        print "REMEMBERED CLIENTS:"
-        for hostname in sorted(self.remembered_clients.iterkeys()):
-            print "%s: %s : %s: %s" % (hostname, self.remembered_clients[hostname]["timestamp"], self.remembered_clients[hostname]["pickle_version"], self.remembered_clients[hostname]["git_pull_date"])
 
     def print_current_clients(self):
         print ""
         print "CURRENT CLIENTS:"
-        for hostname in sorted(self.current_clients.iterkeys()):
-            print "%s: %s : %s: %s" % (hostname, self.current_clients[hostname]["timestamp"], self.current_clients[hostname]["pickle_version"], self.current_clients[hostname]["git_pull_date"])
+        for hostname in self.hostnames:
+            print "%s: %s : %s: %s" % (hostname, self.hosts[hostname]["present"], self.hosts[hostname]["timestamp"], self.hosts[hostname]["pickle_version"], self.hosts[hostname]["git_pull_date"])
 
     def run(self):
         while True:
+            self.empty_host_list()
             self.network.send("client_monitor_request", "")
             time.sleep(self.update_period)
-            self.current_clients = {}
-            while not self.queue.empty():
+            while not self.queue.empty(True):
                 [hostname, git_pull_date, pickle_version, timestamp] = self.queue.get()
                 #print ">>", hostname, git_pull_date, pickle_version, timestamp
-                client_data = {
-                    "git_pull_date":git_pull_date,
-                    "pickle_version":pickle_version,
-                    "timestamp":timestamp,
-                }
-                self.remembered_clients[hostname]  = dict(client_data)
-                self.current_clients[hostname]  = dict(client_data)
-            self.print_remembered_clients()
+                self.hosts[hostname]["present"] = True
+                self.hosts[hostname]["timestamp"] = timestamp
+                self.hosts[hostname]["pickle_version"] = pickle_version
+                self.hosts[hostname]["git_pull_date"] = git_pull_date
             self.print_current_clients()
 
 
@@ -185,9 +187,15 @@ class Main(): # rules them all
         self.door.start()
         self.camera_units = Camera_Units(self.network)
         self.camera_capture_delay = 3
-        self.client_monitor_server = Thirtybirds_Client_Monitor_Server(network)
+        hostnames = [
+            "supercoolerA0","supercoolerA1","supercoolerA2","supercoolerA3","supercoolerA4","supercoolerA5","supercoolerA6","supercoolerA7","supercoolerA8","supercoolerA9","supercoolerA10","supercoolerA11",
+            "supercoolerB0","supercoolerB1","supercoolerB2","supercoolerB3","supercoolerB4","supercoolerB5","supercoolerB6","supercoolerB7","supercoolerB8","supercoolerB9","supercoolerB10","supercoolerB11",
+            "supercoolerC0","supercoolerC1","supercoolerC2","supercoolerC3","supercoolerC4","supercoolerC5","supercoolerC6","supercoolerC7","supercoolerC8","supercoolerC9","supercoolerC10","supercoolerC11",
+            "supercoolerD0","supercoolerD1","supercoolerD2","supercoolerD3","supercoolerD4","supercoolerD5","supercoolerD6","supercoolerD7","supercoolerD8","supercoolerD9","supercoolerD10","supercoolerD11"
+        ]
+        self.client_monitor_server = Thirtybirds_Client_Monitor_Server(network, hostnames)
         self.client_monitor_server.daemon = True
-    	self.client_monitor_server.start()
+        self.client_monitor_server.start()
 
         self.classifier = Classifier()
 
