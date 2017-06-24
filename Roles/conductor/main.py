@@ -143,18 +143,14 @@ class Thirtybirds_Client_Monitor_Server(threading.Thread):
         self.hosts = {}
 
     def empty_host_list(self):
-        print "empty_host_list 0"
         self.hosts = {}
-        print "empty_host_list 1"
         for hostname in self.hostnames:
-            print "empty_host_list 2", hostname
             self.hosts[hostname] = {
                 "present":False,
                 "timestamp":False,
                 "pickle_version":False,
                 "git_pull_date":False
             }
-        print "empty_host_list 3"
 
     def add_to_queue(self, hostname, git_pull_date, pickle_version):
         self.queue.put((hostname, git_pull_date, pickle_version, time.time()))
@@ -168,11 +164,8 @@ class Thirtybirds_Client_Monitor_Server(threading.Thread):
     def run(self):
         while True:
             self.empty_host_list()
-            print "Thirtybirds_Client_Monitor_Server 1"
             self.network.send("client_monitor_request", "")
-            print "Thirtybirds_Client_Monitor_Server 2"
             time.sleep(self.update_period)
-            print "Thirtybirds_Client_Monitor_Server 3"
             while not self.queue.empty():
                 [hostname, git_pull_date, pickle_version, timestamp] = self.queue.get(True)
                 #print ">>", hostname, git_pull_date, pickle_version, timestamp
@@ -180,9 +173,7 @@ class Thirtybirds_Client_Monitor_Server(threading.Thread):
                 self.hosts[hostname]["timestamp"] = timestamp
                 self.hosts[hostname]["pickle_version"] = pickle_version
                 self.hosts[hostname]["git_pull_date"] = git_pull_date
-            print "Thirtybirds_Client_Monitor_Server 4"
             self.print_current_clients()
-            print "Thirtybirds_Client_Monitor_Server  5"
 
 class Main(): # rules them all
     def __init__(self, network):
@@ -369,7 +360,6 @@ def network_message_handler(msg):
                 return
             if main:
                 main.client_monitor_add_to_queue(payload[0],payload[2],payload[1])
-            print '"client_monitor_response"', msg[1] 
 
         if topic == "receive_image_data":
             images.receive_image_data(payload)       
