@@ -224,7 +224,7 @@ class Main(threading.Thread):
             bounds, _, img_out = parser.parse(os.path.join(self.capture_path, filename), self.camera)
 
             # convert image to jpeg and base64-encode
-            image = base64.b64encode(cv2.imencode('.jpg', img_crop)[1].tobytes())
+            image = base64.b64encode(cv2.imencode('.jpg', img_out)[1].tostring())
 
             # collect all fields in dictionary and string-ify
             to_send = str({
