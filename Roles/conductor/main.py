@@ -259,6 +259,10 @@ class Main(): # rules them all
         print "begin classification process"
         self.classify_images()
 
+        if len(self.inventory) == 0:
+            print "empty... add dummy beer"
+            self.inventory[0] = {"type":1,"shelf":1,"x":10,"y":10}
+
         print "update web interface"
         for item in self.inventory:
             self.web_interface.send_report(item)
