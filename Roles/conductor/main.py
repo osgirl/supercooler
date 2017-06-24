@@ -143,14 +143,18 @@ class Thirtybirds_Client_Monitor_Server(threading.Thread):
         self.hosts = {}
 
     def empty_host_list(self):
+        print "empty_host_list 0"
         self.hosts = []
+        print "empty_host_list 1"
         for hostname in self.hostnames:
+            print "empty_host_list 2", hostname
             self.hosts[hostname] = {
                 "present":False,
                 "timestamp":False,
                 "pickle_version":False,
                 "git_pull_date":False
             }
+        print "empty_host_list 3"
 
     def add_to_queue(self, hostname, git_pull_date, pickle_version):
         self.queue.put((hostname, git_pull_date, pickle_version, time.time()))
