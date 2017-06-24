@@ -144,7 +144,7 @@ class Thirtybirds_Client_Monitor_Server(threading.Thread):
 
     def empty_host_list(self):
         print "empty_host_list 0"
-        self.hosts = []
+        self.hosts = {}
         print "empty_host_list 1"
         for hostname in self.hostnames:
             print "empty_host_list 2", hostname
