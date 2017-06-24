@@ -98,12 +98,12 @@ class Images():
         self.captures = []
         self.cropped_captures = []
 
-    # def receive_and_save(self, filename, raw_data):
-    #     file_path = "{}{}".format(self.capture_path,filename)
-    #     print "receive_and_save", file_path
-    #     image_64_decode = base64.decodestring(raw_data) 
-    #     image_result = open(file_path, 'wb') # create a writable image and write the decoding result
-    #     image_result.write(image_64_decode)
+    def receive_and_save(self, filename, raw_data):
+        file_path = "{}{}".format(self.capture_path,filename)
+        print "receive_and_save", file_path
+        image_64_decode = base64.decodestring(raw_data) 
+        image_result = open(file_path, 'wb') # create a writable image and write the decoding result
+        image_result.write(image_64_decode)
 
     # def clear_captures(self):
     #     previous_filenames = [ previous_filename for previous_filename in os.listdir(self.capture_path) if previous_filename.endswith(".png") ]
