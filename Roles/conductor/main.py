@@ -133,23 +133,14 @@ images = Images()
 
 class Thirtybirds_Client_Monitor_Server(threading.Thread):
     def __init__(self, network, hostnames, update_period=120):
-        print "------ 1"
         threading.Thread.__init__(self)
-        print "------ 2"
         self.update_period = update_period
-        print "------ 3"
         self.current_clients = {}
-        print "------ 4"
         self.remembered_clients = {}
-        print "------ 5"
         self.network = network
-        print "------ 6"
         self.hostnames = hostnames
-        print "------ 7"
         self.queue = Queue.Queue()
-        print "------ 8"
         self.hosts = {}
-        print "------ 9"
 
     def empty_host_list(self):
         print "empty_host_list 0"
@@ -193,21 +184,6 @@ class Thirtybirds_Client_Monitor_Server(threading.Thread):
             self.print_current_clients()
             print "Thirtybirds_Client_Monitor_Server  5"
 
-print "<<<< 1"
-hostnames = [
-    "supercoolerA0","supercoolerA1","supercoolerA2","supercoolerA3","supercoolerA4","supercoolerA5","supercoolerA6","supercoolerA7","supercoolerA8","supercoolerA9","supercoolerA10","supercoolerA11",
-    "supercoolerB0","supercoolerB1","supercoolerB2","supercoolerB3","supercoolerB4","supercoolerB5","supercoolerB6","supercoolerB7","supercoolerB8","supercoolerB9","supercoolerB10","supercoolerB11",
-    "supercoolerC0","supercoolerC1","supercoolerC2","supercoolerC3","supercoolerC4","supercoolerC5","supercoolerC6","supercoolerC7","supercoolerC8","supercoolerC9","supercoolerC10","supercoolerC11",
-    "supercoolerD0","supercoolerD1","supercoolerD2","supercoolerD3","supercoolerD4","supercoolerD5","supercoolerD6","supercoolerD7","supercoolerD8","supercoolerD9","supercoolerD10","supercoolerD11"
-]
-print "<<<< 2"
-client_monitor_server = Thirtybirds_Client_Monitor_Server(network, hostnames)
-print "<<<< 3"
-client_monitor_server.daemon = True
-print "<<<< 4"
-client_monitor_server.start()
-print "<<<< 5"
-
 class Main(): # rules them all
     def __init__(self, network):
         self.network = network
@@ -221,6 +197,16 @@ class Main(): # rules them all
         self.camera_units = Camera_Units(self.network)
         self.camera_capture_delay = 3
         self.classifier = Classifier()
+
+        hostnames = [
+            "supercoolerA0","supercoolerA1","supercoolerA2","supercoolerA3","supercoolerA4","supercoolerA5","supercoolerA6","supercoolerA7","supercoolerA8","supercoolerA9","supercoolerA10","supercoolerA11",
+            "supercoolerB0","supercoolerB1","supercoolerB2","supercoolerB3","supercoolerB4","supercoolerB5","supercoolerB6","supercoolerB7","supercoolerB8","supercoolerB9","supercoolerB10","supercoolerB11",
+            "supercoolerC0","supercoolerC1","supercoolerC2","supercoolerC3","supercoolerC4","supercoolerC5","supercoolerC6","supercoolerC7","supercoolerC8","supercoolerC9","supercoolerC10","supercoolerC11",
+            "supercoolerD0","supercoolerD1","supercoolerD2","supercoolerD3","supercoolerD4","supercoolerD5","supercoolerD6","supercoolerD7","supercoolerD8","supercoolerD9","supercoolerD10","supercoolerD11"
+        ]
+        self.client_monitor_server = Thirtybirds_Client_Monitor_Server(network, hostnames)
+        self.client_monitor_server.daemon = True
+        self.client_monitor_server.start()
 
         # initialize inventory -- this will be recalculated on door close events
         self.inventory = []
@@ -247,6 +233,8 @@ class Main(): # rules them all
 
         self.web_interface.send_test_report()   
 
+    def client_monitor_add_to_queue(self,hostname, git_pull_date, pickle_version):
+        self.client_monitor_server.add_to_queue(hostname, git_pull_date, pickle_version)
 
 
     def door_open_event_handler(self):
@@ -302,11 +290,10 @@ class Main(): # rules them all
         with tf.Session() as sess:
             for i, cropped_capture in enumerate(images.cropped_captures):
 
-                print "processing_img"
                 # report progress every ten images
-                #if (i%10) == 0:
-                #    print 'processing %dth image' % i
-                #    time.sleep(1)
+                if (i%10) == 0:
+                    print 'processing %dth image' % i
+                    time.sleep(1)
 
                 # crop image and encode as jpeg (classifier expects jpeg)
                 x, y, w, h = cropped_capture["bounds"]
@@ -388,12 +375,10 @@ def network_message_handler(msg):
         print "exception in network_message_handler", e
 
 def init(HOSTNAME):
-    print ">>>>>>> 1"
     # setup LED control and door sensor
     #io_init()
     wpi.wiringPiSetup()
     # global network
-    print ">>>>>>> 2"
     network = network_init(
         hostname=HOSTNAME,
         role="server",
@@ -404,17 +389,14 @@ def init(HOSTNAME):
         message_callback=network_message_handler,
         status_callback=network_status_handler
     )
-
-    print ">>>>>>> 3"
     network.subscribe_to_topic("system")  # subscribe to all system messages
     network.subscribe_to_topic("found_beer")
     network.subscribe_to_topic("update_complete")
     network.subscribe_to_topic("image_capture_from_camera_unit")
     network.subscribe_to_topic("client_monitor_response")
+
+
     network.subscribe_to_topic("receive_image_data")
 
-    print ">>>>>>> 4"
     main = Main(network)
-
-    print ">>>>>>> 5"
     return main
