@@ -11,6 +11,7 @@ class WebInterface:
     endpoint = web_endpoint
 
     def __upload_data(self, route, data):
+        print "go go"
         """ Only to be called from other methods """
         endpoint_route = self.endpoint + route
         try:
@@ -39,8 +40,10 @@ class WebInterface:
         return self.__upload_data('/update', package)
 
     def send_report(self, data):
+        print "ayo"
         try:
             data = json.dumps(data)
+            print data
         except Exception as e:
             print('Cannot JSONify data: {}'.format(e))
         package = {
