@@ -343,7 +343,7 @@ class Main(): # rules them all
 
         print self.inventory
 
-main
+main = None
 
 def network_status_handler(msg):
     print "network_status_handler", msg
