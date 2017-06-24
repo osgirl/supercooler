@@ -333,8 +333,7 @@ class Main(): # rules them all
         print self.inventory
 
 def network_status_handler(msg):
-    pass
-    #print "network_status_handler", msg
+    print "network_status_handler", msg
 
 def network_message_handler(msg):
     try:
