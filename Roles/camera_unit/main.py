@@ -307,7 +307,9 @@ main = None
 
 
 def init(HOSTNAME):
+    print "@@@@@ 0"
     global network
+    print "@@@@@ 1"
     network = network_init(
         hostname=HOSTNAME,
         role="client",
@@ -318,13 +320,16 @@ def init(HOSTNAME):
         message_callback=network_message_handler,
         status_callback=network_status_handler
     )
-
+    print "@@@@@ 2"
     #global hostname
     #hostname = HOSTNAME
     global main 
+    print "@@@@@ 3"
     main = Main(HOSTNAME,  network)
+    print "@@@@@ "
     main.daemon = True
     main.start()
+    print "@@@@@ 4"
 
     network.subscribe_to_topic("system")  # subscribe to all system messages
     network.subscribe_to_topic("reboot")
@@ -333,6 +338,7 @@ def init(HOSTNAME):
     network.subscribe_to_topic("remote_update")
     network.subscribe_to_topic(HOSTNAME)
     network.subscribe_to_topic("client_monitor_request")
+    print "@@@@@ 5"
 
     return main
 
