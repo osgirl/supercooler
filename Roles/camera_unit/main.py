@@ -223,7 +223,7 @@ class Main(threading.Thread):
             bounds, ocv_img_with_overlay, img_out = parser.parse(os.path.join(self.capture_path, filename), self.camera)
             # convert image to jpeg and base64-encode
             image = base64.b64encode(cv2.imencode('.jpg', img_out)[1].tostring())
-            image_with_overlay = base64.b64encode(cv2.imencode('.jpg', img_out)[1].tostring())
+            image_with_overlay = base64.b64encode(cv2.imencode('.jpg', ocv_img_with_overlay)[1].tostring())
             # collect all fields in dictionary and string-ify
             to_send = str({
                 "shelf_id"      : shelf_id,
