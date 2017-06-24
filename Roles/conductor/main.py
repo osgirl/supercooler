@@ -133,14 +133,23 @@ images = Images()
 
 class Thirtybirds_Client_Monitor_Server(threading.Thread):
     def __init__(self, network, hostnames, update_period=120):
+        print "------ 1"
         threading.Thread.__init__(self)
+        print "------ 2"
         self.update_period = update_period
+        print "------ 3"
         self.current_clients = {}
+        print "------ 4"
         self.remembered_clients = {}
+        print "------ 5"
         self.network = network
+        print "------ 6"
         self.hostnames = hostnames
+        print "------ 7"
         self.queue = Queue.Queue()
+        print "------ 8"
         self.hosts = {}
+        print "------ 9"
 
     def empty_host_list(self):
         print "empty_host_list 0"
