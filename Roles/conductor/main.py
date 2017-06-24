@@ -140,7 +140,7 @@ class Thirtybirds_Client_Monitor_Server(threading.Thread):
         self.network = network
         self.hostnames = hostnames
         self.queue = Queue.Queue()
-        self.hosts = []
+        self.hosts = {}
 
     def empty_host_list(self):
         self.hosts = []
