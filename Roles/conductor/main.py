@@ -303,7 +303,7 @@ class Main(): # rules them all
 
                 # create filename from img data
                 filename = cropped_capture["shelf_id"]+cropped_capture["camera_id"]+\
-                    "_" + cropped_capture["x"] + "_" + cropped_capture["y"] + ".jpg"
+                    "_" + str(x) + "_" + str(y) + ".jpg"
                 filepath = "/home/pi/supercooler/ParsedCaptures/" + filename
 
                 # write to file
