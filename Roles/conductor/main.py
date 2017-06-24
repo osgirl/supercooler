@@ -92,7 +92,7 @@ class Camera_Units():
 
 class Images():
     def __init__(self):
-        # self.capture_path = "/home/pi/supercooler/Captures/"
+        self.capture_path = "/home/pi/supercooler/Captures/"
         # self.dir_classify = "/home/pi/supercooler/Captures/"
         # self.dir_stitch = "/home/pi/supercooler/Captures_Stitching/"
         self.captures = []
