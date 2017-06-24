@@ -130,7 +130,6 @@ class Images():
             self.cropped_captures.append(cropped_capture)
 
 images = Images()
-"""
 class Thirtybirds_Client_Monitor_Server(threading.Thread):
     def __init__(self, network, hostnames, update_period=120):
         threading.Thread.__init__(self)
@@ -184,6 +183,7 @@ class Thirtybirds_Client_Monitor_Server(threading.Thread):
             self.print_current_clients()
             print "Thirtybirds_Client_Monitor_Server  5"
 
+"""
 hostnames = [
     "supercoolerA0","supercoolerA1","supercoolerA2","supercoolerA3","supercoolerA4","supercoolerA5","supercoolerA6","supercoolerA7","supercoolerA8","supercoolerA9","supercoolerA10","supercoolerA11",
     "supercoolerB0","supercoolerB1","supercoolerB2","supercoolerB3","supercoolerB4","supercoolerB5","supercoolerB6","supercoolerB7","supercoolerB8","supercoolerB9","supercoolerB10","supercoolerB11",
