@@ -268,8 +268,9 @@ class Main(): # rules them all
             self.inventory[0] = {"type":1,"shelf":"A","x":10,"y":10}
 
         print "update web interface"
-        for item in self.inventory:
-            self.web_interface.send_report(item)
+        self.web_interface.send_report(inventory)
+        #for item in self.inventory:
+        #    self.web_interface.send_report(item)
 
         print "done updating"
 
