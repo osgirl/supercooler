@@ -343,6 +343,8 @@ class Main(): # rules them all
 
         print self.inventory
 
+main
+
 def network_status_handler(msg):
     print "network_status_handler", msg
 
@@ -373,7 +375,9 @@ def network_message_handler(msg):
     except Exception as e:
         print "exception in network_message_handler", e
 
+
 def init(HOSTNAME):
+    global main
     # setup LED control and door sensor
     #io_init()
     wpi.wiringPiSetup()
