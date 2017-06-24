@@ -130,7 +130,7 @@ class Images():
             self.cropped_captures.append(cropped_capture)
 
 images = Images()
-
+"""
 class Thirtybirds_Client_Monitor_Server(threading.Thread):
     def __init__(self, network, hostnames, update_period=120):
         threading.Thread.__init__(self)
@@ -193,7 +193,7 @@ hostnames = [
 client_monitor_server = Thirtybirds_Client_Monitor_Server(network, hostnames)
 client_monitor_server.daemon = True
 client_monitor_server.start()
-
+"""
 class Main(): # rules them all
     def __init__(self, network):
         self.network = network
@@ -268,7 +268,7 @@ class Main(): # rules them all
             self.inventory[0] = {"type":1,"shelf":"A","x":10,"y":10}
 
         print "update web interface"
-        self.web_interface.send_report(inventory)
+        self.web_interface.send_report(self.inventory)
         #for item in self.inventory:
         #    self.web_interface.send_report(item)
 
@@ -361,9 +361,9 @@ def network_message_handler(msg):
             print 'update complete for host: ', msg[1]
 
         if topic == "client_monitor_response":
-            if payload == None:
-                return
-            client_monitor_server.add_to_queue(payload[0],payload[2],payload[1])
+           # if payload == None:
+           #     return
+           # client_monitor_server.add_to_queue(payload[0],payload[2],payload[1])
 
             print '"client_monitor_response"', msg[1] 
 
@@ -374,10 +374,12 @@ def network_message_handler(msg):
         print "exception in network_message_handler", e
 
 def init(HOSTNAME):
+    print ">>>>>>> 1"
     # setup LED control and door sensor
     #io_init()
     wpi.wiringPiSetup()
     # global network
+    print ">>>>>>> 2"
     network = network_init(
         hostname=HOSTNAME,
         role="server",
@@ -388,14 +390,17 @@ def init(HOSTNAME):
         message_callback=network_message_handler,
         status_callback=network_status_handler
     )
+
+    print ">>>>>>> 3"
     network.subscribe_to_topic("system")  # subscribe to all system messages
     network.subscribe_to_topic("found_beer")
     network.subscribe_to_topic("update_complete")
     network.subscribe_to_topic("image_capture_from_camera_unit")
     network.subscribe_to_topic("client_monitor_response")
-
-
     network.subscribe_to_topic("receive_image_data")
 
+    print ">>>>>>> 4"
     main = Main(network)
+
+    print ">>>>>>> 5"
     return main
