@@ -211,7 +211,7 @@ class Main(threading.Thread):
         # # copy directory to conductor
         # # copy metadata to conductor
 
-        print "getting ready to send images..."
+        print "getting ready to parse images..."
         parser = Image_Parser(self.hostname, self.network)
         filenames = [ filename for filename in os.listdir(self.capture_path) if filename.endswith(".png") ]
 
@@ -236,6 +236,7 @@ class Main(threading.Thread):
             })
 
             # send to conductor for cropping and classification
+            print "parse ok, sending image..."
             network.send("receive_image_data", to_send)
 
     def run(self):
