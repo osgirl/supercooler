@@ -130,7 +130,7 @@ class Images():
             self.cropped_captures.append(cropped_capture)
 
 images = Images()
-
+"""
 class Thirtybirds_Client_Monitor_Server(threading.Thread):
     def __init__(self, network, hostnames, update_period=120):
         threading.Thread.__init__(self)
@@ -193,7 +193,7 @@ hostnames = [
 client_monitor_server = Thirtybirds_Client_Monitor_Server(network, hostnames)
 client_monitor_server.daemon = True
 client_monitor_server.start()
-
+"""
 class Main(): # rules them all
     def __init__(self, network):
         self.network = network
