@@ -217,6 +217,7 @@ class Main(threading.Thread):
 
         # collect capture data to be send to conductor
         for filename in filenames:
+            print "parsing image " + filename
 
             shelf_id, camera_id, light_level = self.return_env_data(filename)
 

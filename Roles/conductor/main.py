@@ -122,7 +122,7 @@ class Images():
         for i, bounds in enumerate(payload["bounds"]):
             cropped_capture = {
               "camera_id"   : payload["camera_id"],
-              "shelf_id"    : payload["camera_id"][0],
+              "shelf_id"    : payload["shelf_id"],
               "light_level" : payload["light_level"],
               "img_index"   : index,
               "bounds"      : bounds
@@ -222,8 +222,6 @@ class Main(): # rules them all
             "other"                     : 15
         }
 
-        self.web_interface.send_test_report()   
-
     def client_monitor_add_to_queue(self,hostname, git_pull_date, pickle_version):
         self.client_monitor_server.add_to_queue(hostname, git_pull_date, pickle_version)
 
@@ -250,8 +248,8 @@ class Main(): # rules them all
         self.camera_units.process_images_and_report()
 
         # pause while conductor waits for captures, then start classification
-        print "waiting for captures... see you in 90 seconds!"
-        time.sleep(90)
+        print "waiting for captures... see you in 120 seconds!"
+        time.sleep(120)
 
         print "begin classification process"
         self.classify_images()
@@ -300,7 +298,7 @@ class Main(): # rules them all
                 if confidence > confidence_threshold:
                     inventory.append({
                         "type"  : self.label_lookup[best_guess],
-                        "shelf" : "D",
+                        "shelf" : cropped_capture["shelf_id"],
                         "x"     : x + w/2,
                         "y"     : y + h/2,
                     })
@@ -332,6 +330,7 @@ class Main(): # rules them all
         images.receive_image_data(payload)  # store image data from payload
         self.classify_images(threshold=0.1)      # classify images
 
+        print "took inventory:"
         print self.inventory
 
 main = None
