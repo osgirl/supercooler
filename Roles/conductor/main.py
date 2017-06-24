@@ -98,12 +98,12 @@ class Images():
         self.captures = []
         self.cropped_captures = []
 
-    def receive_and_save(self, filename, raw_data):
-        file_path = "{}{}".format(self.capture_path,filename)
-        print "receive_and_save", file_path
-        image_64_decode = base64.decodestring(raw_data) 
-        image_result = open(file_path, 'wb') # create a writable image and write the decoding result
-        image_result.write(image_64_decode)
+    # def receive_and_save(self, filename, raw_data):
+    #     file_path = "{}{}".format(self.capture_path,filename)
+    #     print "receive_and_save", file_path
+    #     image_64_decode = base64.decodestring(raw_data) 
+    #     image_result = open(file_path, 'wb') # create a writable image and write the decoding result
+    #     image_result.write(image_64_decode)
 
     # def clear_captures(self):
     #     previous_filenames = [ previous_filename for previous_filename in os.listdir(self.capture_path) if previous_filename.endswith(".png") ]
@@ -122,7 +122,7 @@ class Images():
         for i, bounds in enumerate(payload["bounds"]):
             cropped_capture = {
               "camera_id"   : payload["camera_id"],
-              "shelf_id"    : payload["camera_id"][0],
+              "shelf_id"    : payload["shelf_id"],
               "light_level" : payload["light_level"],
               "img_index"   : index,
               "bounds"      : bounds
@@ -222,8 +222,6 @@ class Main(): # rules them all
             "other"                     : 15
         }
 
-        self.web_interface.send_test_report()   
-
     def client_monitor_add_to_queue(self,hostname, git_pull_date, pickle_version):
         self.client_monitor_server.add_to_queue(hostname, git_pull_date, pickle_version)
 
@@ -250,8 +248,8 @@ class Main(): # rules them all
         self.camera_units.process_images_and_report()
 
         # pause while conductor waits for captures, then start classification
-        print "waiting for captures... see you in 90 seconds!"
-        time.sleep(90)
+        print "waiting for captures... see you in 120 seconds!"
+        time.sleep(120)
 
         print "begin classification process"
         self.classify_images()
@@ -266,6 +264,9 @@ class Main(): # rules them all
         #    self.web_interface.send_report(item)
 
         print "done updating"
+
+        print "took inventory:"
+        print self.inventory
 
 
     def classify_images(self, threshold=0.6):
@@ -288,20 +289,26 @@ class Main(): # rules them all
                     time.sleep(1)
 
                 # crop image and encode as jpeg (classifier expects jpeg)
+                print "cropping..."
                 x, y, w, h = cropped_capture["bounds"]
                 img_crop = images.captures[cropped_capture["img_index"]][y:y+h, x:x+w]
                 img_jpg = cv2.imencode('.jpg', img_crop)[1].tobytes()
+                print "cropped image, w,h = ", w, h
 
                 # get a list of guesses w/ confidence in this format:
                 # guesses = [(best guess, confidence), (next guess, confidence), ...]
+                print "running classifier..."
                 guesses = classifier.guess_image(sess, img_jpg)
                 best_guess, confidence = guesses[0]
+
+                # print result from classifier
+                print guesses
 
                 # if we beat the threshold, then update the inventory accordingly
                 if confidence > confidence_threshold:
                     inventory.append({
                         "type"  : self.label_lookup[best_guess],
-                        "shelf" : "D",
+                        "shelf" : cropped_capture["shelf_id"],
                         "x"     : x + w/2,
                         "y"     : y + h/2,
                     })
@@ -332,8 +339,6 @@ class Main(): # rules them all
 
         images.receive_image_data(payload)  # store image data from payload
         self.classify_images(threshold=0.1)      # classify images
-
-        print self.inventory
 
 main = None
 

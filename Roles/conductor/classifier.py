@@ -28,10 +28,12 @@ class Classifier():
         # Feed the image_data as input to the graph and get first prediction
         softmax_tensor = tf_session.graph.get_tensor_by_name('final_result:0')
         
+        print "run tf session..."
         predictions = tf_session.run(softmax_tensor, \
                  {'DecodeJpeg/contents:0': image})
         
         # Sort to show labels of first prediction in order of confidence
+        print "sort labels.."
         top_k = predictions[0].argsort()[-len(predictions[0]):][::-1]
 
         scores = [(self.label_lines[node_id], predictions[0][node_id]) for node_id in top_k]
