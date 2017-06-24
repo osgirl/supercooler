@@ -288,17 +288,20 @@ class Main(): # rules them all
                     time.sleep(1)
 
                 # crop image and encode as jpeg (classifier expects jpeg)
+                print "cropping..."
                 x, y, w, h = cropped_capture["bounds"]
                 img_crop = images.captures[cropped_capture["img_index"]][y:y+h, x:x+w]
                 img_jpg = cv2.imencode('.jpg', img_crop)[1].tobytes()
+                print "cropped image, w,h = ", w, h
 
                 # get a list of guesses w/ confidence in this format:
                 # guesses = [(best guess, confidence), (next guess, confidence), ...]
+                print "running classifier..."
                 guesses = classifier.guess_image(sess, img_jpg)
                 best_guess, confidence = guesses[0]
 
-                # print result from classifier (top three guesses + confidence)
-                print guesses[0], guesses[1], guesses[2]
+                # print result from classifier
+                print guesses
 
                 # if we beat the threshold, then update the inventory accordingly
                 if confidence > confidence_threshold:
