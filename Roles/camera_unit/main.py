@@ -333,4 +333,6 @@ def init(HOSTNAME):
     network.subscribe_to_topic(HOSTNAME)
     network.subscribe_to_topic("client_monitor_request")
 
+    return main
+
     
