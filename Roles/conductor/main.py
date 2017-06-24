@@ -105,10 +105,10 @@ class Images():
         image_result = open(file_path, 'wb') # create a writable image and write the decoding result
         image_result.write(image_64_decode)
 
-    # def clear_captures(self):
-    #     previous_filenames = [ previous_filename for previous_filename in os.listdir(self.capture_path) if previous_filename.endswith(".png") ]
-    #     for previous_filename in previous_filenames:
-    #         os.remove(   "{}{}".format(self.capture_path,  previous_filename) )
+    def clear_captures(self):
+        previous_filenames = [ previous_filename for previous_filename in os.listdir(self.capture_path) if previous_filename.endswith(".png") ]
+        for previous_filename in previous_filenames:
+            os.remove("{}{}".format(self.capture_path,  previous_filename) )
 
     def receive_image_data(self, payload):
 
