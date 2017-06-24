@@ -173,8 +173,8 @@ class Thirtybirds_Client_Monitor_Server(threading.Thread):
             print "Thirtybirds_Client_Monitor_Server 2"
             time.sleep(self.update_period)
             print "Thirtybirds_Client_Monitor_Server 3"
-            while not self.queue.empty(True):
-                [hostname, git_pull_date, pickle_version, timestamp] = self.queue.get()
+            while not self.queue.empty():
+                [hostname, git_pull_date, pickle_version, timestamp] = self.queue.get(True)
                 #print ">>", hostname, git_pull_date, pickle_version, timestamp
                 self.hosts[hostname]["present"] = True
                 self.hosts[hostname]["timestamp"] = timestamp
