@@ -265,6 +265,9 @@ class Main(): # rules them all
 
         print "done updating"
 
+        print "took inventory:"
+        print self.inventory
+
 
     def classify_images(self, threshold=0.6):
         # for convenience
@@ -329,9 +332,6 @@ class Main(): # rules them all
 
         images.receive_image_data(payload)  # store image data from payload
         self.classify_images(threshold=0.1)      # classify images
-
-        print "took inventory:"
-        print self.inventory
 
 main = None
 
