@@ -134,11 +134,11 @@ class Image_Parser():
             confidence = cv2.matchShapes(contour, circlePoints, 1, 0.0)
             if confidence > self.max_confdence: continue
             result.append((x, y, w, h))
-            #if self.interactive | self.save_visuals:
-            #    cv2.polylines(vis, [contour], 0, (0,0,255), 1)
-            #    cv2.rectangle(vis, (x,y), (x+w,y+h), (0,255,0), 2)
-            #    cv2.circle(vis, center, radius, (0,255,0), 2)                      
-            #    cv2.putText(vis, '%.3f' % confidence, center, cv2.FONT_HERSHEY_SIMPLEX, 0.8, (255,0,255), 2)
+
+        cv2.polylines(vis, [contour], 0, (0,0,255), 1)
+        cv2.rectangle(vis, (x,y), (x+w,y+h), (0,255,0), 2)
+        cv2.circle(vis, center, radius, (0,255,0), 2)                      
+        cv2.putText(vis, '%.3f' % confidence, center, cv2.FONT_HERSHEY_SIMPLEX, 0.8, (255,0,255), 2)
         #if self.interactive: plt.imshow(vis), plt.show()
         return (result, vis)
 
@@ -221,11 +221,10 @@ class Main(threading.Thread):
             shelf_id, camera_id, light_level = self.return_env_data(filename)
 
             # run parser, get image bounds and undistorted image
-            bounds, _, img_out = parser.parse(os.path.join(self.capture_path, filename), self.camera)
-
+            bounds, ocv_img_with_overlay, img_out = parser.parse(os.path.join(self.capture_path, filename), self.camera)
             # convert image to jpeg and base64-encode
             image = base64.b64encode(cv2.imencode('.jpg', img_out)[1].tostring())
-
+            image_with_overlay = base64.b64encode(cv2.imencode('.jpg', img_out)[1].tostring())
             # collect all fields in dictionary and string-ify
             to_send = str({
                 "shelf_id"      : shelf_id,
@@ -238,6 +237,7 @@ class Main(threading.Thread):
             # send to conductor for cropping and classification
             print "parse ok, sending image..."
             network.send("receive_image_data", to_send)
+            network.send("receive_image_overlay", image_with_overlay)
 
     def run(self):
         while True:
@@ -307,9 +307,7 @@ main = None
 
 
 def init(HOSTNAME):
-    print "@@@@@ 0"
     global network
-    print "@@@@@ 1"
     network = network_init(
         hostname=HOSTNAME,
         role="client",
@@ -320,16 +318,12 @@ def init(HOSTNAME):
         message_callback=network_message_handler,
         status_callback=network_status_handler
     )
-    print "@@@@@ 2"
     #global hostname
     #hostname = HOSTNAME
     global main 
-    print "@@@@@ 3"
     main = Main(HOSTNAME,  network)
-    print "@@@@@ "
     main.daemon = True
     main.start()
-    print "@@@@@ 4"
 
     network.subscribe_to_topic("system")  # subscribe to all system messages
     network.subscribe_to_topic("reboot")
@@ -338,7 +332,6 @@ def init(HOSTNAME):
     network.subscribe_to_topic("remote_update")
     network.subscribe_to_topic(HOSTNAME)
     network.subscribe_to_topic("client_monitor_request")
-    print "@@@@@ 5"
 
     return main
 

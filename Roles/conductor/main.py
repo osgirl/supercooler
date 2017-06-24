@@ -277,6 +277,7 @@ class Main(): # rules them all
         # if the best guess falls below this threshold, assume no match
         confidence_threshold = threshold
 
+        print "Main.classify_images images.cropped_captures", images.cropped_captures
         # start tensorflow session, necessary to run classifier
         with tf.Session() as sess:
             for i, cropped_capture in enumerate(images.cropped_captures):
@@ -391,6 +392,7 @@ def init(HOSTNAME):
     network.subscribe_to_topic("client_monitor_response")
 
 
+    network.subscribe_to_topic("receive_image_overlay")
     network.subscribe_to_topic("receive_image_data")
 
     main = Main(network)
