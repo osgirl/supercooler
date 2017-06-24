@@ -350,6 +350,7 @@ def network_status_handler(msg):
 
 def network_message_handler(msg):
     try:
+        global main
         #print "network_message_handler", msg
         topic = msg[0]
         payload = eval(msg[1])
@@ -366,7 +367,8 @@ def network_message_handler(msg):
         if topic == "client_monitor_response":
             if payload == None:
                 return
-            main.client_monitor_add_to_queue(payload[0],payload[2],payload[1])
+            if main:
+                main.client_monitor_add_to_queue(payload[0],payload[2],payload[1])
             print '"client_monitor_response"', msg[1] 
 
         if topic == "receive_image_data":
