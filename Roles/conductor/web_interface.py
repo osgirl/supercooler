@@ -14,7 +14,9 @@ class WebInterface:
         print "go go"
         """ Only to be called from other methods """
         endpoint_route = self.endpoint + route
+        print endpoint_route
         try:
+            print params
             response = requests.get(endpoint_route, params=data, timeout=5)
             return(response)
         except requests.exceptions.RequestException as e:
