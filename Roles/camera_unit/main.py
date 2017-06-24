@@ -244,7 +244,7 @@ class Main(threading.Thread):
                 network.send("receive_image_data", to_send)
                 print "sent image ok"
                 print "sending image overlay..."
-                network.send("receive_image_overlay", image_with_overlay)
+                network.send("receive_image_overlay", (filename,image_with_overlay))
                 print "sent image overlay ok"
 
     def run(self):

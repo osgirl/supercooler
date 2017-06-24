@@ -355,8 +355,8 @@ def network_message_handler(msg):
         if topic == "__heartbeat__":
             print "heartbeat received", msg
 
-        # if topic == "image_capture_from_camera_unit":
-        #     images.receive_and_save(payload[0],payload[1])
+        if topic == "receive_image_overlay":
+            images.receive_and_save(payload[0],payload[1])
 
         if topic == "update_complete":
             print 'update complete for host: ', msg[1]
