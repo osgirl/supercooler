@@ -184,6 +184,15 @@ class Thirtybirds_Client_Monitor_Server(threading.Thread):
             self.print_current_clients()
             print "Thirtybirds_Client_Monitor_Server  5"
 
+hostnames = [
+    "supercoolerA0","supercoolerA1","supercoolerA2","supercoolerA3","supercoolerA4","supercoolerA5","supercoolerA6","supercoolerA7","supercoolerA8","supercoolerA9","supercoolerA10","supercoolerA11",
+    "supercoolerB0","supercoolerB1","supercoolerB2","supercoolerB3","supercoolerB4","supercoolerB5","supercoolerB6","supercoolerB7","supercoolerB8","supercoolerB9","supercoolerB10","supercoolerB11",
+    "supercoolerC0","supercoolerC1","supercoolerC2","supercoolerC3","supercoolerC4","supercoolerC5","supercoolerC6","supercoolerC7","supercoolerC8","supercoolerC9","supercoolerC10","supercoolerC11",
+    "supercoolerD0","supercoolerD1","supercoolerD2","supercoolerD3","supercoolerD4","supercoolerD5","supercoolerD6","supercoolerD7","supercoolerD8","supercoolerD9","supercoolerD10","supercoolerD11"
+]
+client_monitor_server = Thirtybirds_Client_Monitor_Server(network, hostnames)
+client_monitor_server.daemon = True
+client_monitor_server.start()
 
 class Main(): # rules them all
     def __init__(self, network):
@@ -197,15 +206,6 @@ class Main(): # rules them all
         self.door.start()
         self.camera_units = Camera_Units(self.network)
         self.camera_capture_delay = 3
-        hostnames = [
-            "supercoolerA0","supercoolerA1","supercoolerA2","supercoolerA3","supercoolerA4","supercoolerA5","supercoolerA6","supercoolerA7","supercoolerA8","supercoolerA9","supercoolerA10","supercoolerA11",
-            "supercoolerB0","supercoolerB1","supercoolerB2","supercoolerB3","supercoolerB4","supercoolerB5","supercoolerB6","supercoolerB7","supercoolerB8","supercoolerB9","supercoolerB10","supercoolerB11",
-            "supercoolerC0","supercoolerC1","supercoolerC2","supercoolerC3","supercoolerC4","supercoolerC5","supercoolerC6","supercoolerC7","supercoolerC8","supercoolerC9","supercoolerC10","supercoolerC11",
-            "supercoolerD0","supercoolerD1","supercoolerD2","supercoolerD3","supercoolerD4","supercoolerD5","supercoolerD6","supercoolerD7","supercoolerD8","supercoolerD9","supercoolerD10","supercoolerD11"
-        ]
-        self.client_monitor_server = Thirtybirds_Client_Monitor_Server(network, hostnames)
-        self.client_monitor_server.daemon = True
-        self.client_monitor_server.start()
         self.classifier = Classifier()
 
         # initialize inventory -- this will be recalculated on door close events
@@ -230,6 +230,8 @@ class Main(): # rules them all
             "bottle corona"             : 14,
             "other"                     : 15
         }   
+
+
 
     def door_open_event_handler(self):
         print "Main.door_open_event_handler"
@@ -355,6 +357,10 @@ def network_message_handler(msg):
             print 'update complete for host: ', msg[1]
 
         if topic == "client_monitor_response":
+            if payload == None:
+                return
+            client_monitor_server.add_to_queue(payload[0],payload[2],payload[1])
+
             print '"client_monitor_response"', msg[1] 
 
         if topic == "receive_image_data":
