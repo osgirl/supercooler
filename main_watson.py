@@ -190,6 +190,8 @@ class ImageParser(): # class not necessary.  used for organization
             self.process_image(cap_metadata[0],index, cap_metadata[1], cap_metadata[2])
 
 
+capture_list = ["test1.png","test2.png","test3.png"]
+
 imageparser = ImageParser()
 print ">>>> 1"
 imageparser.processImages(capture_list)
