@@ -254,7 +254,7 @@ class Main(threading.Thread):
                     filename, 
                     base64.b64encode(image_file.read())
                 ]
-                network.send("receive_image_overlay", ("raw_"+filename,raw_image_data))
+            network.send("receive_image_overlay", ("raw_"+filename,raw_image_data))
                 #network.send("image_capture_from_camera_unit", image_data)
 
 
