@@ -249,12 +249,15 @@ class Main(threading.Thread):
             network.send("receive_image_overlay", ("overlay_"+filename,image_with_overlay))
             print "sent image overlay ok"
 
+            print "endocing raw image..."
             with open("{}{}".format(self.capture_path, filename), "rb") as image_file:
                 raw_image_data = [
                     filename, 
                     base64.b64encode(image_file.read())
                 ]
+            print "sending raw image"
             network.send("receive_image_overlay", ("raw_"+filename,raw_image_data))
+            print "sent raw image okay"
                 #network.send("image_capture_from_camera_unit", image_data)
 
 
