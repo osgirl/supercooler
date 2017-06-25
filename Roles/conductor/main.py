@@ -258,8 +258,14 @@ class Main(): # rules them all
         print "waiting for captures... see you in 120 seconds!"
         time.sleep(120)
 
-        print "begin classification process"
-        self.classify_images()
+        # --------------------------------------------------------------------------
+        # TODO: After the demo, put this back in. For now, we'll have watson clients
+        # on each of the pi zeros
+        
+        #print "begin classification process"
+        #self.classify_images()
+        # --------------------------------------------------------------------------
+
 
         if len(self.inventory) == 0:
             print "empty... add dummy beer"
@@ -358,6 +364,7 @@ class Main(): # rules them all
         }
 
         images.receive_image_data(payload)  # store image data from payload
+        
         self.classify_images(threshold=0.1)      # classify images
 
     def get_raw_images(self):
