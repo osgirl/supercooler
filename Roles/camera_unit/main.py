@@ -121,7 +121,27 @@ class Main(threading.Thread):
         pass
 
     def send_cropped_images_to_watson(self):
-        pass
+        visual_recognition = VisualRecognitionV3('2016-05-20', api_key='753a741d6f32d80e1935503b40a8a00f317e85c6')
+        classification_data = []
+        filenames = [ filename for filename in os.listdir(self.parsed_capture_path) if filename.endswith(".jpg") ]
+        for filename in filenames:
+            filepath = os.path.join(self.capture_path, filename)
+            with open( filepath, 'rb') as image_file:
+                try:
+                    result = visual_recognition.classify(images_file=image_file,  classifier_ids=['beercaps_697951100'], threshold=0.99)
+                    classifiers = result[u'images'][0][u'classifiers']
+                    if len(classifiers) > 0:
+                        classification_data.append(
+                            {
+                                "filename":filename,
+                                "label":classifiers[0][u'classes'][0][u'class'],
+                                "confidence":classifiers[0][u'classes'][0][u'score'],
+                            }
+                        )
+                except Exception as e:
+                    print "exception in send_cropped_images_to_watson ", e
+
+
 
 
     def process_images_and_report(self):
@@ -134,6 +154,7 @@ class Main(threading.Thread):
 
 
         # prepare images to send to Watson
+
 
         # send to Watson for classification
 
