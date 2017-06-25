@@ -17,7 +17,7 @@ import sys
 import time
 
 from watson_developer_cloud import VisualRecognitionV3
-from parser import Image_Parser
+#from parser import Image_Parser
 
 BASE_PATH = os.path.dirname(os.path.realpath(__file__))
 UPPER_PATH = os.path.split(os.path.dirname(os.path.realpath(__file__)))[0]
