@@ -138,6 +138,7 @@ class Main(threading.Thread):
         pass
 
     def send_cropped_images_to_watson(self):
+        print "send_cropped_images_to_watson 0"
         visual_recognition = VisualRecognitionV3('2016-05-20', api_key='753a741d6f32d80e1935503b40a8a00f317e85c6')
         print "send_cropped_images_to_watson 1"
         classification_data = []
@@ -181,7 +182,7 @@ class Main(threading.Thread):
         subprocess.call(['zip', '-r', filename_zipped, '/home/pi/supercooler/ParsedCaptures' ])
 
         # send to Watson for classification
-        send_cropped_images_to_watson()
+        self.send_cropped_images_to_watson()
 
 
     def return_raw_images(self):
