@@ -87,6 +87,8 @@ class Camera_Units():
         self.network.send("remote_update_scripts", "")
     def send_reboot(self):
         self.network.send("reboot")
+    def return_raw_images(self):
+        self.network.send("return_raw_images", "")
     #def ping_nodes_go(self):
     #   self.network.send("say_hello_to_node")
 
@@ -357,6 +359,19 @@ class Main(): # rules them all
 
         images.receive_image_data(payload)  # store image data from payload
         self.classify_images(threshold=0.1)      # classify images
+
+    def get_raw_images(self):
+        images.clear_captures()
+
+        # tell camera units to captures images at each light level
+        for light_level_sequence_position in range(3):
+            self.lights.play_sequence_step(light_level_sequence_position)
+            self.camera_units.capture_image(light_level_sequence_position)
+            time.sleep(self.camera_capture_delay)
+        self.lights.all_off()
+
+        # tell camera units to parse images and send back the data
+        self.camera_units.return_raw_images()
 
 main = None
 

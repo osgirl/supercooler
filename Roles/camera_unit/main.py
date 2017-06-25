@@ -157,6 +157,23 @@ class Main(threading.Thread):
 
         print "sent raw images okay"
 
+    self return_raw_images(self):
+        filenames = [ filename for filename in os.listdir(self.capture_path) if filename.endswith(".png") ]
+        ocv_imgs  = [None, None, None]
+
+        for filename in filenames:
+            shelf_id, camera_id, light_level = self.return_env_data(filename)
+            print 'loading %s' % (filename)
+            ocv_imgs[int(light_level)] = cv2.imread(os.path.join(self.capture_path, filename))
+
+        print "sending raw images"
+        for i, ocv_img in enumerate(ocv_imgs):
+
+            image_raw = base64.b64encode(cv2.imencode('.png', ocv_img)[1].tostring())
+            network.send("receive_image_overlay", ("raw_%s%s_%d.png" % (shelf_id, camera_id, i),image_raw))
+
+        print "sent raw images okay"
+
     def run(self):
         while True:
             print "Main.run 1"
@@ -171,6 +188,8 @@ class Main(threading.Thread):
                 self.capture_image_and_save(filename)
             if topic == "process_images_and_report":
                 self.process_images_and_report()
+            if topic == "return_raw_images":
+                self.return_raw_images()
 
 
 def network_status_handler(msg):
@@ -252,6 +271,7 @@ def init(HOSTNAME):
     network.subscribe_to_topic("remote_update")
     network.subscribe_to_topic(HOSTNAME)
     network.subscribe_to_topic("client_monitor_request")
+    network.subscribe_to_topic("return_raw_images")
 
     return main
 
