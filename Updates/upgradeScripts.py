@@ -6,10 +6,11 @@ scripts = {
         "sudo cp /home/pi/supercooler/scripts/rc.local /etc/rc.local",
         "sudo chmod 755 /etc/rc.local",
     ],
-    "0.08":[
-        "apt-get install -y build-essential libssl-dev libffi-dev",
+    "0.095":[
+        "sudo apt-get update",
+        "sudo apt-get -f install",
+        "sudo apt-get install  -y --force-yes build-essential libssl-dev libffi-dev",
         "sudo pip install --upgrade watson-developer-cloud",
         "sudo apt-get install -y zip"
     ]
 }
-
