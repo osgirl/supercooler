@@ -157,7 +157,7 @@ class Main(threading.Thread):
 
         print "sent raw images okay"
 
-    self return_raw_images(self):
+    def return_raw_images(self):
         filenames = [ filename for filename in os.listdir(self.capture_path) if filename.endswith(".png") ]
         ocv_imgs  = [None, None, None]
 
