@@ -50,6 +50,52 @@ network = network_init(
     status_callback=network_status_handler
 )
 
+
+class Thirtybirds_Client_Monitor_Server(threading.Thread):
+    def __init__(self, network, hostnames, update_period=120):
+        threading.Thread.__init__(self)
+        self.update_period = update_period
+        self.current_clients = {}
+        self.remembered_clients = {}
+        self.network = network
+        self.hostnames = hostnames
+        self.queue = Queue.Queue()
+        self.hosts = {}
+
+    def empty_host_list(self):
+        self.hosts = {}
+        for hostname in self.hostnames:
+            self.hosts[hostname] = {
+                "present":False,
+                "timestamp":False,
+                "pickle_version":False,
+                "git_pull_date":False
+            }
+
+    def add_to_queue(self, hostname, git_pull_date, pickle_version):
+        self.queue.put((hostname, git_pull_date, pickle_version, time.time()))
+
+    def print_current_clients(self):
+        print ""
+        print "CURRENT CLIENTS:"
+        for hostname in self.hostnames:
+            print "%s: %s : %s: %s: %s" % (hostname, self.hosts[hostname]["present"], self.hosts[hostname]["timestamp"], self.hosts[hostname]["pickle_version"], self.hosts[hostname]["git_pull_date"])
+
+    def run(self):
+        while True:
+            self.empty_host_list()
+            self.network.send("client_monitor_request", "")
+            time.sleep(self.update_period)
+            while not self.queue.empty():
+                [hostname, git_pull_date, pickle_version, timestamp] = self.queue.get(True)
+                #print ">>", hostname, git_pull_date, pickle_version, timestamp
+                self.hosts[hostname]["present"] = True
+                self.hosts[hostname]["timestamp"] = timestamp
+                self.hosts[hostname]["pickle_version"] = pickle_version
+                self.hosts[hostname]["git_pull_date"] = git_pull_date
+            self.print_current_clients()
+
+
 class Camera_Units():
     def __init__(self, network):
             self.network = network
@@ -65,12 +111,30 @@ class Camera_Units():
         self.network.send("reboot")
 
 camera_units = Camera_Units(network)
-time.sleep(120)
-
-camera_units.send_update_command(cool=True, birds=True, update=True, upgrade=True)
 time.sleep(60)
 
-camera_units.send_update_scripts_command()
+hostnames = [
+    "supercoolerA0","supercoolerA1","supercoolerA2","supercoolerA3","supercoolerA4","supercoolerA5","supercoolerA6","supercoolerA7","supercoolerA8","supercoolerA9","supercoolerA10","supercoolerA11",
+    "supercoolerB0","supercoolerB1","supercoolerB2","supercoolerB3","supercoolerB4","supercoolerB5","supercoolerB6","supercoolerB7","supercoolerB8","supercoolerB9","supercoolerB10","supercoolerB11",
+    "supercoolerC0","supercoolerC1","supercoolerC2","supercoolerC3","supercoolerC4","supercoolerC5","supercoolerC6","supercoolerC7","supercoolerC8","supercoolerC9","supercoolerC10","supercoolerC11",
+    "supercoolerD0","supercoolerD1","supercoolerD2","supercoolerD3","supercoolerD4","supercoolerD5","supercoolerD6","supercoolerD7","supercoolerD8","supercoolerD9","supercoolerD10","supercoolerD11"
+]
+client_monitor_server = Thirtybirds_Client_Monitor_Server(network, hostnames)
+client_monitor_server.daemon = True
+client_monitor_server.start()
+
+
+
+camera_units.send_update_command(cool=True, birds=False, update=False, upgrade=False)
+time.sleep(60)
+
+camera_units.send_update_command(cool=True, birds=False, update=False, upgrade=False)
+time.sleep(60)
+
+camera_units.send_update_command(cool=True, birds=False, update=False, upgrade=False)
+#time.sleep(60)
+print "done"
+#camera_units.send_update_scripts_command()
 
 
 
