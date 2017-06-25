@@ -28,7 +28,7 @@ sys.path.append(BASE_PATH)
 sys.path.append(UPPER_PATH)
 
 from thirtybirds_2_0.Adaptors.Cameras.elp import init as camera_init
-from Roles.camera_units.imageparser import  ImageParser 
+#from Roles.camera_units.imageparser import  ImageParser 
 # take capture
 
 capture_path = "/home/pi/supercooler/Captures/"
@@ -276,6 +276,9 @@ class ImageParser(): # class not necessary.  used for organization
 
 
 
+
+
+imageparser = ImageParser()
 
 
 
