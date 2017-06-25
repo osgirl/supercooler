@@ -98,26 +98,23 @@ class Image_Parser():
         #if self.interactive: plt.imshow(vis), plt.show()
         return (result, vis)
 
-    def parse(self, filename, filename_50=None, filename_0=None):
-        img = cv2.imread(filename)
+    def parse(self, img, img_50=None, img_0=None):
         img_weighted = img.copy()
 
         camera_matrix = self.calc_camera_matrix(img.shape[:2])
         print 'masking objects at light level 100'
         mask_final = self.mask_beers(img, camera_matrix)
 
-        if filename_50 is not None:
+        if img_50 is not None:
             print 'masking objects at light level 50'
-            img_50 = cv2.imread(filename_50)
             img_weighted = cv2.addWeighted(img_weighted, 0.5, img_50, 0.5, 0)
             mask_final += self.mask_beers(img_50, camera_matrix)
-        if filename_0  is not None:
+        if img_0  is not None:
             print 'masking objects at light level 0'
-            img_0  = cv2.imread(filename_0 )
             img_weighted = cv2.addWeighted(img_weighted, 0.5, img_0 , 0.5, 0)
             mask_final += self.mask_beers(img_0 , camera_matrix)
 
-        if filename_50 is not None or filename_0 is not None:
+        if img_50 is not None or img_0 is not None:
             print 'masking objects at average light level'
             mask_final += self.mask_beers(img_weighted, camera_matrix)
 

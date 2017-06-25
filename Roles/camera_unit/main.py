@@ -115,25 +115,21 @@ class Main(threading.Thread):
 
         # collect capture data to be send to conductor
 
-        filename_100 = filename_50 = filename_0 = None
+        ocv_imgs = [None, None, None]
 
         for filename in filenames:
             shelf_id, camera_id, light_level = self.return_env_data(filename)
-            if light_level == '0': filename_100 = os.path.join(self.capture_path, filename)
-            if light_level == '1': filename_50  = os.path.join(self.capture_path, filename)
-            if light_level == '2': filename_0   = os.path.join(self.capture_path, filename)
+            print 'loading %s' % (filename)
+            ocv_imgs[int(light_level)] = cv2.imread(os.path.join(self.capture_path, filename))
 
-        if filename_100 is None: 
-            print 'error: no image found'
-            return
-            
+        if ocv_imgs[0] is None: print 'error: no image found'; return
         print 'starting parser'
 
         # run parser, get image bounds and undistorted image
-        bounds, ocv_img_with_overlay, img_out = parser.parse(filename_100, filename_50, filename_0)
+        bounds, ocv_img_with_overlay, ocv_img_out = parser.parse(ocv_imgs[0], ocv_imgs[1], ocv_imgs[2])
 
         # convert image to jpeg and base64-encode
-        image = base64.b64encode(cv2.imencode('.jpg', img_out)[1].tostring())
+        image_undistorted  = base64.b64encode(cv2.imencode('.jpg', ocv_img_out)[1].tostring())
         image_with_overlay = base64.b64encode(cv2.imencode('.png', ocv_img_with_overlay)[1].tostring())
 
         # collect all fields in dictionary and string-ify
@@ -142,7 +138,7 @@ class Main(threading.Thread):
             "camera_id"     : camera_id,
             "light_level"   : light_level,
             "bounds"        : bounds,
-            "image"         : image
+            "image"         : image_undistorted
         })
 
         print "sending parsed image data..."
@@ -152,16 +148,14 @@ class Main(threading.Thread):
         print "sending image overlay..."
         network.send("receive_image_overlay", ("overlay_%s%s.png" % (shelf_id, camera_id),image_with_overlay))
         print "sent image overlay ok"
+        
+        print "sending raw images"
+        for i, ocv_img in enumerate(ocv_imgs):
 
-        print "endocing raw image..."
-        with open("{}{}".format(self.capture_path, filename), "rb") as image_file:
-            raw_image_data = [
-                filename, 
-                base64.b64encode(image_file.read())
-            ]
-        print "sending raw image"
-        network.send("receive_image_overlay", ("raw_"+filename,raw_image_data))
-        print "sent raw image okay"
+            image_raw = base64.b64encode(cv2.imencode('.png', ocv_img)[1].tostring())
+            network.send("receive_image_overlay", ("raw_%s%s_%d.png" % (shelf_id, camera_id, i),image_raw))
+
+        print "sent raw images okay"
 
     def run(self):
         while True:
