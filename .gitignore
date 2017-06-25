@@ -3,5 +3,8 @@
 Updates/version.pickle
 Logs
 Captures/*.png
+Captures/*.jpg
+ParsedCaptures/*.png
+ParsedCaptures/*.jpg
 settings_private.py
 .vscode
