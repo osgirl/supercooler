@@ -105,6 +105,8 @@ class Main(threading.Thread):
         img_jpg = cv2.imencode('.jpg', img_crop)[1].tobytes()
         print "cropped image, w,h = ", w, h
 
+        return bounds, ocv_img_with_overlay, ocv_img_out
+
     def send_images_to_conductor(self, raw_images, processed_image, processed_image_with_overlay ):
         # convert image to jpeg and base64-encode
         image_undistorted  = base64.b64encode(cv2.imencode('.jpg', processed_image)[1].tostring())
