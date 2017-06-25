@@ -1,23 +1,28 @@
-# single - unit image cap using watson
-#sys.path.append('/usr/local/lib/python2.7/site-packages')
-#sys.path.append('/home/pi/.virtualenvs/cv/lib/python2.7/site-packages')
 
+import base64
 import commands
 import cv2
-import datetime
+import importlib
 import json
-import math
-import numpy as np
 import os
-from os import environ
-from os import walk
-from os.path import join, dirname
-import shutil
+import Queue
+import settings 
 import sys
+import subprocess
+import threading
 import time
 
+from thirtybirds_2_0.Network.manager import init as network_init
+from thirtybirds_2_0.Network.email_simple import init as email_init
+from thirtybirds_2_0.Adaptors.Cameras.elp import init as camera_init
+from thirtybirds_2_0.Updates.manager import init as updates_init
+from thirtybirds_2_0.Network.info import init as network_info_init
+
+from parser import Image_Parser
+
 from watson_developer_cloud import VisualRecognitionV3
-#from parser import Image_Parser
+
+network_info = network_info_init()
 
 BASE_PATH = os.path.dirname(os.path.realpath(__file__))
 UPPER_PATH = os.path.split(os.path.dirname(os.path.realpath(__file__)))[0]
@@ -27,203 +32,244 @@ THIRTYBIRDS_PATH = "%s/thirtybirds" % (UPPER_PATH )
 sys.path.append(BASE_PATH)
 sys.path.append(UPPER_PATH)
 
-from thirtybirds_2_0.Adaptors.Cameras.elp import init as camera_init
-#from Roles.camera_units.imageparser import  ImageParser 
-# take capture
+class Thirtybirds_Client_Monitor_Client():
+    def __init__(self, hostname, network ):
+        self.network = network
+        self.hostname = hostname
 
-capture_path = "/home/pi/supercooler/Captures/"
-camera = camera_init(capture_path)
+    def get_pickle_version(self):
+        (updates, ghStatus, bsStatus) = updates_init("/home/pi/supercooler", False, False)
+        return updates.read_version_pickle()
 
-filenames = ["test1.png","test2.png","test3.png"]
-for filename in filenames:
-    camera.take_capture(filename)
-    time.sleep(1)
+    def get_git_timestamp(self):
+        return commands.getstatusoutput("cd /home/pi/supercooler/; git log -1 --format=%cd")[1]   
 
-# run object detection
+    def send_client_status(self):
+        pickle_version = self.get_pickle_version()
+        git_timestamp = self.get_git_timestamp()
+        self.network.send("client_monitor_response", (self.hostname,pickle_version, git_timestamp))
 
-class ImageParser(): # class not necessary.  used for organization
-    def __init__(self):
-        self.parsedCaptures = [] # 2D list of capture:
-        dir_path = os.path.dirname(os.path.realpath(__file__))
-        self.foldername = ("%s/ParsedCaptures") %(dir_path)
-        #os.makedirs(self.foldername)
-    def empty_directory(self):
-        for file in os.listdir(self.foldername):
-            file_path = os.path.join(self.foldername, file)
-            try:
-                if os.path.isfile(file_path):
-                    os.unlink(file_path)
-                elif os.path.isdir(file_path): shutil.rmtree(file_path)
-            except Exception as e:
-                print(e)
+class Main(threading.Thread):
+    def __init__(self, hostname, network):
+        threading.Thread.__init__(self)
+        self.hostname = hostname
+        self.network = network
+        self.capture_path = "/home/pi/supercooler/Captures/"
+        self.parsed_capture_path = "/home/pi/supercooler/ParsedCaptures/"
+        self.camera = camera_init(self.capture_path)
+        self.queue = Queue.Queue()
+        self.max_capture_age_to_use = 120  # seconds
+        self.thirtybirds_client_monitor_client = Thirtybirds_Client_Monitor_Client(hostname, network)
 
-    def get_foldername(self):
-        return self.foldername
+    def add_to_queue(self, topic, msg):
+        print "Main.add_to_queue",topic, msg
+        self.queue.put((topic, msg))
+        print "Main.add_to_queue done"
 
-    def get_parsed_images(self):
-        return self.parsedCaptures
+    def capture_image_and_save(self, filename):
+        print "Main.capture_image_and_save", filename
+        self.camera.take_capture(filename)
 
-    def undistort_image(self, image):
-        width = image.shape[1]
-        height = image.shape[0]
-        distCoeff = np.zeros((4,1),np.float64)
-        k1 = -6.0e-5; # negative to remove barrel distortion
-        k2 = 0.0;
-        p1 = 0.0;
-        p2 = 0.0;
-        distCoeff[0,0] = k1;
-        distCoeff[1,0] = k2;
-        distCoeff[2,0] = p1;
-        distCoeff[3,0] = p2;
-        # assume unit matrix for camera
-        cam = np.eye(3,dtype=np.float32)
-        cam[0,2] = width/2.0  # define center x
-        cam[1,2] = height/2.0 # define center y
-        cam[0,0] = 10.        # define focal length x
-        cam[1,1] = 10.        # define focal length y
-        # here the undistortion will be computed
-        return cv2.undistort(image,cam,distCoeff)
+    def return_env_data(self, filename):
+        shelf_id = filename[:-4][:1]
+        camera_id = filename[1:-6]
+        light_level = filename[:-4][-1:]
+        return shelf_id, camera_id, light_level
 
-    def adjust_gamma(self, image, gamma=1.0):
-        # build a lookup table mapping the pixel values [0, 255] to
-        # their adjusted gamma values
-        invGamma = 1.0 / gamma
-        table = np.array([((i / 255.0) ** invGamma) * 255
-            for i in np.arange(0, 256)]).astype("uint8")
-     
-        # apply gamma correction using the lookup table
-        return cv2.LUT(image, table)
+    def process_images_and_report(self):
 
-    def process_image(self, filepath, camera_id, offset_x, offset_y):
-        print "Processing image...", camera_id, filepath
-        parsedImageMetadata = [] 
-        self.parsedCaptures.append(parsedImageMetadata)# images are introduce in order of cap_id, so list index == cap_id
-        img_for_cropping = cv2.imread(filepath) # read image into memory
-        print 
-        img_for_cropping = cv2.resize(img_for_cropping, (800,450), cv2.INTER_AREA) # resize image
-        img_for_cropping = self.undistort_image(img_for_cropping) # get unbent!
+        print "getting ready to parse images..."
+        parser = Image_Parser()
+        filenames = [ filename for filename in os.listdir(self.capture_path) if filename.endswith(".png") ]
 
-        img_for_circle_detection = cv2.imread(filepath,0) # read image into memory
-        img_for_circle_detection = cv2.resize(img_for_circle_detection, (800,450), cv2.INTER_AREA) # resize image
-        img_for_circle_detection = self.undistort_image(img_for_circle_detection) # get unbent!
-        height, width = img_for_circle_detection.shape
+        # collect capture data to be send to conductor
+        ocv_imgs = [None, None, None]
 
-        img_for_circle_detection = cv2.medianBlur(img_for_circle_detection,21)
-        img_for_circle_detection = cv2.blur(img_for_circle_detection,(1,1))
+        for filename in filenames:
+            shelf_id, camera_id, light_level = self.return_env_data(filename)
+            print 'loading %s' % (filename)
+            ocv_imgs[int(light_level)] = cv2.imread(os.path.join(self.capture_path, filename))
 
-        img_for_circle_detection = cv2.Canny(img_for_circle_detection, 0, 23, True)
-        img_for_circle_detection = cv2.adaptiveThreshold(img_for_circle_detection,255,cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY,17,2)
+        if ocv_imgs[0] is None: print 'error: no image found'; return
+        print 'starting parser'
 
-        print "Detecting circles..."
-        circles = cv2.HoughCircles(img_for_circle_detection,cv2.HOUGH_GRADIENT,1,150, param1=70,param2=28,minRadius=30,maxRadius=80)
-
-        margin = 30
-        if circles is not None:
-            # convert the (x, y) coordinates and radius of the circles to integers
-            _circles = np.round(circles[0, :]).astype("int")
-         
-            # loop over the (x, y) coordinates and radius of the circles
-            for (x, y, radius) in _circles:
-                # draw the circle in the output image, then draw a rectangle
-                    # corresponding to the center of the circle
-                leftEdge = x-radius-margin if x-radius-margin >= 0 else 0
-                rightEdge = x+radius+margin if x+radius+margin <= width else width
-                topEdge = y-radius-margin if y-radius-margin >=0 else 0
-                bottomEdge = y+radius+margin if y+radius+margin <= height else height
-
-                #cv2.circle(img_for_circle_detection, (x, y), radius, (255, 0, 0), 10)
-                cv2.rectangle(img_for_circle_detection, (leftEdge, topEdge), (rightEdge, bottomEdge), (0, 128, 255), -1)
-         
-
-                testFileName = "{}_4_with_circles.png".format(camera_id)
-                cv2.imwrite(testFileName ,img_for_circle_detection)
-        testFileName = "{}_0_croppingTest.png".format(camera_id)
-        cv2.imwrite(testFileName ,img_for_cropping) 
-
-        circles = np.uint16(np.around(circles))
-        margin = 30
-        for x, y, radius in circles[0,:]:
-            x=int(x)
-            y=int(y)
-            radius=int(radius)
-            leftEdge = x-radius-margin if x-radius-margin >= 0 else 0
-            rightEdge = x+radius+margin if x+radius+margin <= width else width
-            topEdge = y-radius-margin if y-radius-margin >=0 else 0
-            bottomEdge = y+radius+margin if y+radius+margin <= height else height
-            crop_img = img_for_cropping[topEdge:bottomEdge, leftEdge:rightEdge]
-            imageName = 'image_%s_%s_%s.jpg'%(camera_id,x, y)
-            pathName = '%s/%s'%(self.foldername, imageName)
-            cv2.imwrite(pathName,crop_img)
-            # draw the outer circle
-            cv2.circle(img_for_cropping,(x,y),radius,(0,255,0),2)
-            # draw the center of the circle
-            cv2.circle(img_for_cropping,(x,y),2,(0,0,255),3)
-            #print len(circles)
-            totalX = x + offset_x
-            totalY = y + offset_y
-            parsedImageMetadata.append( {
-                'capture':camera_id,
-                'imageName':imageName,
-                'pathName':pathName,
-                'x':x,
-                'y':y,
-                'totalX':totalX,
-                'totalY':totalY,
-                'radius':radius,
-                'leftEdge':leftEdge,
-                'rightEdge':rightEdge,
-                'topEdge':topEdge,
-                'bottomEdge':bottomEdge,
-                'label':"",
-                'confidence':0,
-                'duplicate':False
-            } )
-            #print "detected circle:", repr(x), repr(y), repr(radius), leftEdge, rightEdge, topEdge, bottomEdge
-        # cv2.imshow('detected circles',img_for_cropping)
-        #cv2.destroyAllWindows()
-        #print parsedImageMetadata
-        print "Processing image done"
-
-    def processImages(self, captureLIst):
-        self.parsedCaptures = [] # 2D list of capture:
-        self.empty_directory()
-        for index, cap_metadata in enumerate(captureLIst):
-            self.process_image(cap_metadata[0],index, cap_metadata[1], cap_metadata[2])
+        # run parser, get image bounds and undistorted image
+        bounds, ocv_img_with_overlay, ocv_img_out = parser.parse(ocv_imgs[0], ocv_imgs[1], ocv_imgs[2])
 
 
-capture_list = [["test1.png",0,0],["test2.png",0,0],["test3.png",0,0]]
-
-imageparser = ImageParser()
-print ">>>> 1"
-imageparser.processImages(capture_list)
-print ">>>> 2"
-parsed_images = imageparser.get_parsed_images()
-print ">>>> 3", parsed_images
-parsed_folder_name = imageparser.get_foldername()
-print ">>>> 4", parsed_folder_name
-
-# collect capture data to be send to conductor
-
-
-# parse capture into cropped images
-
-
-
-
-# prepare images for watson
-
-
-
-
-# send to watson
-
-
-
-
-# print results
+        # parse captures and save cropped images in /ParsedCaptures
 
 
 
 
 
 
+
+
+        # prepare images to send to Watson
+
+
+
+
+
+
+        # send to Watson for classification
+
+
+
+
+
+
+        # receive classifications
+
+
+
+
+        # convert image to jpeg and base64-encode
+        image_undistorted  = base64.b64encode(cv2.imencode('.jpg', ocv_img_out)[1].tostring())
+        image_with_overlay = base64.b64encode(cv2.imencode('.png', ocv_img_with_overlay)[1].tostring())
+
+        # collect all fields in dictionary and string-ify
+        to_send = str({
+            "shelf_id"      : shelf_id,
+            "camera_id"     : camera_id,
+            "light_level"   : light_level,
+            "bounds"        : bounds,
+            "image"         : image_undistorted
+        })
+
+        print "sending parsed image data..."
+        network.send("receive_image_data", to_send)
+        print "sent parsed image data ok"
+
+        print "sending image overlay..."
+        network.send("receive_image_overlay", ("overlay_%s%s.png" % (shelf_id, camera_id),image_with_overlay))
+        print "sent image overlay ok"
+        
+        print "sending raw images"
+        for i, ocv_img in enumerate(ocv_imgs):
+
+            image_raw = base64.b64encode(cv2.imencode('.png', ocv_img)[1].tostring())
+            network.send("receive_image_overlay", ("raw_%s%s_%d.png" % (shelf_id, camera_id, i),image_raw))
+
+        print "sent raw images okay"
+
+    def return_raw_images(self):
+        filenames = [ filename for filename in os.listdir(self.capture_path) if filename.endswith(".png") ]
+        ocv_imgs  = [None, None, None]
+
+        for filename in filenames:
+            shelf_id, camera_id, light_level = self.return_env_data(filename)
+            print 'loading %s' % (filename)
+            ocv_imgs[int(light_level)] = cv2.imread(os.path.join(self.capture_path, filename))
+
+        print "sending raw images"
+        for i, ocv_img in enumerate(ocv_imgs):
+
+            image_raw = base64.b64encode(cv2.imencode('.png', ocv_img)[1].tostring())
+            network.send("receive_image_overlay", ("raw_%s%s_%d.png" % (shelf_id, camera_id, i),image_raw))
+
+        print "sent raw images okay"
+
+    def run(self):
+        while True:
+            print "Main.run 1"
+            topic, msg = self.queue.get(True)
+            print "Main.run 2"
+            if topic == "capture_image":
+                if msg in [0, "0"]: # on request 0, empty directory
+                    previous_filenames = [ previous_filename for previous_filename in os.listdir(self.capture_path) if previous_filename.endswith(".png") ]
+                    for previous_filename in previous_filenames:
+                        os.remove(   "{}{}".format(self.capture_path,  previous_filename) )
+                filename = "{}_{}.png".format(self.hostname[11:], msg) 
+                self.capture_image_and_save(filename)
+            if topic == "process_images_and_report":
+                self.process_images_and_report()
+            if topic == "return_raw_images":
+                self.return_raw_images()
+
+
+def network_status_handler(msg):
+    print "network_status_handler", msg
+
+def network_message_handler(msg):
+
+    print "network_message_handler", msg
+    topic = msg[0]
+    data = msg[1]
+    #host, sensor, data = yaml.safe_load(msg[1])
+    if topic == "__heartbeat__":
+        print "heartbeat received", msg
+
+    elif topic == "reboot":
+        os.system("sudo reboot now")
+
+    elif topic == "remote_update":
+        print "satarting remote_update"
+        [cool, birds, update, upgrade] = eval(msg[1])
+        print repr([cool, birds, update, upgrade])
+        if cool:
+            print "cool"
+            subprocess.call(['sudo', 'git', 'pull'], cwd='/home/pi/supercooler')
+        if birds:
+            print "birds"
+            subprocess.call(['sudo', 'git', 'pull'], cwd='/home/pi/thirtybirds_2_0')
+        network.send("update_complete", network_info.getHostName())
+
+    elif topic == "remote_update_scripts":
+        updates_init("/home/pi/supercooler", False, True)
+        network.send("update_complete", network_info.getHostName())
+
+    elif topic == "client_monitor_request":
+        network.send("client_monitor_response", main.thirtybirds_client_monitor_client.send_client_status())
+        
+    else: # [ "capture_image" ]
+        main.add_to_queue(topic, data)
+        
+    """    
+    elif topic == hostname:
+        print "testing png file sending"
+
+        filename = "capture" + hostname[11:] + ".png"
+        main.camera.take_capture(filename)
+
+        with open("/home/pi/supercooler/Captures/" + filename, "rb") as f:
+            data = f.read()
+            network.send("found_beer", base64.b64encode(data))
+    """
+
+
+main = None
+
+
+def init(HOSTNAME):
+    global network
+    network = network_init(
+        hostname=HOSTNAME,
+        role="client",
+        discovery_multicastGroup=settings.discovery_multicastGroup,
+        discovery_multicastPort=settings.discovery_multicastPort,
+        discovery_responsePort=settings.discovery_responsePort,
+        pubsub_pubPort=settings.pubsub_pubPort,
+        message_callback=network_message_handler,
+        status_callback=network_status_handler
+    )
+    #global hostname
+    #hostname = HOSTNAME
+    global main 
+    main = Main(HOSTNAME,  network)
+    main.daemon = True
+    main.start()
+
+    network.subscribe_to_topic("system")  # subscribe to all system messages
+    network.subscribe_to_topic("reboot")
+    network.subscribe_to_topic("process_images_and_report")
+    network.subscribe_to_topic("capture_image")
+    network.subscribe_to_topic("remote_update")
+    network.subscribe_to_topic(HOSTNAME)
+    network.subscribe_to_topic("client_monitor_request")
+    network.subscribe_to_topic("return_raw_images")
+
+    return main
+
+    
