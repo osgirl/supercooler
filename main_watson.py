@@ -41,30 +41,6 @@ for filename in filenames:
 
 # run object detection
 
-imageparser = ImageParser()
-
-# collect capture data to be send to conductor
-
-
-# parse capture into cropped images
-
-
-
-
-# prepare images for watson
-
-
-
-
-# send to watson
-
-
-
-
-# print results
-
-
-
 class ImageParser(): # class not necessary.  used for organization
     def __init__(self):
         self.parsedCaptures = [] # 2D list of capture:
@@ -129,70 +105,17 @@ class ImageParser(): # class not necessary.  used for organization
         img_for_circle_detection = cv2.imread(filepath,0) # read image into memory
         img_for_circle_detection = cv2.resize(img_for_circle_detection, (800,450), cv2.INTER_AREA) # resize image
         img_for_circle_detection = self.undistort_image(img_for_circle_detection) # get unbent!
-        # cv2.imshow('dst', img_for_circle_detection)
         height, width = img_for_circle_detection.shape
 
         img_for_circle_detection = cv2.medianBlur(img_for_circle_detection,21)
-
-        #testFileName = "{}_1_median.png".format(camera_id)
-        #cv2.imwrite(testFileName ,img_for_circle_detection)
-
         img_for_circle_detection = cv2.blur(img_for_circle_detection,(1,1))
 
-        #testFileName = "{}_2_blur.png".format(camera_id)
-        #cv2.imwrite(testFileName ,img_for_circle_detection)
-
         img_for_circle_detection = cv2.Canny(img_for_circle_detection, 0, 23, True)
-
-        #testFileName = "{}_3_canny.png".format(camera_id)
-        #cv2.imwrite(testFileName ,img_for_circle_detection)
-
-
-        #params = cv2.SimpleBlobDetector_Params()
-        #params.filterByCircularity = True
-        #params.minCircularity = 0.1
-
-        #params.filterByArea = True
-        #params.minArea =  5000
-        #params.maxArea = 200000
-        #params.maxCircularity = 0
-
-        # Read image
-        #im = cv2.imread(filepath, cv2.IMREAD_GRAYSCALE)
-        #im = cv2.resize(im, (800,450), cv2.INTER_AREA) # resize image
-
-        #im = self.undistort_image(im) # get unbent!
-        #im = self.adjust_gamma(im, 1.5)
-
-        #im = cv2.medianBlur(im,5)
-
-        #im[im >= 128]= 255
-        #im[im < 128] = 0
-
-        # Set up the detector with default parameters.
-        #detector = cv2.SimpleBlobDetector_create(params)
-
-        # Detect blobs.
-        #keypoints = detector.detect(im)
-        # Draw detected blobs as red circles.
-        # cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS ensures the size of the circle corresponds to the size of blob
-        #im_with_keypoints = cv2.drawKeypoints(im, keypoints, np.array([]), (255,0,0), cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
-        # Show keypoints
-
-        #testFileName = "{}_2_blob.png".format(camera_id)
-        #cv2.imwrite(testFileName ,im_with_keypoints)
-
-
-        #img_for_circle_detection = cv2.medianBlur(img_for_circle_detection,21)
-        #img_for_circle_detection = cv2.blur(img_for_circle_detection,(1,1))
-        #img_for_circle_detection = cv2.Canny(img_for_circle_detection, 0, 23, True)
         img_for_circle_detection = cv2.adaptiveThreshold(img_for_circle_detection,255,cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY,17,2)
 
         print "Detecting circles..."
         circles = cv2.HoughCircles(img_for_circle_detection,cv2.HOUGH_GRADIENT,1,150, param1=70,param2=28,minRadius=30,maxRadius=80)
 
-        #im_with_keypoints = cv2.drawKeypoints(img_for_circle_detection, circles, np.array([]), (255,0,0), cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
-        # ensure at least some circles were found
         margin = 30
         if circles is not None:
             # convert the (x, y) coordinates and radius of the circles to integers
@@ -222,12 +145,6 @@ class ImageParser(): # class not necessary.  used for organization
             x=int(x)
             y=int(y)
             radius=int(radius)
-            #leftEdge = x-radius-margin
-            #rightEdge = x+radius+margin
-            #topEdge = y-radius-margin
-            #bottomEdge = y+radius+margin
-            #if leftEdge < 0 or  rightEdge > width or topEdge < 0 or bottomEdge > height:
-            #   continue
             leftEdge = x-radius-margin if x-radius-margin >= 0 else 0
             rightEdge = x+radius+margin if x+radius+margin <= width else width
             topEdge = y-radius-margin if y-radius-margin >=0 else 0
@@ -262,7 +179,7 @@ class ImageParser(): # class not necessary.  used for organization
             } )
             #print "detected circle:", repr(x), repr(y), repr(radius), leftEdge, rightEdge, topEdge, bottomEdge
         # cv2.imshow('detected circles',img_for_cropping)
-        cv2.destroyAllWindows()
+        #cv2.destroyAllWindows()
         #print parsedImageMetadata
         print "Processing image done"
 
@@ -273,12 +190,36 @@ class ImageParser(): # class not necessary.  used for organization
             self.process_image(cap_metadata[0],index, cap_metadata[1], cap_metadata[2])
 
 
-
-
-
-
-
 imageparser = ImageParser()
+print ">>>> 1"
+imageparser.processImages(capture_list)
+print ">>>> 2"
+parsed_images = imageparser.get_parsed_images()
+print ">>>> 3", parsed_images
+parsed_folder_name = imageparser.get_foldername()
+print ">>>> 4", parsed_folder_name
+
+# collect capture data to be send to conductor
+
+
+# parse capture into cropped images
+
+
+
+
+# prepare images for watson
+
+
+
+
+# send to watson
+
+
+
+
+# print results
+
+
 
 
 
