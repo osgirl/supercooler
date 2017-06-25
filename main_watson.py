@@ -45,7 +45,7 @@ class ImageParser(): # class not necessary.  used for organization
     def __init__(self):
         self.parsedCaptures = [] # 2D list of capture:
         dir_path = os.path.dirname(os.path.realpath(__file__))
-        self.foldername = ("%s/cropped") %(dir_path)
+        self.foldername = ("%s/ParsedCaptures") %(dir_path)
         #os.makedirs(self.foldername)
     def empty_directory(self):
         for file in os.listdir(self.foldername):
