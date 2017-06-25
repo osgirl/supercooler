@@ -164,7 +164,9 @@ class Main(threading.Thread):
         self.thirtybirds_client_monitor_client = Thirtybirds_Client_Monitor_Client(hostname, network)
 
     def add_to_queue(self, topic, msg):
+        print "Main.add_to_queue",topic, msg
         self.queue.put((topic, msg))
+        print "Main.add_to_queue done"
 
     def capture_image_and_save(self, filename):
         print "Main.capture_image_and_save", filename
@@ -249,7 +251,9 @@ class Main(threading.Thread):
 
     def run(self):
         while True:
+            print "Main.run 1"
             topic, msg = self.queue.get(True)
+            print "Main.run 2"
             if topic == "capture_image":
                 if msg in [0, "0"]: # on request 0, empty directory
                     previous_filenames = [ previous_filename for previous_filename in os.listdir(self.capture_path) if previous_filename.endswith(".png") ]
