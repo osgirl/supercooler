@@ -99,6 +99,7 @@ class ImageParser(): # class not necessary.  used for organization
         parsedImageMetadata = [] 
         self.parsedCaptures.append(parsedImageMetadata)# images are introduce in order of cap_id, so list index == cap_id
         img_for_cropping = cv2.imread(filepath) # read image into memory
+        print 
         img_for_cropping = cv2.resize(img_for_cropping, (800,450), cv2.INTER_AREA) # resize image
         img_for_cropping = self.undistort_image(img_for_cropping) # get unbent!
 
@@ -190,7 +191,7 @@ class ImageParser(): # class not necessary.  used for organization
             self.process_image(cap_metadata[0],index, cap_metadata[1], cap_metadata[2])
 
 
-capture_list = ["test1.png","test2.png","test3.png"]
+capture_list = [["test1.png",0,0],["test2.png",0,0],["test3.png",0,0]]
 
 imageparser = ImageParser()
 print ">>>> 1"
