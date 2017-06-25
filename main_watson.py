@@ -76,7 +76,41 @@ class Main(threading.Thread):
         light_level = filename[:-4][-1:]
         return shelf_id, camera_id, light_level
 
+
+    def parse_and_crop(self):
+        pass
+
+    def send_images_to_conductor(self, raw_images, processed_image, processed_image_with_overlay ):
+        # convert image to jpeg and base64-encode
+        image_undistorted  = base64.b64encode(cv2.imencode('.jpg', processed_image)[1].tostring())
+        image_with_overlay = base64.b64encode(cv2.imencode('.png', processed_image_with_overlay)[1].tostring())
+        
+        network.send("receive_image_data", to_send)
+        network.send("receive_image_overlay", ("overlay_%s%s.png" % (shelf_id, camera_id),image_with_overlay))
+        for i, ocv_img in enumerate(ocv_imgs):
+            image_raw = base64.b64encode(cv2.imencode('.png', ocv_img)[1].tostring())
+            network.send("receive_image_overlay", ("raw_%s%s_%d.png" % (shelf_id, camera_id, i),image_raw))
+
+
+    def prepare_cropped_images_for_classification(self):
+        pass
+
+    def send_cropped_images_to_watson(self):
+        pass
+
+
     def process_images_and_report(self):
+        # get capture filenames
+
+        # parse and crop Captures 
+        bounds, processed_image_with_overlay, processed_image = self.parse_and_crop()
+
+        # send images to conductor
+
+
+        # prepare images to send to Watson
+
+        # send to Watson for classification
 
         print "getting ready to parse images..."
         parser = Image_Parser()
@@ -100,24 +134,10 @@ class Main(threading.Thread):
         # parse captures and save cropped images in /ParsedCaptures
 
 
-
-
-
-
-
-
         # prepare images to send to Watson
 
 
-
-
-
-
         # send to Watson for classification
-
-
-
-
 
 
         # receive classifications
@@ -125,9 +145,6 @@ class Main(threading.Thread):
 
 
 
-        # convert image to jpeg and base64-encode
-        image_undistorted  = base64.b64encode(cv2.imencode('.jpg', ocv_img_out)[1].tostring())
-        image_with_overlay = base64.b64encode(cv2.imencode('.png', ocv_img_with_overlay)[1].tostring())
 
         # collect all fields in dictionary and string-ify
         to_send = str({
@@ -137,22 +154,6 @@ class Main(threading.Thread):
             "bounds"        : bounds,
             "image"         : image_undistorted
         })
-
-        print "sending parsed image data..."
-        network.send("receive_image_data", to_send)
-        print "sent parsed image data ok"
-
-        print "sending image overlay..."
-        network.send("receive_image_overlay", ("overlay_%s%s.png" % (shelf_id, camera_id),image_with_overlay))
-        print "sent image overlay ok"
-        
-        print "sending raw images"
-        for i, ocv_img in enumerate(ocv_imgs):
-
-            image_raw = base64.b64encode(cv2.imencode('.png', ocv_img)[1].tostring())
-            network.send("receive_image_overlay", ("raw_%s%s_%d.png" % (shelf_id, camera_id, i),image_raw))
-
-        print "sent raw images okay"
 
     def return_raw_images(self):
         filenames = [ filename for filename in os.listdir(self.capture_path) if filename.endswith(".png") ]
