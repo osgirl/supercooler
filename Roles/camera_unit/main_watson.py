@@ -17,7 +17,6 @@ import sys
 import time
 
 from watson_developer_cloud import VisualRecognitionV3
-from thirtybirds_2_0.Adaptors.Cameras.elp import init as camera_init
 from parser import Image_Parser
 
 BASE_PATH = os.path.dirname(os.path.realpath(__file__))
@@ -28,6 +27,7 @@ THIRTYBIRDS_PATH = "%s/thirtybirds" % (UPPER_PATH )
 sys.path.append(BASE_PATH)
 sys.path.append(UPPER_PATH)
 
+from thirtybirds_2_0.Adaptors.Cameras.elp import init as camera_init
 # take capture
 
 capture_path = "/home/pi/supercooler/Captures/"
