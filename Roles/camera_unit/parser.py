@@ -2,9 +2,7 @@ import cv2
 import numpy as np
 
 class Image_Parser():
-    def __init__(self, hostname, network, min_size=65):
-        self.hostname = hostname
-        self.network = network
+    def __init__(self, min_size=65):
         self.min_size = min_size
         self.distortion = np.array([[-6.0e-5, 0.0, 0.0, 0.0]], np.float64)
         self.max_confdence = 1.0

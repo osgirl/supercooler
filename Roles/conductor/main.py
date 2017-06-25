@@ -428,8 +428,6 @@ def init(HOSTNAME):
     network.subscribe_to_topic("update_complete")
     network.subscribe_to_topic("image_capture_from_camera_unit")
     network.subscribe_to_topic("client_monitor_response")
-
-
     network.subscribe_to_topic("receive_image_overlay")
     network.subscribe_to_topic("receive_image_data")
 

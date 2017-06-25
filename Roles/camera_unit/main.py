@@ -110,7 +110,7 @@ class Main(threading.Thread):
         # # copy metadata to conductor
 
         print "getting ready to parse images..."
-        parser = Image_Parser(self.hostname, self.network)
+        parser = Image_Parser()
         filenames = [ filename for filename in os.listdir(self.capture_path) if filename.endswith(".png") ]
 
         # collect capture data to be send to conductor
