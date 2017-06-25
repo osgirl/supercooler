@@ -1,0 +1,135 @@
+<html>
+    <head>
+        <title>Super Cooler Scan Report</title>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="stylesheet" href="./styles/main.css">
+    </head>
+    <body>
+        <div class="wrapper">
+            <div class="report-header">
+                <h1>Super Cooler Scan Report</h1>
+                <p>Scan date: {{ts}}<br><a href="./">Home</a></p>
+            </div>
+            <hr>
+            <section>
+                <div class="title">
+                    <h2>Summary</h2>
+                    <a href="./pdf"><span>Download PDF</span></a>
+                </div>
+                <br>
+                <hr>
+                <h3>Total Inventory: {{ all_products|length }}</h3>
+                <br>
+                <p>Sort by: <span class="sort sort-count active">Item Count</span> <span class="sort sort-alpha">Brand Name</span></p>
+                <div class="product-list list-count active">
+                    {% for p in sorted_count %}
+                    <div class="product-list-item">
+                        <div>
+                            <img src="./images/{{ products_by_brand[p]['src'] }}">
+                            <strong>
+                                <p class="count">{{ products_by_brand[p]['count'] }}</p>
+                            </strong>
+                        </div>
+                        <p>{{ p }}</p>
+                    </div>
+                    {% endfor %}
+                </div>
+                <div class="product-list list-alpha">
+                    {% for p in sorted_alpha %}
+                    <div class="product-list-item">
+                        <div>
+                            <img src="./images/{{ products_by_brand[p]['src'] }}">
+                            <p class="count">
+                                {{ products_by_brand[p]['count'] }}
+                            </p>
+                        </div>
+                        <p>{{ p }}</p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </section>
+                <h3>Inventory by shelf</h3>
+                <br>
+                <p>(click to view shelf layout)</p>
+                <div class="view-shelf-wrapper">
+                    {% for c in shelf_counts %}
+                    <div class="view-shelf">
+                        <a href="#{{c['name']}}">
+                            <p>Shelf {{ c['name'] }} - {{ c['count'] }}</p>
+                        </a>
+                    </div>
+                    {% endfor %}
+                </div>
+            </section>
+            <section>
+                <h2>Shelf layout</h2>
+                <hr>
+                {% for shelf in shelfs %}
+                    <div class="shelf-layout" id="{{shelf['name']}}">
+                        <h3>Shelf {{shelf['name']}} Inventory: {{ shelf['products']|length }}</h3>
+                        <div class="shelf-wrapper-mobile">
+                            <div class="shelf">
+                                {% for product in shelf['products'] %}
+                                    <div style="
+                                        background-image: url('./images/{{ product['src'] }}');
+                                        background-size: cover;
+                                        border-radius: 50%;
+                                        left: {{ product['x']/2 - product['width']/4 }}px;
+                                        top: {{ product['y']/2 - product['width']/4 }}px;
+                                        height: {{ product['width']/2 }}px;
+                                        width: {{ product['width']/2 }}px;
+                                        position: absolute;
+                                        background-position: 50% 50%;
+                                        border: 3px #fff solid;
+                                        background-color: #fff;
+                                        "
+                                    >
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        <div class="shelf-wrapper">
+                            <div class="shelf">
+                                {% for product in shelf['products'] %}
+                                    <div style="
+                                        background-image: url('./images/{{ product['src'] }}');
+                                        background-size: cover;
+                                        border-radius: 50%;
+                                        left: {{ product['x'] - product['width']/2 }}px;
+                                        top: {{ product['y'] - product['width']/2 }}px;
+                                        height: {{ product['width'] }}px;
+                                        width: {{ product['width'] }}px;
+                                        position: absolute;
+                                        background-position: 50% 50%;
+                                        border: 3px #fff solid;
+                                        background-color: #fff;
+                                        "
+                                    >
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </section>
+        </div>
+    </body>
+    <script>
+        (function() {
+            document.querySelector('.sort-count').addEventListener('click', function() {
+                document.querySelector('.list-count').classList.add('active');
+                document.querySelector('.list-alpha').classList.remove('active');
+                document.querySelector('.sort-count').classList.add('active');
+                document.querySelector('.sort-alpha').classList.remove('active');
+            });
+            document.querySelector('.sort-alpha').addEventListener('click', function() {
+                document.querySelector('.list-count').classList.remove('active');
+                document.querySelector('.list-alpha').classList.add('active');
+                document.querySelector('.sort-count').classList.remove('active');
+                document.querySelector('.sort-alpha').classList.add('active');
+            });
+        })();
+    </script>
+</html>

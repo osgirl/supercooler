@@ -1,0 +1,30 @@
+<html>
+    <head>
+        <title>Super Cooler All Reports</title>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="stylesheet" href="./styles/main.css">
+    </head>
+    <body>
+        <div class="wrapper">
+            <div class="report-header">
+                <h1>Super Cooler | All Reports</h1>
+                <p><a href="./">Home</a></p>
+            </div>
+            <hr>
+            <section>
+                <div class="reports">
+                {% for report in reports %}
+                    <div class="report">
+                        <h3>{{ report[1] }} | {{ report[2] }} products</h3>
+                        <div class="report-link"><a href="./report?ts={{report[0]}}">Report</a></div>
+                        <div class="report-link"><a href="./pdf?ts={{report[0]}}">PDF</a></div>
+                        <hr>
+                    </div>
+                {% endfor %}
+                </div>
+            </section>
+        </div>
+    </body>
+</html>

@@ -1,0 +1,1854 @@
+<html>
+    <head>
+        <title>Smart Fridge</title>
+        <meta charset="utf-8">
+        <meta name="pdfkit-orientation" content="Portrait"/>
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <style>
+            /* site-wide styles */
+            html, body {
+                margin: 0;
+                font-family: 'Proxima Nova', Helvetica, sans-serif;
+            }
+            h1, h2, h3, h4, h5, strong {
+                padding: 0;
+                margin: 0;
+                font-family: 'Proxima Nova Bold'
+            }
+            p {
+                padding: 0;
+                margin: 0;
+            }
+            .wrapper {
+                margin: 50px auto;
+                padding: 0 20px;
+                max-width: 750px;
+            }
+            .report-header {
+                text-align: center;
+            }
+            section {
+                margin-top: 40px;
+            }
+            section hr {
+                border-width: 0;
+                border-top: 2px dashed #8c8b8b;
+                margin-bottom: 50px;
+            }
+
+            /* Shelfs */
+            .shelf-wrapper-mobile {
+                display: none;
+                margin: 10px;
+                width: 280px;
+                height: 245px;
+                position: relative;
+            }
+            .shelf-wrapper {
+                display: block;
+                margin: 10px;
+                width: 560px;
+                height: 490px;
+                position: relative;
+            }
+            @media (max-width: 600px) {
+              .shelf-wrapper {
+                display: none;
+              }
+              .shelf-wrapper-mobile {
+                display: block;
+              }
+            }
+            .shelf-layout {
+                padding-top: 40px;
+            }
+            .shelf {
+                position: absolute;
+                width: 100%;
+                height: 100%;
+                border: 1px black solid;
+                background-color: #eee;
+                top: 0;
+                left: 0;
+                z-index:-1;
+                overflow: hidden;
+            }
+
+            /* Product List */
+            .product-list {
+                width: 100%;
+                margin: 10px auto 40px;
+            }
+            .product-list-item {
+                padding: 5px;
+                width: 110px;
+                display: inline-block;
+                vertical-align: top;
+            }
+            .product-list-item > p {
+                padding-top: 5px;
+            }
+            .product-list-item img {
+                float: left;
+                height: 40px;
+                width: auto;
+            }
+            .product-list-item .count {
+                line-height: 40px;
+                text-align: center;
+            }
+            .sort {
+                color: blue;
+                cursor: pointer;
+                padding-left: 10px;
+            }
+            .sort.active, .sort:hover {
+                text-decoration: underline;
+            }
+            .list-alpha, .list-count {
+                display: none;
+            }
+            .list-alpha.active, .list-count.active {
+                display: block;
+            }
+            .view-shelf-wrapper {
+                margin-top: 30px;
+            }
+            .view-shelf-wrapper a {
+                text-decoration: none;
+            }
+            .view-shelf {
+                width: 200px;
+                margin: 5px;
+                background-color: #ccc;
+                text-align: center;
+            }
+            .view-shelf p {
+                color: #000;
+                line-height: 40px;
+            }
+            .view-shelf:hover {
+                background-color: #eee;
+            }
+            .title {
+                position: relative;
+            }
+            .title span {
+                position: absolute;
+                right: 0;
+                bottom: 0;
+            }
+            @font-face {
+                font-family:'Proxima Nova';
+                src: url('./fonts/Proxima Nova Regular.otf') format('opentype')
+            }
+            @font-face {
+                font-family:'Proxima Nova Semibold';
+                src: url('./fonts/Proxima Nova Semibold.otf') format('opentype')
+            }
+            @font-face {
+                font-family:'Proxima Nova Bold';
+                src: url('./fonts/Proxima Nova Bold.otf') format('opentype')
+            }
+        </style>
+    </head>
+    <body>
+        <div class="wrapper">
+            <div class="report-header">
+                <h1>Scan Report</h1>
+                <p>12:53:27 - 12 Jun 2017</p>
+            </div>
+            <hr>
+            <section>
+                <div class="title">
+                    <h2>Summary</h2>
+                    <a href="./render"><span>Download PDF</span></a>
+                </div>
+                <br>
+                <hr>
+                <h3>Total Inventory: 50</h3>
+                <br>
+                <p>Sort by: <span class="sort sort-count active">Item Count</span> <span class="sort sort-alpha">Brand Name</span></p>
+                <div class="product-list list-count active">
+                    
+                    <div class="product-list-item">
+                        <div>
+                            <img src="./images/bud-america.jpg">
+                            <strong>
+                                <p class="count">7</p>
+                            </strong>
+                        </div>
+                        <p>Bud America (can - 25oz)</p>
+                    </div>
+                    
+                    <div class="product-list-item">
+                        <div>
+                            <img src="./images/shock-top-twisted-pretzel-wheat.png">
+                            <strong>
+                                <p class="count">5</p>
+                            </strong>
+                        </div>
+                        <p>Shock Top - Twisted Pretzel Wheat</p>
+                    </div>
+                    
+                    <div class="product-list-item">
+                        <div>
+                            <img src="./images/bud-light.jpg">
+                            <strong>
+                                <p class="count">5</p>
+                            </strong>
+                        </div>
+                        <p>Bud Light</p>
+                    </div>
+                    
+                    <div class="product-list-item">
+                        <div>
+                            <img src="./images/bud-ice.png">
+                            <strong>
+                                <p class="count">4</p>
+                            </strong>
+                        </div>
+                        <p>Bud Ice (can - 25oz)</p>
+                    </div>
+                    
+                    <div class="product-list-item">
+                        <div>
+                            <img src="./images/stella-artois.jpg">
+                            <strong>
+                                <p class="count">3</p>
+                            </strong>
+                        </div>
+                        <p>Stella Artois</p>
+                    </div>
+                    
+                    <div class="product-list-item">
+                        <div>
+                            <img src="./images/shock-top-raspberry-wheat.png">
+                            <strong>
+                                <p class="count">3</p>
+                            </strong>
+                        </div>
+                        <p>Shock Top - Raspberry Wheat</p>
+                    </div>
+                    
+                    <div class="product-list-item">
+                        <div>
+                            <img src="./images/natural-light.png">
+                            <strong>
+                                <p class="count">3</p>
+                            </strong>
+                        </div>
+                        <p>Natural Light (can)</p>
+                    </div>
+                    
+                    <div class="product-list-item">
+                        <div>
+                            <img src="./images/busch-beer.png">
+                            <strong>
+                                <p class="count">3</p>
+                            </strong>
+                        </div>
+                        <p>Busch Beer (can)</p>
+                    </div>
+                    
+                    <div class="product-list-item">
+                        <div>
+                            <img src="./images/bud-light.jpg">
+                            <strong>
+                                <p class="count">3</p>
+                            </strong>
+                        </div>
+                        <p>Bud Light (can)</p>
+                    </div>
+                    
+                    <div class="product-list-item">
+                        <div>
+                            <img src="./images/michelob-ultra.png">
+                            <strong>
+                                <p class="count">2</p>
+                            </strong>
+                        </div>
+                        <p>Michelob Ultra</p>
+                    </div>
+                    
+                    <div class="product-list-item">
+                        <div>
+                            <img src="./images/corona-extra.png">
+                            <strong>
+                                <p class="count">2</p>
+                            </strong>
+                        </div>
+                        <p>Corona Extra</p>
+                    </div>
+                    
+                    <div class="product-list-item">
+                        <div>
+                            <img src="./images/busch-beer.png">
+                            <strong>
+                                <p class="count">2</p>
+                            </strong>
+                        </div>
+                        <p>Busch Beer (can - 16oz)</p>
+                    </div>
+                    
+                    <div class="product-list-item">
+                        <div>
+                            <img src="./images/bud-light.jpg">
+                            <strong>
+                                <p class="count">2</p>
+                            </strong>
+                        </div>
+                        <p>Bud Light (can - 25oz)</p>
+                    </div>
+                    
+                    <div class="product-list-item">
+                        <div>
+                            <img src="./images/bud-light-plat.png">
+                            <strong>
+                                <p class="count">2</p>
+                            </strong>
+                        </div>
+                        <p>Bud Light Platinum</p>
+                    </div>
+                    
+                    <div class="product-list-item">
+                        <div>
+                            <img src="./images/becks.jpg">
+                            <strong>
+                                <p class="count">2</p>
+                            </strong>
+                        </div>
+                        <p>Beck&#39;s (non-alcoholic)</p>
+                    </div>
+                    
+                    <div class="product-list-item">
+                        <div>
+                            <img src="./images/hoegaarden-logo.jpg">
+                            <strong>
+                                <p class="count">1</p>
+                            </strong>
+                        </div>
+                        <p>Hoegaarden</p>
+                    </div>
+                    
+                    <div class="product-list-item">
+                        <div>
+                            <img src="./images/bud-america.jpg">
+                            <strong>
+                                <p class="count">1</p>
+                            </strong>
+                        </div>
+                        <p>Budweiser America (can)</p>
+                    </div>
+                    
+                </div>
+                <div class="product-list list-alpha">
+                    
+                    <div class="product-list-item">
+                        <div>
+                            <img src="./images/becks.jpg">
+                            <p class="count">
+                                2
+                            </p>
+                        </div>
+                        <p>Beck&#39;s (non-alcoholic)</p>
+                    </div>
+                    
+                    <div class="product-list-item">
+                        <div>
+                            <img src="./images/bud-america.jpg">
+                            <p class="count">
+                                7
+                            </p>
+                        </div>
+                        <p>Bud America (can - 25oz)</p>
+                    </div>
+                    
+                    <div class="product-list-item">
+                        <div>
+                            <img src="./images/bud-ice.png">
+                            <p class="count">
+                                4
+                            </p>
+                        </div>
+                        <p>Bud Ice (can - 25oz)</p>
+                    </div>
+                    
+                    <div class="product-list-item">
+                        <div>
+                            <img src="./images/bud-light.jpg">
+                            <p class="count">
+                                5
+                            </p>
+                        </div>
+                        <p>Bud Light</p>
+                    </div>
+                    
+                    <div class="product-list-item">
+                        <div>
+                            <img src="./images/bud-light.jpg">
+                            <p class="count">
+                                2
+                            </p>
+                        </div>
+                        <p>Bud Light (can - 25oz)</p>
+                    </div>
+                    
+                    <div class="product-list-item">
+                        <div>
+                            <img src="./images/bud-light.jpg">
+                            <p class="count">
+                                3
+                            </p>
+                        </div>
+                        <p>Bud Light (can)</p>
+                    </div>
+                    
+                    <div class="product-list-item">
+                        <div>
+                            <img src="./images/bud-light-plat.png">
+                            <p class="count">
+                                2
+                            </p>
+                        </div>
+                        <p>Bud Light Platinum</p>
+                    </div>
+                    
+                    <div class="product-list-item">
+                        <div>
+                            <img src="./images/bud-america.jpg">
+                            <p class="count">
+                                1
+                            </p>
+                        </div>
+                        <p>Budweiser America (can)</p>
+                    </div>
+                    
+                    <div class="product-list-item">
+                        <div>
+                            <img src="./images/busch-beer.png">
+                            <p class="count">
+                                2
+                            </p>
+                        </div>
+                        <p>Busch Beer (can - 16oz)</p>
+                    </div>
+                    
+                    <div class="product-list-item">
+                        <div>
+                            <img src="./images/busch-beer.png">
+                            <p class="count">
+                                3
+                            </p>
+                        </div>
+                        <p>Busch Beer (can)</p>
+                    </div>
+                    
+                    <div class="product-list-item">
+                        <div>
+                            <img src="./images/corona-extra.png">
+                            <p class="count">
+                                2
+                            </p>
+                        </div>
+                        <p>Corona Extra</p>
+                    </div>
+                    
+                    <div class="product-list-item">
+                        <div>
+                            <img src="./images/hoegaarden-logo.jpg">
+                            <p class="count">
+                                1
+                            </p>
+                        </div>
+                        <p>Hoegaarden</p>
+                    </div>
+                    
+                    <div class="product-list-item">
+                        <div>
+                            <img src="./images/michelob-ultra.png">
+                            <p class="count">
+                                2
+                            </p>
+                        </div>
+                        <p>Michelob Ultra</p>
+                    </div>
+                    
+                    <div class="product-list-item">
+                        <div>
+                            <img src="./images/natural-light.png">
+                            <p class="count">
+                                3
+                            </p>
+                        </div>
+                        <p>Natural Light (can)</p>
+                    </div>
+                    
+                    <div class="product-list-item">
+                        <div>
+                            <img src="./images/shock-top-raspberry-wheat.png">
+                            <p class="count">
+                                3
+                            </p>
+                        </div>
+                        <p>Shock Top - Raspberry Wheat</p>
+                    </div>
+                    
+                    <div class="product-list-item">
+                        <div>
+                            <img src="./images/shock-top-twisted-pretzel-wheat.png">
+                            <p class="count">
+                                5
+                            </p>
+                        </div>
+                        <p>Shock Top - Twisted Pretzel Wheat</p>
+                    </div>
+                    
+                    <div class="product-list-item">
+                        <div>
+                            <img src="./images/stella-artois.jpg">
+                            <p class="count">
+                                3
+                            </p>
+                        </div>
+                        <p>Stella Artois</p>
+                    </div>
+                    
+                </div>
+            </section>
+                <h3>Inventory by shelf</h3>
+                <br>
+                <p>(click to view shelf layout)</p>
+                <div class="view-shelf-wrapper">
+                    
+                    <div class="view-shelf">
+                        <a href="#D">
+                            <p>Shelf D - 8</p>
+                        </a>
+                    </div>
+                    
+                    <div class="view-shelf">
+                        <a href="#C">
+                            <p>Shelf C - 13</p>
+                        </a>
+                    </div>
+                    
+                    <div class="view-shelf">
+                        <a href="#B">
+                            <p>Shelf B - 12</p>
+                        </a>
+                    </div>
+                    
+                    <div class="view-shelf">
+                        <a href="#A">
+                            <p>Shelf A - 17</p>
+                        </a>
+                    </div>
+                    
+                </div>
+            </section>
+            <section>
+                <h2>Shelf layout</h2>
+                <hr>
+                
+                    <div class="shelf-layout" id="D">
+                        <h3>Shelf D Inventory: 8</h3>
+                        <div class="shelf-wrapper-mobile">
+                            <svg class="shelf">
+                                <style>
+                                    image {
+                                        border-radius: 100%;
+                                        border: 2px dotted red;
+                                    }
+                                </style>
+                                
+                                <image
+                                    xlink:href="./images/bud-america.jpg"
+                                    x="-10.3100972999"
+                                    y="185.880209058"
+                                    height="26.5px"
+                                    width="26.5px"
+                                />
+                                
+                                <image
+                                    xlink:href="./images/bud-ice.png"
+                                    x="86.6722592317"
+                                    y="98.4146639677"
+                                    height="31.5px"
+                                    width="31.5px"
+                                />
+                                
+                                <image
+                                    xlink:href="./images/shock-top-raspberry-wheat.png"
+                                    x="254.991971461"
+                                    y="170.193292644"
+                                    height="26.5px"
+                                    width="26.5px"
+                                />
+                                
+                                <image
+                                    xlink:href="./images/bud-light.jpg"
+                                    x="85.0255495684"
+                                    y="120.309733543"
+                                    height="26.5px"
+                                    width="26.5px"
+                                />
+                                
+                                <image
+                                    xlink:href="./images/bud-america.jpg"
+                                    x="67.275662608"
+                                    y="196.242988155"
+                                    height="31.5px"
+                                    width="31.5px"
+                                />
+                                
+                                <image
+                                    xlink:href="./images/bud-america.jpg"
+                                    x="30.3427080397"
+                                    y="191.563697698"
+                                    height="31.5px"
+                                    width="31.5px"
+                                />
+                                
+                                <image
+                                    xlink:href="./images/natural-light.png"
+                                    x="104.199831162"
+                                    y="203.281029274"
+                                    height="26.5px"
+                                    width="26.5px"
+                                />
+                                
+                                <image
+                                    xlink:href="./images/bud-ice.png"
+                                    x="194.907030625"
+                                    y="15.6995022535"
+                                    height="31.5px"
+                                    width="31.5px"
+                                />
+                                
+                            </svg>
+                        </div>
+                        <div class="shelf-wrapper">
+                            <div class="shelf">
+                                
+                                    <div style="
+                                        background-image: url('./images/bud-america.jpg');
+                                        background-size: cover;
+                                        border-radius: 50%;
+                                        left: -20.6201945999px;
+                                        top: 371.760418116px;
+                                        height: 53.0px;
+                                        width: 53.0px;
+                                        position: absolute;
+                                        background-position: 50% 50%;
+                                        border: 3px #fff solid;
+                                        background-color: #fff;
+                                        "
+                                    >
+                                    </div>
+                                
+                                    <div style="
+                                        background-image: url('./images/bud-ice.png');
+                                        background-size: cover;
+                                        border-radius: 50%;
+                                        left: 173.344518463px;
+                                        top: 196.829327935px;
+                                        height: 63.0px;
+                                        width: 63.0px;
+                                        position: absolute;
+                                        background-position: 50% 50%;
+                                        border: 3px #fff solid;
+                                        background-color: #fff;
+                                        "
+                                    >
+                                    </div>
+                                
+                                    <div style="
+                                        background-image: url('./images/shock-top-raspberry-wheat.png');
+                                        background-size: cover;
+                                        border-radius: 50%;
+                                        left: 509.983942922px;
+                                        top: 340.386585288px;
+                                        height: 53.0px;
+                                        width: 53.0px;
+                                        position: absolute;
+                                        background-position: 50% 50%;
+                                        border: 3px #fff solid;
+                                        background-color: #fff;
+                                        "
+                                    >
+                                    </div>
+                                
+                                    <div style="
+                                        background-image: url('./images/bud-light.jpg');
+                                        background-size: cover;
+                                        border-radius: 50%;
+                                        left: 170.051099137px;
+                                        top: 240.619467087px;
+                                        height: 53.0px;
+                                        width: 53.0px;
+                                        position: absolute;
+                                        background-position: 50% 50%;
+                                        border: 3px #fff solid;
+                                        background-color: #fff;
+                                        "
+                                    >
+                                    </div>
+                                
+                                    <div style="
+                                        background-image: url('./images/bud-america.jpg');
+                                        background-size: cover;
+                                        border-radius: 50%;
+                                        left: 134.551325216px;
+                                        top: 392.485976309px;
+                                        height: 63.0px;
+                                        width: 63.0px;
+                                        position: absolute;
+                                        background-position: 50% 50%;
+                                        border: 3px #fff solid;
+                                        background-color: #fff;
+                                        "
+                                    >
+                                    </div>
+                                
+                                    <div style="
+                                        background-image: url('./images/bud-america.jpg');
+                                        background-size: cover;
+                                        border-radius: 50%;
+                                        left: 60.6854160793px;
+                                        top: 383.127395396px;
+                                        height: 63.0px;
+                                        width: 63.0px;
+                                        position: absolute;
+                                        background-position: 50% 50%;
+                                        border: 3px #fff solid;
+                                        background-color: #fff;
+                                        "
+                                    >
+                                    </div>
+                                
+                                    <div style="
+                                        background-image: url('./images/natural-light.png');
+                                        background-size: cover;
+                                        border-radius: 50%;
+                                        left: 208.399662324px;
+                                        top: 406.562058548px;
+                                        height: 53.0px;
+                                        width: 53.0px;
+                                        position: absolute;
+                                        background-position: 50% 50%;
+                                        border: 3px #fff solid;
+                                        background-color: #fff;
+                                        "
+                                    >
+                                    </div>
+                                
+                                    <div style="
+                                        background-image: url('./images/bud-ice.png');
+                                        background-size: cover;
+                                        border-radius: 50%;
+                                        left: 389.814061251px;
+                                        top: 31.3990045071px;
+                                        height: 63.0px;
+                                        width: 63.0px;
+                                        position: absolute;
+                                        background-position: 50% 50%;
+                                        border: 3px #fff solid;
+                                        background-color: #fff;
+                                        "
+                                    >
+                                    </div>
+                                
+                            </div>
+                        </div>
+                    </div>
+                
+                    <div class="shelf-layout" id="C">
+                        <h3>Shelf C Inventory: 13</h3>
+                        <div class="shelf-wrapper-mobile">
+                            <svg class="shelf">
+                                <style>
+                                    image {
+                                        border-radius: 100%;
+                                        border: 2px dotted red;
+                                    }
+                                </style>
+                                
+                                <image
+                                    xlink:href="./images/bud-ice.png"
+                                    x="108.866438591"
+                                    y="87.6478051188"
+                                    height="31.5px"
+                                    width="31.5px"
+                                />
+                                
+                                <image
+                                    xlink:href="./images/hoegaarden-logo.jpg"
+                                    x="114.83273157"
+                                    y="90.1856647784"
+                                    height="26.5px"
+                                    width="26.5px"
+                                />
+                                
+                                <image
+                                    xlink:href="./images/bud-light.jpg"
+                                    x="128.286591995"
+                                    y="127.685276348"
+                                    height="26.5px"
+                                    width="26.5px"
+                                />
+                                
+                                <image
+                                    xlink:href="./images/stella-artois.jpg"
+                                    x="177.206057982"
+                                    y="3.12927576152"
+                                    height="26.5px"
+                                    width="26.5px"
+                                />
+                                
+                                <image
+                                    xlink:href="./images/michelob-ultra.png"
+                                    x="165.179631035"
+                                    y="1.59863285611"
+                                    height="26.5px"
+                                    width="26.5px"
+                                />
+                                
+                                <image
+                                    xlink:href="./images/shock-top-raspberry-wheat.png"
+                                    x="13.4389423846"
+                                    y="83.7236684436"
+                                    height="26.5px"
+                                    width="26.5px"
+                                />
+                                
+                                <image
+                                    xlink:href="./images/busch-beer.png"
+                                    x="254.000945449"
+                                    y="185.797170801"
+                                    height="26.5px"
+                                    width="26.5px"
+                                />
+                                
+                                <image
+                                    xlink:href="./images/bud-america.jpg"
+                                    x="246.839746383"
+                                    y="87.2015900927"
+                                    height="31.5px"
+                                    width="31.5px"
+                                />
+                                
+                                <image
+                                    xlink:href="./images/bud-america.jpg"
+                                    x="200.1913971"
+                                    y="189.915860628"
+                                    height="31.5px"
+                                    width="31.5px"
+                                />
+                                
+                                <image
+                                    xlink:href="./images/bud-america.jpg"
+                                    x="58.9612750544"
+                                    y="-0.833227035375"
+                                    height="31.5px"
+                                    width="31.5px"
+                                />
+                                
+                                <image
+                                    xlink:href="./images/shock-top-twisted-pretzel-wheat.png"
+                                    x="201.233527909"
+                                    y="0.504298040471"
+                                    height="26.5px"
+                                    width="26.5px"
+                                />
+                                
+                                <image
+                                    xlink:href="./images/bud-light.jpg"
+                                    x="235.398746423"
+                                    y="106.630444901"
+                                    height="26.5px"
+                                    width="26.5px"
+                                />
+                                
+                                <image
+                                    xlink:href="./images/bud-america.jpg"
+                                    x="217.519334425"
+                                    y="15.6464199802"
+                                    height="31.5px"
+                                    width="31.5px"
+                                />
+                                
+                            </svg>
+                        </div>
+                        <div class="shelf-wrapper">
+                            <div class="shelf">
+                                
+                                    <div style="
+                                        background-image: url('./images/bud-ice.png');
+                                        background-size: cover;
+                                        border-radius: 50%;
+                                        left: 217.732877182px;
+                                        top: 175.295610238px;
+                                        height: 63.0px;
+                                        width: 63.0px;
+                                        position: absolute;
+                                        background-position: 50% 50%;
+                                        border: 3px #fff solid;
+                                        background-color: #fff;
+                                        "
+                                    >
+                                    </div>
+                                
+                                    <div style="
+                                        background-image: url('./images/hoegaarden-logo.jpg');
+                                        background-size: cover;
+                                        border-radius: 50%;
+                                        left: 229.66546314px;
+                                        top: 180.371329557px;
+                                        height: 53.0px;
+                                        width: 53.0px;
+                                        position: absolute;
+                                        background-position: 50% 50%;
+                                        border: 3px #fff solid;
+                                        background-color: #fff;
+                                        "
+                                    >
+                                    </div>
+                                
+                                    <div style="
+                                        background-image: url('./images/bud-light.jpg');
+                                        background-size: cover;
+                                        border-radius: 50%;
+                                        left: 256.57318399px;
+                                        top: 255.370552696px;
+                                        height: 53.0px;
+                                        width: 53.0px;
+                                        position: absolute;
+                                        background-position: 50% 50%;
+                                        border: 3px #fff solid;
+                                        background-color: #fff;
+                                        "
+                                    >
+                                    </div>
+                                
+                                    <div style="
+                                        background-image: url('./images/stella-artois.jpg');
+                                        background-size: cover;
+                                        border-radius: 50%;
+                                        left: 354.412115964px;
+                                        top: 6.25855152304px;
+                                        height: 53.0px;
+                                        width: 53.0px;
+                                        position: absolute;
+                                        background-position: 50% 50%;
+                                        border: 3px #fff solid;
+                                        background-color: #fff;
+                                        "
+                                    >
+                                    </div>
+                                
+                                    <div style="
+                                        background-image: url('./images/michelob-ultra.png');
+                                        background-size: cover;
+                                        border-radius: 50%;
+                                        left: 330.359262071px;
+                                        top: 3.19726571222px;
+                                        height: 53.0px;
+                                        width: 53.0px;
+                                        position: absolute;
+                                        background-position: 50% 50%;
+                                        border: 3px #fff solid;
+                                        background-color: #fff;
+                                        "
+                                    >
+                                    </div>
+                                
+                                    <div style="
+                                        background-image: url('./images/shock-top-raspberry-wheat.png');
+                                        background-size: cover;
+                                        border-radius: 50%;
+                                        left: 26.8778847692px;
+                                        top: 167.447336887px;
+                                        height: 53.0px;
+                                        width: 53.0px;
+                                        position: absolute;
+                                        background-position: 50% 50%;
+                                        border: 3px #fff solid;
+                                        background-color: #fff;
+                                        "
+                                    >
+                                    </div>
+                                
+                                    <div style="
+                                        background-image: url('./images/busch-beer.png');
+                                        background-size: cover;
+                                        border-radius: 50%;
+                                        left: 508.001890898px;
+                                        top: 371.594341602px;
+                                        height: 53.0px;
+                                        width: 53.0px;
+                                        position: absolute;
+                                        background-position: 50% 50%;
+                                        border: 3px #fff solid;
+                                        background-color: #fff;
+                                        "
+                                    >
+                                    </div>
+                                
+                                    <div style="
+                                        background-image: url('./images/bud-america.jpg');
+                                        background-size: cover;
+                                        border-radius: 50%;
+                                        left: 493.679492765px;
+                                        top: 174.403180185px;
+                                        height: 63.0px;
+                                        width: 63.0px;
+                                        position: absolute;
+                                        background-position: 50% 50%;
+                                        border: 3px #fff solid;
+                                        background-color: #fff;
+                                        "
+                                    >
+                                    </div>
+                                
+                                    <div style="
+                                        background-image: url('./images/bud-america.jpg');
+                                        background-size: cover;
+                                        border-radius: 50%;
+                                        left: 400.382794201px;
+                                        top: 379.831721256px;
+                                        height: 63.0px;
+                                        width: 63.0px;
+                                        position: absolute;
+                                        background-position: 50% 50%;
+                                        border: 3px #fff solid;
+                                        background-color: #fff;
+                                        "
+                                    >
+                                    </div>
+                                
+                                    <div style="
+                                        background-image: url('./images/bud-america.jpg');
+                                        background-size: cover;
+                                        border-radius: 50%;
+                                        left: 117.922550109px;
+                                        top: -1.66645407075px;
+                                        height: 63.0px;
+                                        width: 63.0px;
+                                        position: absolute;
+                                        background-position: 50% 50%;
+                                        border: 3px #fff solid;
+                                        background-color: #fff;
+                                        "
+                                    >
+                                    </div>
+                                
+                                    <div style="
+                                        background-image: url('./images/shock-top-twisted-pretzel-wheat.png');
+                                        background-size: cover;
+                                        border-radius: 50%;
+                                        left: 402.467055818px;
+                                        top: 1.00859608094px;
+                                        height: 53.0px;
+                                        width: 53.0px;
+                                        position: absolute;
+                                        background-position: 50% 50%;
+                                        border: 3px #fff solid;
+                                        background-color: #fff;
+                                        "
+                                    >
+                                    </div>
+                                
+                                    <div style="
+                                        background-image: url('./images/bud-light.jpg');
+                                        background-size: cover;
+                                        border-radius: 50%;
+                                        left: 470.797492847px;
+                                        top: 213.260889802px;
+                                        height: 53.0px;
+                                        width: 53.0px;
+                                        position: absolute;
+                                        background-position: 50% 50%;
+                                        border: 3px #fff solid;
+                                        background-color: #fff;
+                                        "
+                                    >
+                                    </div>
+                                
+                                    <div style="
+                                        background-image: url('./images/bud-america.jpg');
+                                        background-size: cover;
+                                        border-radius: 50%;
+                                        left: 435.03866885px;
+                                        top: 31.2928399603px;
+                                        height: 63.0px;
+                                        width: 63.0px;
+                                        position: absolute;
+                                        background-position: 50% 50%;
+                                        border: 3px #fff solid;
+                                        background-color: #fff;
+                                        "
+                                    >
+                                    </div>
+                                
+                            </div>
+                        </div>
+                    </div>
+                
+                    <div class="shelf-layout" id="B">
+                        <h3>Shelf B Inventory: 12</h3>
+                        <div class="shelf-wrapper-mobile">
+                            <svg class="shelf">
+                                <style>
+                                    image {
+                                        border-radius: 100%;
+                                        border: 2px dotted red;
+                                    }
+                                </style>
+                                
+                                <image
+                                    xlink:href="./images/shock-top-twisted-pretzel-wheat.png"
+                                    x="123.680495036"
+                                    y="174.625900855"
+                                    height="26.5px"
+                                    width="26.5px"
+                                />
+                                
+                                <image
+                                    xlink:href="./images/bud-america.jpg"
+                                    x="17.8492984669"
+                                    y="144.599335786"
+                                    height="31.5px"
+                                    width="31.5px"
+                                />
+                                
+                                <image
+                                    xlink:href="./images/bud-ice.png"
+                                    x="201.046119463"
+                                    y="8.72556395196"
+                                    height="31.5px"
+                                    width="31.5px"
+                                />
+                                
+                                <image
+                                    xlink:href="./images/bud-light.jpg"
+                                    x="129.439005485"
+                                    y="-10.7805304255"
+                                    height="31.5px"
+                                    width="31.5px"
+                                />
+                                
+                                <image
+                                    xlink:href="./images/bud-light.jpg"
+                                    x="234.541635423"
+                                    y="38.0888597605"
+                                    height="26.5px"
+                                    width="26.5px"
+                                />
+                                
+                                <image
+                                    xlink:href="./images/shock-top-twisted-pretzel-wheat.png"
+                                    x="189.939782906"
+                                    y="180.311284549"
+                                    height="26.5px"
+                                    width="26.5px"
+                                />
+                                
+                                <image
+                                    xlink:href="./images/bud-light-plat.png"
+                                    x="61.3235217588"
+                                    y="121.001634935"
+                                    height="26.5px"
+                                    width="26.5px"
+                                />
+                                
+                                <image
+                                    xlink:href="./images/busch-beer.png"
+                                    x="84.3208179804"
+                                    y="61.4663213542"
+                                    height="26.5px"
+                                    width="26.5px"
+                                />
+                                
+                                <image
+                                    xlink:href="./images/michelob-ultra.png"
+                                    x="242.767148678"
+                                    y="215.970525658"
+                                    height="26.5px"
+                                    width="26.5px"
+                                />
+                                
+                                <image
+                                    xlink:href="./images/natural-light.png"
+                                    x="188.38022238"
+                                    y="-8.24049386989"
+                                    height="26.5px"
+                                    width="26.5px"
+                                />
+                                
+                                <image
+                                    xlink:href="./images/stella-artois.jpg"
+                                    x="-13.1723849888"
+                                    y="6.20783275275"
+                                    height="26.5px"
+                                    width="26.5px"
+                                />
+                                
+                                <image
+                                    xlink:href="./images/bud-light.jpg"
+                                    x="194.046301865"
+                                    y="28.9469728407"
+                                    height="31.5px"
+                                    width="31.5px"
+                                />
+                                
+                            </svg>
+                        </div>
+                        <div class="shelf-wrapper">
+                            <div class="shelf">
+                                
+                                    <div style="
+                                        background-image: url('./images/shock-top-twisted-pretzel-wheat.png');
+                                        background-size: cover;
+                                        border-radius: 50%;
+                                        left: 247.360990071px;
+                                        top: 349.25180171px;
+                                        height: 53.0px;
+                                        width: 53.0px;
+                                        position: absolute;
+                                        background-position: 50% 50%;
+                                        border: 3px #fff solid;
+                                        background-color: #fff;
+                                        "
+                                    >
+                                    </div>
+                                
+                                    <div style="
+                                        background-image: url('./images/bud-america.jpg');
+                                        background-size: cover;
+                                        border-radius: 50%;
+                                        left: 35.6985969337px;
+                                        top: 289.198671572px;
+                                        height: 63.0px;
+                                        width: 63.0px;
+                                        position: absolute;
+                                        background-position: 50% 50%;
+                                        border: 3px #fff solid;
+                                        background-color: #fff;
+                                        "
+                                    >
+                                    </div>
+                                
+                                    <div style="
+                                        background-image: url('./images/bud-ice.png');
+                                        background-size: cover;
+                                        border-radius: 50%;
+                                        left: 402.092238927px;
+                                        top: 17.4511279039px;
+                                        height: 63.0px;
+                                        width: 63.0px;
+                                        position: absolute;
+                                        background-position: 50% 50%;
+                                        border: 3px #fff solid;
+                                        background-color: #fff;
+                                        "
+                                    >
+                                    </div>
+                                
+                                    <div style="
+                                        background-image: url('./images/bud-light.jpg');
+                                        background-size: cover;
+                                        border-radius: 50%;
+                                        left: 258.87801097px;
+                                        top: -21.5610608511px;
+                                        height: 63.0px;
+                                        width: 63.0px;
+                                        position: absolute;
+                                        background-position: 50% 50%;
+                                        border: 3px #fff solid;
+                                        background-color: #fff;
+                                        "
+                                    >
+                                    </div>
+                                
+                                    <div style="
+                                        background-image: url('./images/bud-light.jpg');
+                                        background-size: cover;
+                                        border-radius: 50%;
+                                        left: 469.083270846px;
+                                        top: 76.1777195211px;
+                                        height: 53.0px;
+                                        width: 53.0px;
+                                        position: absolute;
+                                        background-position: 50% 50%;
+                                        border: 3px #fff solid;
+                                        background-color: #fff;
+                                        "
+                                    >
+                                    </div>
+                                
+                                    <div style="
+                                        background-image: url('./images/shock-top-twisted-pretzel-wheat.png');
+                                        background-size: cover;
+                                        border-radius: 50%;
+                                        left: 379.879565812px;
+                                        top: 360.622569099px;
+                                        height: 53.0px;
+                                        width: 53.0px;
+                                        position: absolute;
+                                        background-position: 50% 50%;
+                                        border: 3px #fff solid;
+                                        background-color: #fff;
+                                        "
+                                    >
+                                    </div>
+                                
+                                    <div style="
+                                        background-image: url('./images/bud-light-plat.png');
+                                        background-size: cover;
+                                        border-radius: 50%;
+                                        left: 122.647043518px;
+                                        top: 242.00326987px;
+                                        height: 53.0px;
+                                        width: 53.0px;
+                                        position: absolute;
+                                        background-position: 50% 50%;
+                                        border: 3px #fff solid;
+                                        background-color: #fff;
+                                        "
+                                    >
+                                    </div>
+                                
+                                    <div style="
+                                        background-image: url('./images/busch-beer.png');
+                                        background-size: cover;
+                                        border-radius: 50%;
+                                        left: 168.641635961px;
+                                        top: 122.932642708px;
+                                        height: 53.0px;
+                                        width: 53.0px;
+                                        position: absolute;
+                                        background-position: 50% 50%;
+                                        border: 3px #fff solid;
+                                        background-color: #fff;
+                                        "
+                                    >
+                                    </div>
+                                
+                                    <div style="
+                                        background-image: url('./images/michelob-ultra.png');
+                                        background-size: cover;
+                                        border-radius: 50%;
+                                        left: 485.534297357px;
+                                        top: 431.941051316px;
+                                        height: 53.0px;
+                                        width: 53.0px;
+                                        position: absolute;
+                                        background-position: 50% 50%;
+                                        border: 3px #fff solid;
+                                        background-color: #fff;
+                                        "
+                                    >
+                                    </div>
+                                
+                                    <div style="
+                                        background-image: url('./images/natural-light.png');
+                                        background-size: cover;
+                                        border-radius: 50%;
+                                        left: 376.760444759px;
+                                        top: -16.4809877398px;
+                                        height: 53.0px;
+                                        width: 53.0px;
+                                        position: absolute;
+                                        background-position: 50% 50%;
+                                        border: 3px #fff solid;
+                                        background-color: #fff;
+                                        "
+                                    >
+                                    </div>
+                                
+                                    <div style="
+                                        background-image: url('./images/stella-artois.jpg');
+                                        background-size: cover;
+                                        border-radius: 50%;
+                                        left: -26.3447699776px;
+                                        top: 12.4156655055px;
+                                        height: 53.0px;
+                                        width: 53.0px;
+                                        position: absolute;
+                                        background-position: 50% 50%;
+                                        border: 3px #fff solid;
+                                        background-color: #fff;
+                                        "
+                                    >
+                                    </div>
+                                
+                                    <div style="
+                                        background-image: url('./images/bud-light.jpg');
+                                        background-size: cover;
+                                        border-radius: 50%;
+                                        left: 388.092603729px;
+                                        top: 57.8939456814px;
+                                        height: 63.0px;
+                                        width: 63.0px;
+                                        position: absolute;
+                                        background-position: 50% 50%;
+                                        border: 3px #fff solid;
+                                        background-color: #fff;
+                                        "
+                                    >
+                                    </div>
+                                
+                            </div>
+                        </div>
+                    </div>
+                
+                    <div class="shelf-layout" id="A">
+                        <h3>Shelf A Inventory: 17</h3>
+                        <div class="shelf-wrapper-mobile">
+                            <svg class="shelf">
+                                <style>
+                                    image {
+                                        border-radius: 100%;
+                                        border: 2px dotted red;
+                                    }
+                                </style>
+                                
+                                <image
+                                    xlink:href="./images/busch-beer.png"
+                                    x="142.351683144"
+                                    y="-2.87498381536"
+                                    height="26.5px"
+                                    width="26.5px"
+                                />
+                                
+                                <image
+                                    xlink:href="./images/shock-top-raspberry-wheat.png"
+                                    x="57.2074285214"
+                                    y="114.712882024"
+                                    height="26.5px"
+                                    width="26.5px"
+                                />
+                                
+                                <image
+                                    xlink:href="./images/bud-light.jpg"
+                                    x="21.5205637849"
+                                    y="168.544425409"
+                                    height="26.5px"
+                                    width="26.5px"
+                                />
+                                
+                                <image
+                                    xlink:href="./images/bud-light.jpg"
+                                    x="88.8058168923"
+                                    y="175.223767661"
+                                    height="26.5px"
+                                    width="26.5px"
+                                />
+                                
+                                <image
+                                    xlink:href="./images/shock-top-twisted-pretzel-wheat.png"
+                                    x="247.056657518"
+                                    y="208.328852714"
+                                    height="26.5px"
+                                    width="26.5px"
+                                />
+                                
+                                <image
+                                    xlink:href="./images/becks.jpg"
+                                    x="141.812416763"
+                                    y="53.4924800691"
+                                    height="26.5px"
+                                    width="26.5px"
+                                />
+                                
+                                <image
+                                    xlink:href="./images/natural-light.png"
+                                    x="202.632163518"
+                                    y="79.5394071357"
+                                    height="26.5px"
+                                    width="26.5px"
+                                />
+                                
+                                <image
+                                    xlink:href="./images/busch-beer.png"
+                                    x="85.161314187"
+                                    y="110.850675291"
+                                    height="26.5px"
+                                    width="26.5px"
+                                />
+                                
+                                <image
+                                    xlink:href="./images/corona-extra.png"
+                                    x="53.1702547693"
+                                    y="127.403035932"
+                                    height="26.5px"
+                                    width="26.5px"
+                                />
+                                
+                                <image
+                                    xlink:href="./images/bud-light-plat.png"
+                                    x="57.1728193763"
+                                    y="77.8537457272"
+                                    height="26.5px"
+                                    width="26.5px"
+                                />
+                                
+                                <image
+                                    xlink:href="./images/becks.jpg"
+                                    x="239.959741311"
+                                    y="6.10136022219"
+                                    height="26.5px"
+                                    width="26.5px"
+                                />
+                                
+                                <image
+                                    xlink:href="./images/busch-beer.png"
+                                    x="191.091600147"
+                                    y="167.688983109"
+                                    height="26.5px"
+                                    width="26.5px"
+                                />
+                                
+                                <image
+                                    xlink:href="./images/stella-artois.jpg"
+                                    x="183.616958337"
+                                    y="22.6664892295"
+                                    height="26.5px"
+                                    width="26.5px"
+                                />
+                                
+                                <image
+                                    xlink:href="./images/shock-top-twisted-pretzel-wheat.png"
+                                    x="215.209154506"
+                                    y="133.15472539"
+                                    height="26.5px"
+                                    width="26.5px"
+                                />
+                                
+                                <image
+                                    xlink:href="./images/bud-light.jpg"
+                                    x="201.069087575"
+                                    y="58.6073184377"
+                                    height="26.5px"
+                                    width="26.5px"
+                                />
+                                
+                                <image
+                                    xlink:href="./images/bud-light.jpg"
+                                    x="239.946348027"
+                                    y="153.026789321"
+                                    height="26.5px"
+                                    width="26.5px"
+                                />
+                                
+                                <image
+                                    xlink:href="./images/corona-extra.png"
+                                    x="83.4307448165"
+                                    y="131.478450904"
+                                    height="26.5px"
+                                    width="26.5px"
+                                />
+                                
+                            </svg>
+                        </div>
+                        <div class="shelf-wrapper">
+                            <div class="shelf">
+                                
+                                    <div style="
+                                        background-image: url('./images/busch-beer.png');
+                                        background-size: cover;
+                                        border-radius: 50%;
+                                        left: 284.703366289px;
+                                        top: -5.74996763071px;
+                                        height: 53.0px;
+                                        width: 53.0px;
+                                        position: absolute;
+                                        background-position: 50% 50%;
+                                        border: 3px #fff solid;
+                                        background-color: #fff;
+                                        "
+                                    >
+                                    </div>
+                                
+                                    <div style="
+                                        background-image: url('./images/shock-top-raspberry-wheat.png');
+                                        background-size: cover;
+                                        border-radius: 50%;
+                                        left: 114.414857043px;
+                                        top: 229.425764048px;
+                                        height: 53.0px;
+                                        width: 53.0px;
+                                        position: absolute;
+                                        background-position: 50% 50%;
+                                        border: 3px #fff solid;
+                                        background-color: #fff;
+                                        "
+                                    >
+                                    </div>
+                                
+                                    <div style="
+                                        background-image: url('./images/bud-light.jpg');
+                                        background-size: cover;
+                                        border-radius: 50%;
+                                        left: 43.0411275697px;
+                                        top: 337.088850818px;
+                                        height: 53.0px;
+                                        width: 53.0px;
+                                        position: absolute;
+                                        background-position: 50% 50%;
+                                        border: 3px #fff solid;
+                                        background-color: #fff;
+                                        "
+                                    >
+                                    </div>
+                                
+                                    <div style="
+                                        background-image: url('./images/bud-light.jpg');
+                                        background-size: cover;
+                                        border-radius: 50%;
+                                        left: 177.611633785px;
+                                        top: 350.447535322px;
+                                        height: 53.0px;
+                                        width: 53.0px;
+                                        position: absolute;
+                                        background-position: 50% 50%;
+                                        border: 3px #fff solid;
+                                        background-color: #fff;
+                                        "
+                                    >
+                                    </div>
+                                
+                                    <div style="
+                                        background-image: url('./images/shock-top-twisted-pretzel-wheat.png');
+                                        background-size: cover;
+                                        border-radius: 50%;
+                                        left: 494.113315037px;
+                                        top: 416.657705429px;
+                                        height: 53.0px;
+                                        width: 53.0px;
+                                        position: absolute;
+                                        background-position: 50% 50%;
+                                        border: 3px #fff solid;
+                                        background-color: #fff;
+                                        "
+                                    >
+                                    </div>
+                                
+                                    <div style="
+                                        background-image: url('./images/becks.jpg');
+                                        background-size: cover;
+                                        border-radius: 50%;
+                                        left: 283.624833526px;
+                                        top: 106.984960138px;
+                                        height: 53.0px;
+                                        width: 53.0px;
+                                        position: absolute;
+                                        background-position: 50% 50%;
+                                        border: 3px #fff solid;
+                                        background-color: #fff;
+                                        "
+                                    >
+                                    </div>
+                                
+                                    <div style="
+                                        background-image: url('./images/natural-light.png');
+                                        background-size: cover;
+                                        border-radius: 50%;
+                                        left: 405.264327037px;
+                                        top: 159.078814271px;
+                                        height: 53.0px;
+                                        width: 53.0px;
+                                        position: absolute;
+                                        background-position: 50% 50%;
+                                        border: 3px #fff solid;
+                                        background-color: #fff;
+                                        "
+                                    >
+                                    </div>
+                                
+                                    <div style="
+                                        background-image: url('./images/busch-beer.png');
+                                        background-size: cover;
+                                        border-radius: 50%;
+                                        left: 170.322628374px;
+                                        top: 221.701350582px;
+                                        height: 53.0px;
+                                        width: 53.0px;
+                                        position: absolute;
+                                        background-position: 50% 50%;
+                                        border: 3px #fff solid;
+                                        background-color: #fff;
+                                        "
+                                    >
+                                    </div>
+                                
+                                    <div style="
+                                        background-image: url('./images/corona-extra.png');
+                                        background-size: cover;
+                                        border-radius: 50%;
+                                        left: 106.340509539px;
+                                        top: 254.806071864px;
+                                        height: 53.0px;
+                                        width: 53.0px;
+                                        position: absolute;
+                                        background-position: 50% 50%;
+                                        border: 3px #fff solid;
+                                        background-color: #fff;
+                                        "
+                                    >
+                                    </div>
+                                
+                                    <div style="
+                                        background-image: url('./images/bud-light-plat.png');
+                                        background-size: cover;
+                                        border-radius: 50%;
+                                        left: 114.345638753px;
+                                        top: 155.707491454px;
+                                        height: 53.0px;
+                                        width: 53.0px;
+                                        position: absolute;
+                                        background-position: 50% 50%;
+                                        border: 3px #fff solid;
+                                        background-color: #fff;
+                                        "
+                                    >
+                                    </div>
+                                
+                                    <div style="
+                                        background-image: url('./images/becks.jpg');
+                                        background-size: cover;
+                                        border-radius: 50%;
+                                        left: 479.919482623px;
+                                        top: 12.2027204444px;
+                                        height: 53.0px;
+                                        width: 53.0px;
+                                        position: absolute;
+                                        background-position: 50% 50%;
+                                        border: 3px #fff solid;
+                                        background-color: #fff;
+                                        "
+                                    >
+                                    </div>
+                                
+                                    <div style="
+                                        background-image: url('./images/busch-beer.png');
+                                        background-size: cover;
+                                        border-radius: 50%;
+                                        left: 382.183200294px;
+                                        top: 335.377966218px;
+                                        height: 53.0px;
+                                        width: 53.0px;
+                                        position: absolute;
+                                        background-position: 50% 50%;
+                                        border: 3px #fff solid;
+                                        background-color: #fff;
+                                        "
+                                    >
+                                    </div>
+                                
+                                    <div style="
+                                        background-image: url('./images/stella-artois.jpg');
+                                        background-size: cover;
+                                        border-radius: 50%;
+                                        left: 367.233916674px;
+                                        top: 45.3329784589px;
+                                        height: 53.0px;
+                                        width: 53.0px;
+                                        position: absolute;
+                                        background-position: 50% 50%;
+                                        border: 3px #fff solid;
+                                        background-color: #fff;
+                                        "
+                                    >
+                                    </div>
+                                
+                                    <div style="
+                                        background-image: url('./images/shock-top-twisted-pretzel-wheat.png');
+                                        background-size: cover;
+                                        border-radius: 50%;
+                                        left: 430.418309012px;
+                                        top: 266.309450779px;
+                                        height: 53.0px;
+                                        width: 53.0px;
+                                        position: absolute;
+                                        background-position: 50% 50%;
+                                        border: 3px #fff solid;
+                                        background-color: #fff;
+                                        "
+                                    >
+                                    </div>
+                                
+                                    <div style="
+                                        background-image: url('./images/bud-light.jpg');
+                                        background-size: cover;
+                                        border-radius: 50%;
+                                        left: 402.13817515px;
+                                        top: 117.214636875px;
+                                        height: 53.0px;
+                                        width: 53.0px;
+                                        position: absolute;
+                                        background-position: 50% 50%;
+                                        border: 3px #fff solid;
+                                        background-color: #fff;
+                                        "
+                                    >
+                                    </div>
+                                
+                                    <div style="
+                                        background-image: url('./images/bud-light.jpg');
+                                        background-size: cover;
+                                        border-radius: 50%;
+                                        left: 479.892696055px;
+                                        top: 306.053578642px;
+                                        height: 53.0px;
+                                        width: 53.0px;
+                                        position: absolute;
+                                        background-position: 50% 50%;
+                                        border: 3px #fff solid;
+                                        background-color: #fff;
+                                        "
+                                    >
+                                    </div>
+                                
+                                    <div style="
+                                        background-image: url('./images/corona-extra.png');
+                                        background-size: cover;
+                                        border-radius: 50%;
+                                        left: 166.861489633px;
+                                        top: 262.956901807px;
+                                        height: 53.0px;
+                                        width: 53.0px;
+                                        position: absolute;
+                                        background-position: 50% 50%;
+                                        border: 3px #fff solid;
+                                        background-color: #fff;
+                                        "
+                                    >
+                                    </div>
+                                
+                            </div>
+                        </div>
+                    </div>
+                
+            </section>
+        </div>
+    </body>
+    <script>
+        (function() {
+            document.querySelector('.sort-count').addEventListener('click', function() {
+                document.querySelector('.list-count').classList.add('active');
+                document.querySelector('.list-alpha').classList.remove('active');
+                document.querySelector('.sort-count').classList.add('active');
+                document.querySelector('.sort-alpha').classList.remove('active');
+            });
+            document.querySelector('.sort-alpha').addEventListener('click', function() {
+                document.querySelector('.list-count').classList.remove('active');
+                document.querySelector('.list-alpha').classList.add('active');
+                document.querySelector('.sort-count').classList.remove('active');
+                document.querySelector('.sort-alpha').classList.add('active');
+            });
+        })();
+    </script>
+</html>

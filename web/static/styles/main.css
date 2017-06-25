@@ -1,0 +1,226 @@
+/* site-wide styles */
+html, body {
+    margin: 0;
+    font-family: 'Proxima Nova', Helvetica, sans-serif;
+}
+h1, h2, h3, h4, h5, strong {
+    padding: 0;
+    margin: 0;
+    font-family: 'Proxima Nova Bold'
+}
+p {
+    padding: 0;
+    margin: 0;
+}
+.wrapper {
+    margin: 50px auto;
+    padding: 0 20px;
+    max-width: 750px;
+}
+.report-header {
+    text-align: center;
+}
+section {
+    margin-top: 40px;
+}
+section hr {
+    border-width: 0;
+    border-top: 2px dashed #8c8b8b;
+    margin-bottom: 20px;
+}
+
+.footer {
+    text-align: center;
+}
+
+
+/* Shelfs */
+.shelf-wrapper-mobile {
+    display: none;
+    margin: 10px;
+    width: 280px;
+    height: 245px;
+    position: relative;
+}
+.shelf-wrapper {
+    display: block;
+    margin: 10px;
+    width: 560px;
+    height: 490px;
+    position: relative;
+}
+@media screen (max-width: 600px) {
+  .shelf-wrapper {
+    display: none;
+  }
+  .shelf-wrapper-mobile {
+    display: block;
+  }
+}
+.shelf-layout {
+    padding-top: 40px;
+}
+.shelf {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    border: 1px black solid;
+    background-color: #eee;
+    top: 0;
+    left: 0;
+    z-index:-1;
+    overflow: hidden;
+}
+
+/* Product List */
+.product-list {
+    width: 100%;
+    margin: 10px auto 40px;
+}
+.product-list-item {
+    padding: 5px;
+    width: 110px;
+    display: inline-block;
+    vertical-align: top;
+}
+.product-list-item > p {
+    padding-top: 5px;
+}
+.product-list-item img {
+    float: left;
+    height: 40px;
+    width: auto;
+}
+.product-list-item .count {
+    line-height: 40px;
+    text-align: center;
+}
+.sort {
+    color: blue;
+    cursor: pointer;
+    padding-left: 10px;
+}
+.sort.active, .sort:hover {
+    text-decoration: underline;
+}
+.list-alpha, .list-count {
+    display: none;
+}
+.list-alpha.active, .list-count.active {
+    display: block;
+}
+.view-shelf-wrapper {
+    margin-top: 30px;
+}
+.view-shelf-wrapper a {
+    text-decoration: none;
+}
+.view-shelf {
+    width: 200px;
+    margin: 5px;
+    background-color: #ccc;
+    text-align: center;
+}
+.view-shelf p {
+    color: #000;
+    line-height: 40px;
+}
+.view-shelf:hover {
+    background-color: #eee;
+}
+.title {
+    position: relative;
+}
+.title span {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+}
+
+/* REPORTS */
+.reports {
+    max-width: 500px;
+    width: 100%;
+    margin: 0 auto;
+}
+.report {
+    margin: 15px 0;
+}
+.report hr {
+    margin-top: 20px;
+}
+.report-link {
+    display: inline-block;
+    padding-right: 20px;
+}
+.activity {
+    padding: 10px 0 0;
+}
+.activity hr {
+    margin: 10px 0 0 0;
+}
+.activity h3 {
+    padding-left: 20px;
+}
+.activity h3 span {
+    text-transform: uppercase;
+    letter-spacing: 0.25em;
+}
+.activity.scan {
+    border-left: 20px #879DC8 solid;
+}
+.activity.open {
+    border-left: 20px #819556 solid;
+}
+.activity.close {
+    border-left: 20px #D19A90 solid;
+}
+
+/* INDEX */
+.pages {
+    width: 600px;
+    margin: 20px auto;
+}
+.page {
+    display: inline-block;
+    width: 32%;
+    max-width: 200px;
+    text-align: center;
+    text-decoration: none;
+    color: #444;
+    margin: 50px auto 20px;
+}
+.page:hover {
+    color: #000;
+}
+.page i {
+    font-size: 80px;
+}
+.page p {
+    font-size: 25px;
+    margin-top: 10px;
+}
+@media screen(max-width: 600px) {
+    .pages {
+        width: 100%;
+    }
+    .page {
+        width: 100%;
+        max-width: 100%;
+        margin: 30px auto 0;
+    }
+}
+
+/* TYPEFACES */
+@font-face {
+    font-family:'Proxima Nova';
+    src: url('../fonts/Proxima Nova Regular.otf') format('opentype')
+}
+@font-face {
+    font-family:'Proxima Nova Semibold';
+    src: url('../fonts/Proxima Nova Semibold.otf') format('opentype')
+}
+@font-face {
+    font-family:'Proxima Nova Bold';
+    src: url('../fonts/Proxima Nova Bold.otf') format('opentype')
+}

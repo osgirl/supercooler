@@ -1,0 +1,597 @@
+<html>
+    <head>
+        <title>Smart Fridge</title>
+        <meta charset="utf-8">
+        <meta name="pdfkit-orientation" content="Portrait"/>
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <style>
+            /* site-wide styles */
+            html, body {
+                margin: 0;
+                font-family: 'Proxima Nova', Helvetica, sans-serif;
+            }
+            h1, h2, h3, h4, h5, strong {
+                padding: 0;
+                margin: 0;
+                font-family: 'Proxima Nova Bold'
+            }
+            p {
+                padding: 0;
+                margin: 0;
+            }
+            .wrapper {
+                margin: 50px auto;
+                padding: 0 20px;
+                max-width: 750px;
+            }
+            .report-header {
+                text-align: center;
+            }
+            section {
+                margin-top: 40px;
+            }
+            section hr {
+                border-width: 0;
+                border-top: 2px dashed #8c8b8b;
+                margin-bottom: 50px;
+            }
+
+            /* Shelfs */
+            .shelf-wrapper-mobile {
+                display: none;
+                margin: 10px;
+                width: 280px;
+                height: 245px;
+                position: relative;
+            }
+            .shelf-wrapper {
+                display: block;
+                margin: 10px;
+                width: 560px;
+                height: 490px;
+                position: relative;
+            }
+            @media (max-width: 600px) {
+              .shelf-wrapper {
+                display: none;
+              }
+              .shelf-wrapper-mobile {
+                display: block;
+              }
+            }
+            .shelf-layout {
+                margin-top: 40px;
+            }
+            .shelf {
+                position: absolute;
+                width: 100%;
+                height: 100%;
+                border: 1px black solid;
+                top:0; left:0;
+                z-index:-1;
+            }
+
+            /* Product List */
+            .product-list {
+                width: 100%;
+                margin: 10px auto;
+            }
+            .product-list-item {
+                padding: 5px;
+                width: 110px;
+                display: inline-block;
+                vertical-align: top;
+            }
+            .product-list-item > p {
+                padding-top: 5px;
+            }
+            .product-list-item img {
+                float: left;
+                height: 40px;
+                width: auto;
+            }
+            .product-list-item .count {
+                line-height: 40px;
+                text-align: center;
+            }
+            .sort {
+                color: blue;
+                cursor: pointer;
+                padding-left: 10px;
+            }
+            .sort.active, .sort:hover {
+                text-decoration: underline;
+            }
+            .list-alpha, .list-count {
+                display: none;
+            }
+            .list-alpha.active, .list-count.active {
+                display: block;
+            }
+            .view-shelf-wrapper {
+                margin-top: 30px;
+            }
+            .view-shelf-wrapper a {
+                text-decoration: none;
+            }
+            .view-shelf {
+                width: 200px;
+                margin: 5px;
+                background-color: #ccc;
+                text-align: center;
+            }
+            .view-shelf p {
+                color: #000;
+                line-height: 40px;
+            }
+            .view-shelf:hover {
+                background-color: #eee;
+            }
+            @font-face {
+                font-family:'Proxima Nova';
+                src: url('./fonts/Proxima Nova Regular.otf') format('opentype')
+            }
+            @font-face {
+                font-family:'Proxima Nova Semibold';
+                src: url('./fonts/Proxima Nova Semibold.otf') format('opentype')
+            }
+            @font-face {
+                font-family:'Proxima Nova Bold';
+                src: url('./fonts/Proxima Nova Bold.otf') format('opentype')
+            }
+        </style>
+    </head>
+    <body>
+        <div class="wrapper">
+            <div class="report-header">
+                <h1>Scan Report</h1>
+                <p>11:45:32 - 28 May 2017</p>
+            </div>
+            <hr>
+            <section>
+                <h2>Summary</h2>
+                <hr>
+                <div>
+                    <h3>Total Inventory: 20</h3>
+                </div>
+                <p>Inventory by shelf (click to view shelf layout)</p>
+                <div class="view-shelf-wrapper">
+                    
+                    <div class="view-shelf">
+                        <a href="#D">
+                            <p>Shelf D - 5</p>
+                        </a>
+                    </div>
+                    
+                    <div class="view-shelf">
+                        <a href="#C">
+                            <p>Shelf C - 4</p>
+                        </a>
+                    </div>
+                    
+                    <div class="view-shelf">
+                        <a href="#B">
+                            <p>Shelf B - 7</p>
+                        </a>
+                    </div>
+                    
+                    <div class="view-shelf">
+                        <a href="#A">
+                            <p>Shelf A - 4</p>
+                        </a>
+                    </div>
+                    
+                </div>
+            </section>
+            <section>
+                <h2>List of Inventory by Product</h2>
+                <hr>
+                <p>Sort by: <span class="sort sort-count active">Item Count</span> <span class="sort sort-alpha">Brand Name</span></p>
+                <div class="product-list list-count active">
+                    
+                    <div class="product-list-item">
+                        <div>
+                            <img src="./images/bud-america.jpg">
+                            <strong>
+                                <p class="count">3</p>
+                            </strong>
+                        </div>
+                        <p>Budweiser America</p>
+                    </div>
+                    
+                    <div class="product-list-item">
+                        <div>
+                            <img src="./images/natural-light.png">
+                            <strong>
+                                <p class="count">2</p>
+                            </strong>
+                        </div>
+                        <p>Natural Light (can)</p>
+                    </div>
+                    
+                    <div class="product-list-item">
+                        <div>
+                            <img src="./images/hoegaarden-logo.jpg">
+                            <strong>
+                                <p class="count">2</p>
+                            </strong>
+                        </div>
+                        <p>Hoegaarden</p>
+                    </div>
+                    
+                    <div class="product-list-item">
+                        <div>
+                            <img src="./images/bud-light.jpg">
+                            <strong>
+                                <p class="count">2</p>
+                            </strong>
+                        </div>
+                        <p>Bud Light</p>
+                    </div>
+                    
+                    <div class="product-list-item">
+                        <div>
+                            <img src="./images/bud-light.jpg">
+                            <strong>
+                                <p class="count">2</p>
+                            </strong>
+                        </div>
+                        <p>Bud Light (can - 25oz)</p>
+                    </div>
+                    
+                    <div class="product-list-item">
+                        <div>
+                            <img src="./images/bud-light-plat.png">
+                            <strong>
+                                <p class="count">2</p>
+                            </strong>
+                        </div>
+                        <p>Bud Light Platinum</p>
+                    </div>
+                    
+                    <div class="product-list-item">
+                        <div>
+                            <img src="./images/bud-america.jpg">
+                            <strong>
+                                <p class="count">2</p>
+                            </strong>
+                        </div>
+                        <p>Bud America (can - 25oz)</p>
+                    </div>
+                    
+                    <div class="product-list-item">
+                        <div>
+                            <img src="./images/stella-artois.jpg">
+                            <strong>
+                                <p class="count">1</p>
+                            </strong>
+                        </div>
+                        <p>Stella Artois</p>
+                    </div>
+                    
+                    <div class="product-list-item">
+                        <div>
+                            <img src="./images/corona-extra.png">
+                            <strong>
+                                <p class="count">1</p>
+                            </strong>
+                        </div>
+                        <p>Corona Extra</p>
+                    </div>
+                    
+                    <div class="product-list-item">
+                        <div>
+                            <img src="./images/busch-beer.png">
+                            <strong>
+                                <p class="count">1</p>
+                            </strong>
+                        </div>
+                        <p>Busch Beer (can - 16oz)</p>
+                    </div>
+                    
+                    <div class="product-list-item">
+                        <div>
+                            <img src="./images/bud-light.jpg">
+                            <strong>
+                                <p class="count">1</p>
+                            </strong>
+                        </div>
+                        <p>Bud Light (can)</p>
+                    </div>
+                    
+                    <div class="product-list-item">
+                        <div>
+                            <img src="./images/bud-america.jpg">
+                            <strong>
+                                <p class="count">1</p>
+                            </strong>
+                        </div>
+                        <p>Budweiser America (can)</p>
+                    </div>
+                    
+                </div>
+                <div class="product-list list-alpha">
+                    
+                    <div class="product-list-item">
+                        <div>
+                            <img src="./images/bud-america.jpg">
+                            <p class="count">
+                                2
+                            </p>
+                        </div>
+                        <p>Bud America (can - 25oz)</p>
+                    </div>
+                    
+                    <div class="product-list-item">
+                        <div>
+                            <img src="./images/bud-light.jpg">
+                            <p class="count">
+                                2
+                            </p>
+                        </div>
+                        <p>Bud Light</p>
+                    </div>
+                    
+                    <div class="product-list-item">
+                        <div>
+                            <img src="./images/bud-light.jpg">
+                            <p class="count">
+                                2
+                            </p>
+                        </div>
+                        <p>Bud Light (can - 25oz)</p>
+                    </div>
+                    
+                    <div class="product-list-item">
+                        <div>
+                            <img src="./images/bud-light.jpg">
+                            <p class="count">
+                                1
+                            </p>
+                        </div>
+                        <p>Bud Light (can)</p>
+                    </div>
+                    
+                    <div class="product-list-item">
+                        <div>
+                            <img src="./images/bud-light-plat.png">
+                            <p class="count">
+                                2
+                            </p>
+                        </div>
+                        <p>Bud Light Platinum</p>
+                    </div>
+                    
+                    <div class="product-list-item">
+                        <div>
+                            <img src="./images/bud-america.jpg">
+                            <p class="count">
+                                3
+                            </p>
+                        </div>
+                        <p>Budweiser America</p>
+                    </div>
+                    
+                    <div class="product-list-item">
+                        <div>
+                            <img src="./images/bud-america.jpg">
+                            <p class="count">
+                                1
+                            </p>
+                        </div>
+                        <p>Budweiser America (can)</p>
+                    </div>
+                    
+                    <div class="product-list-item">
+                        <div>
+                            <img src="./images/busch-beer.png">
+                            <p class="count">
+                                1
+                            </p>
+                        </div>
+                        <p>Busch Beer (can - 16oz)</p>
+                    </div>
+                    
+                    <div class="product-list-item">
+                        <div>
+                            <img src="./images/corona-extra.png">
+                            <p class="count">
+                                1
+                            </p>
+                        </div>
+                        <p>Corona Extra</p>
+                    </div>
+                    
+                    <div class="product-list-item">
+                        <div>
+                            <img src="./images/hoegaarden-logo.jpg">
+                            <p class="count">
+                                2
+                            </p>
+                        </div>
+                        <p>Hoegaarden</p>
+                    </div>
+                    
+                    <div class="product-list-item">
+                        <div>
+                            <img src="./images/natural-light.png">
+                            <p class="count">
+                                2
+                            </p>
+                        </div>
+                        <p>Natural Light (can)</p>
+                    </div>
+                    
+                    <div class="product-list-item">
+                        <div>
+                            <img src="./images/stella-artois.jpg">
+                            <p class="count">
+                                1
+                            </p>
+                        </div>
+                        <p>Stella Artois</p>
+                    </div>
+                    
+                </div>
+            </section>
+            <section>
+                <h2>Shelf layout</h2>
+                <hr>
+                
+                    <div class="shelf-layout" id="D">
+                        <h3>Shelf D Inventory: 5</h3>
+                        <div class="shelf-wrapper-mobile">
+                            <svg class="shelf">
+                                
+                                <image xlink:href="./images/busch-beer.png"" x="11.9564335332" y="37.9709097148" height="40px" width="40px"/>
+                                
+                                <image xlink:href="./images/hoegaarden-logo.jpg"" x="103.376702528" y="166.614202197" height="40px" width="40px"/>
+                                
+                                <image xlink:href="./images/hoegaarden-logo.jpg"" x="98.4449518584" y="108.581165616" height="40px" width="40px"/>
+                                
+                                <image xlink:href="./images/stella-artois.jpg"" x="151.400724103" y="51.8578158624" height="40px" width="40px"/>
+                                
+                                <image xlink:href="./images/bud-america.jpg"" x="12.7602368847" y="154.641480059" height="40px" width="40px"/>
+                                
+                            </svg>
+                        </div>
+                        <div class="shelf-wrapper">
+                            <svg class="shelf">
+                                
+                                <image xlink:href="./images/busch-beer.png" x="23.9128670664" y="75.9418194295" height="60px" width="60px"/>
+                                
+                                <image xlink:href="./images/hoegaarden-logo.jpg" x="206.753405056" y="333.228404395" height="60px" width="60px"/>
+                                
+                                <image xlink:href="./images/hoegaarden-logo.jpg" x="196.889903717" y="217.162331232" height="60px" width="60px"/>
+                                
+                                <image xlink:href="./images/stella-artois.jpg" x="302.801448205" y="103.715631725" height="60px" width="60px"/>
+                                
+                                <image xlink:href="./images/bud-america.jpg" x="25.5204737693" y="309.282960118" height="60px" width="60px"/>
+                                
+                            </svg>
+                        </div>
+                    </div>
+                
+                    <div class="shelf-layout" id="C">
+                        <h3>Shelf C Inventory: 4</h3>
+                        <div class="shelf-wrapper-mobile">
+                            <svg class="shelf">
+                                
+                                <image xlink:href="./images/bud-america.jpg"" x="128.470318625" y="98.3002866571" height="40px" width="40px"/>
+                                
+                                <image xlink:href="./images/bud-light.jpg"" x="91.1272743163" y="42.2184383734" height="40px" width="40px"/>
+                                
+                                <image xlink:href="./images/corona-extra.png"" x="98.0797783066" y="219.623674504" height="40px" width="40px"/>
+                                
+                                <image xlink:href="./images/bud-america.jpg"" x="98.0853232953" y="90.8411027621" height="40px" width="40px"/>
+                                
+                            </svg>
+                        </div>
+                        <div class="shelf-wrapper">
+                            <svg class="shelf">
+                                
+                                <image xlink:href="./images/bud-america.jpg" x="256.94063725" y="196.600573314" height="60px" width="60px"/>
+                                
+                                <image xlink:href="./images/bud-light.jpg" x="182.254548633" y="84.4368767468" height="60px" width="60px"/>
+                                
+                                <image xlink:href="./images/corona-extra.png" x="196.159556613" y="439.247349007" height="60px" width="60px"/>
+                                
+                                <image xlink:href="./images/bud-america.jpg" x="196.170646591" y="181.682205524" height="60px" width="60px"/>
+                                
+                            </svg>
+                        </div>
+                    </div>
+                
+                    <div class="shelf-layout" id="B">
+                        <h3>Shelf B Inventory: 7</h3>
+                        <div class="shelf-wrapper-mobile">
+                            <svg class="shelf">
+                                
+                                <image xlink:href="./images/bud-light.jpg"" x="255.860697233" y="200.845614295" height="40px" width="40px"/>
+                                
+                                <image xlink:href="./images/bud-light.jpg"" x="159.942258123" y="156.49964254" height="40px" width="40px"/>
+                                
+                                <image xlink:href="./images/natural-light.png"" x="59.7959753696" y="5.43207703009" height="40px" width="40px"/>
+                                
+                                <image xlink:href="./images/bud-america.jpg"" x="13.4843049957" y="211.510190828" height="40px" width="40px"/>
+                                
+                                <image xlink:href="./images/natural-light.png"" x="15.824011753" y="214.062794545" height="40px" width="40px"/>
+                                
+                                <image xlink:href="./images/bud-america.jpg"" x="207.800408789" y="171.492047813" height="40px" width="40px"/>
+                                
+                                <image xlink:href="./images/bud-america.jpg"" x="221.511420728" y="41.7732165741" height="40px" width="40px"/>
+                                
+                            </svg>
+                        </div>
+                        <div class="shelf-wrapper">
+                            <svg class="shelf">
+                                
+                                <image xlink:href="./images/bud-light.jpg" x="511.721394466" y="401.691228589" height="60px" width="60px"/>
+                                
+                                <image xlink:href="./images/bud-light.jpg" x="319.884516245" y="312.99928508" height="60px" width="60px"/>
+                                
+                                <image xlink:href="./images/natural-light.png" x="119.591950739" y="10.8641540602" height="60px" width="60px"/>
+                                
+                                <image xlink:href="./images/bud-america.jpg" x="26.9686099915" y="423.020381656" height="60px" width="60px"/>
+                                
+                                <image xlink:href="./images/natural-light.png" x="31.6480235059" y="428.125589091" height="60px" width="60px"/>
+                                
+                                <image xlink:href="./images/bud-america.jpg" x="415.600817578" y="342.984095627" height="60px" width="60px"/>
+                                
+                                <image xlink:href="./images/bud-america.jpg" x="443.022841456" y="83.5464331482" height="60px" width="60px"/>
+                                
+                            </svg>
+                        </div>
+                    </div>
+                
+                    <div class="shelf-layout" id="A">
+                        <h3>Shelf A Inventory: 4</h3>
+                        <div class="shelf-wrapper-mobile">
+                            <svg class="shelf">
+                                
+                                <image xlink:href="./images/bud-light.jpg"" x="46.2475753561" y="80.1921715581" height="40px" width="40px"/>
+                                
+                                <image xlink:href="./images/bud-light-plat.png"" x="151.165678819" y="129.304761838" height="40px" width="40px"/>
+                                
+                                <image xlink:href="./images/bud-light-plat.png"" x="130.986076499" y="215.017399381" height="40px" width="40px"/>
+                                
+                                <image xlink:href="./images/bud-light.jpg"" x="221.124473198" y="224.563580829" height="40px" width="40px"/>
+                                
+                            </svg>
+                        </div>
+                        <div class="shelf-wrapper">
+                            <svg class="shelf">
+                                
+                                <image xlink:href="./images/bud-light.jpg" x="92.4951507123" y="160.384343116" height="60px" width="60px"/>
+                                
+                                <image xlink:href="./images/bud-light-plat.png" x="302.331357639" y="258.609523677" height="60px" width="60px"/>
+                                
+                                <image xlink:href="./images/bud-light-plat.png" x="261.972152998" y="430.034798762" height="60px" width="60px"/>
+                                
+                                <image xlink:href="./images/bud-light.jpg" x="442.248946396" y="449.127161658" height="60px" width="60px"/>
+                                
+                            </svg>
+                        </div>
+                    </div>
+                
+            </section>
+        </div>
+    </body>
+    <script>
+        (function() {
+            document.querySelector('.sort-count').addEventListener('click', function() {
+                document.querySelector('.list-count').classList.add('active');
+                document.querySelector('.list-alpha').classList.remove('active');
+                document.querySelector('.sort-count').classList.add('active');
+                document.querySelector('.sort-alpha').classList.remove('active');
+            });
+            document.querySelector('.sort-alpha').addEventListener('click', function() {
+                document.querySelector('.list-count').classList.remove('active');
+                document.querySelector('.list-alpha').classList.add('active');
+                document.querySelector('.sort-count').classList.remove('active');
+                document.querySelector('.sort-alpha').classList.add('active');
+            });
+        })();
+    </script>
+</html>
