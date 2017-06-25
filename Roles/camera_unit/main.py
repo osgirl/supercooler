@@ -78,6 +78,8 @@ class Main(threading.Thread):
 
     def parse_and_crop_images(self):
 
+        # PARSE IMAGES
+
         # create instance of image parser and gather captures
         print "getting ready to parse images..."
         parser = Image_Parser()
@@ -96,14 +98,27 @@ class Main(threading.Thread):
         print 'starting parser'
 
         # run parser, get image bounds and undistorted image
-        bounds, ocv_img_with_overlay, ocv_img_out = parser.parse(ocv_imgs[0], ocv_imgs[1], ocv_imgs[2])
+        bounds_list, ocv_img_with_overlay, ocv_img_out = parser.parse(ocv_imgs[0], ocv_imgs[1], ocv_imgs[2])
 
-        # crop image and encode as jpeg
-        print "cropping..."
-        x, y, w, h = cropped_capture["bounds"]
-        img_crop = images.captures[cropped_capture["img_index"]][y:y+h, x:x+w]
-        img_jpg = cv2.imencode('.jpg', img_crop)[1].tobytes()
-        print "cropped image, w,h = ", w, h
+        # CROP IMAGES
+
+        # iterate through list of image bounds, store cropped capture info
+        for bounds in bounds_list:
+
+            # crop image and encode as jpeg
+            print "cropping..."
+            x, y, w, h = bounds
+            img_crop = ocv_img_out[y:y+h, x:x+w]
+            img_jpg = cv2.imencode('.jpg', img_crop)[1].tobytes()
+            print "cropped image, w,h = ", w, h
+
+            # create filename from img data
+            filename = shelf_id + camera_id + "_" + str(x) + "_" + str(y) + ".jpg"
+            filepath = "/home/pi/supercooler/ParsedCaptures/" + filename
+
+            # write to file
+            with open(filepath, 'wb') as f:
+                f.write(img_jpg)
 
         return bounds, ocv_img_with_overlay, ocv_img_out
 
