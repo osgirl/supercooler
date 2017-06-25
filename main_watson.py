@@ -76,9 +76,34 @@ class Main(threading.Thread):
         light_level = filename[:-4][-1:]
         return shelf_id, camera_id, light_level
 
+    def parse_and_crop_images(self):
 
-    def parse_and_crop(self):
-        pass
+        # create instance of image parser and gather captures
+        print "getting ready to parse images..."
+        parser = Image_Parser()
+        filenames = [ filename for filename in os.listdir(self.capture_path) if filename.endswith(".png") ]
+
+        # store references to images (will be nparrays for opencv)
+        ocv_imgs = [None, None, None]
+
+        # convert images in capture directory to nparrays, extract metadata from filename
+        for filename in filenames:
+            shelf_id, camera_id, light_level = self.return_env_data(filename)
+            print 'loading %s' % (filename)
+            ocv_imgs[int(light_level)] = cv2.imread(os.path.join(self.capture_path, filename))
+
+        if ocv_imgs[0] is None: print 'error: no image found'; return
+        print 'starting parser'
+
+        # run parser, get image bounds and undistorted image
+        bounds, ocv_img_with_overlay, ocv_img_out = parser.parse(ocv_imgs[0], ocv_imgs[1], ocv_imgs[2])
+
+        # crop image and encode as jpeg
+        print "cropping..."
+        x, y, w, h = cropped_capture["bounds"]
+        img_crop = images.captures[cropped_capture["img_index"]][y:y+h, x:x+w]
+        img_jpg = cv2.imencode('.jpg', img_crop)[1].tobytes()
+        print "cropped image, w,h = ", w, h
 
     def send_images_to_conductor(self, raw_images, processed_image, processed_image_with_overlay ):
         # convert image to jpeg and base64-encode
@@ -103,7 +128,7 @@ class Main(threading.Thread):
         # get capture filenames
 
         # parse and crop Captures 
-        bounds, processed_image_with_overlay, processed_image = self.parse_and_crop()
+        bounds, processed_image_with_overlay, processed_image = self.parse_and_crop_images()
 
         # send images to conductor
 
@@ -111,24 +136,6 @@ class Main(threading.Thread):
         # prepare images to send to Watson
 
         # send to Watson for classification
-
-        print "getting ready to parse images..."
-        parser = Image_Parser()
-        filenames = [ filename for filename in os.listdir(self.capture_path) if filename.endswith(".png") ]
-
-        # collect capture data to be send to conductor
-        ocv_imgs = [None, None, None]
-
-        for filename in filenames:
-            shelf_id, camera_id, light_level = self.return_env_data(filename)
-            print 'loading %s' % (filename)
-            ocv_imgs[int(light_level)] = cv2.imread(os.path.join(self.capture_path, filename))
-
-        if ocv_imgs[0] is None: print 'error: no image found'; return
-        print 'starting parser'
-
-        # run parser, get image bounds and undistorted image
-        bounds, ocv_img_with_overlay, ocv_img_out = parser.parse(ocv_imgs[0], ocv_imgs[1], ocv_imgs[2])
 
 
         # parse captures and save cropped images in /ParsedCaptures
@@ -140,20 +147,14 @@ class Main(threading.Thread):
         # send to Watson for classification
 
 
-        # receive classifications
+        # create filename from img data
+        # parse captures and save cropped images in /ParsedCaptures
+
+        # prepare images to send to Watson
+        filename_zipped = "/home/pi/supercooler/captures_cropped.zip"
+        subprocess.call(['zip', '-r', filename_zipped, '/home/pi/supercooler/ParsedCaptures' ])
 
 
-
-
-
-        # collect all fields in dictionary and string-ify
-        to_send = str({
-            "shelf_id"      : shelf_id,
-            "camera_id"     : camera_id,
-            "light_level"   : light_level,
-            "bounds"        : bounds,
-            "image"         : image_undistorted
-        })
 
     def return_raw_images(self):
         filenames = [ filename for filename in os.listdir(self.capture_path) if filename.endswith(".png") ]
