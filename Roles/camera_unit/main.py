@@ -114,48 +114,54 @@ class Main(threading.Thread):
         filenames = [ filename for filename in os.listdir(self.capture_path) if filename.endswith(".png") ]
 
         # collect capture data to be send to conductor
+
+        filename_100 = filename_50 = filename_0 = None
+
         for filename in filenames:
-            print "parsing image " + filename
             shelf_id, camera_id, light_level = self.return_env_data(filename)
-            # run parser, get image bounds and undistorted image
-            bounds, ocv_img_with_overlay, img_out = parser.parse(os.path.join(self.capture_path, filename), self.camera)
-            # convert image to jpeg and base64-encode
-            image = base64.b64encode(cv2.imencode('.jpg', img_out)[1].tostring())
-            image_with_overlay = base64.b64encode(cv2.imencode('.png', ocv_img_with_overlay)[1].tostring())
-            # collect all fields in dictionary and string-ify
-            to_send = str({
-                "shelf_id"      : shelf_id,
-                "camera_id"     : camera_id,
-                "light_level"   : light_level,
-                "bounds"        : bounds,
-                "image"         : image
-            })
+            if light_level == '0': filename_100 = os.path.join(self.capture_path, filename)
+            if light_level == '1': filename_50  = os.path.join(self.capture_path, filename)
+            if light_level == '2': filename_0   = os.path.join(self.capture_path, filename)
 
-            # send to conductor for cropping and classification
-            #print "parse ok, sending image..."
-            #network.send("receive_image_data", to_send)
-            #print "parse ok for image at light level " + light_level
+        if filename_100 is None: 
+            print 'error: no image found'
+            return
+            
+        print 'starting parser'
 
-            # for now, only send max brightness image
-            #if light_level == "0":
-            print "sending image..."
-            network.send("receive_image_data", to_send)
-            print "sent image ok"
-            print "sending image overlay..."
-            network.send("receive_image_overlay", ("overlay_"+filename,image_with_overlay))
-            print "sent image overlay ok"
+        # run parser, get image bounds and undistorted image
+        bounds, ocv_img_with_overlay, img_out = parser.parse(filename_100, filename_50, filename_0)
 
-            print "endocing raw image..."
-            with open("{}{}".format(self.capture_path, filename), "rb") as image_file:
-                raw_image_data = [
-                    filename, 
-                    base64.b64encode(image_file.read())
-                ]
-            print "sending raw image"
-            network.send("receive_image_overlay", ("raw_"+filename,raw_image_data))
-            print "sent raw image okay"
-                #network.send("image_capture_from_camera_unit", image_data)
+        # convert image to jpeg and base64-encode
+        image = base64.b64encode(cv2.imencode('.jpg', img_out)[1].tostring())
+        image_with_overlay = base64.b64encode(cv2.imencode('.png', ocv_img_with_overlay)[1].tostring())
 
+        # collect all fields in dictionary and string-ify
+        to_send = str({
+            "shelf_id"      : shelf_id,
+            "camera_id"     : camera_id,
+            "light_level"   : light_level,
+            "bounds"        : bounds,
+            "image"         : image
+        })
+
+        print "sending parsed image data..."
+        network.send("receive_image_data", to_send)
+        print "sent parsed image data ok"
+
+        print "sending image overlay..."
+        network.send("receive_image_overlay", ("overlay_%s%s.png" % (shelf_id, camera_id),image_with_overlay))
+        print "sent image overlay ok"
+
+        print "endocing raw image..."
+        with open("{}{}".format(self.capture_path, filename), "rb") as image_file:
+            raw_image_data = [
+                filename, 
+                base64.b64encode(image_file.read())
+            ]
+        print "sending raw image"
+        network.send("receive_image_overlay", ("raw_"+filename,raw_image_data))
+        print "sent raw image okay"
 
     def run(self):
         while True:
