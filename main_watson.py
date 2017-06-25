@@ -76,15 +76,18 @@ class Main(threading.Thread):
         light_level = filename[:-4][-1:]
         return shelf_id, camera_id, light_level
 
-    def process_images_and_report(self):
 
+    def parse_and_crop_images(self):
+
+        # create instance of image parser and gather captures
         print "getting ready to parse images..."
         parser = Image_Parser()
         filenames = [ filename for filename in os.listdir(self.capture_path) if filename.endswith(".png") ]
 
-        # collect capture data to be send to conductor
+        # store references to images (will be nparrays for opencv)
         ocv_imgs = [None, None, None]
 
+        # convert images in capture directory to nparrays, extract metadata from filename
         for filename in filenames:
             shelf_id, camera_id, light_level = self.return_env_data(filename)
             print 'loading %s' % (filename)
@@ -96,63 +99,68 @@ class Main(threading.Thread):
         # run parser, get image bounds and undistorted image
         bounds, ocv_img_with_overlay, ocv_img_out = parser.parse(ocv_imgs[0], ocv_imgs[1], ocv_imgs[2])
 
+        # crop image and encode as jpeg
+        print "cropping..."
+        x, y, w, h = cropped_capture["bounds"]
+        img_crop = images.captures[cropped_capture["img_index"]][y:y+h, x:x+w]
+        img_jpg = cv2.imencode('.jpg', img_crop)[1].tobytes()
+        print "cropped image, w,h = ", w, h
+
+        # create filename from img data
+        filename = cropped_capture["shelf_id"]+cropped_capture["camera_id"]+\
+            "_" + str(x) + "_" + str(y) + ".jpg"
+        filepath = "/home/pi/supercooler/ParsedCaptures/" + filename
+
+        # write to file
+        with open(filepath, 'wb') as f:
+            f.write(img_jpg)
+
+    def process_images_and_report(self):
 
         # parse captures and save cropped images in /ParsedCaptures
-
-
-
-
-
-
-
+        parse_and_crop_images()
 
         # prepare images to send to Watson
-
-
-
-
-
+        filename_zipped = "/home/pi/supercooler/captures_cropped.zip"
+        subprocess.call(['zip', '-r', filename_zipped, '/home/pi/supercooler/ParsedCaptures' )
 
         # send to Watson for classification
-
-
-
-
-
 
         # receive classifications
 
 
+        # ------------------------------------------------------------------------
+        # TODO: Put this back after demo? or just revert to old code
 
+        # # convert image to jpeg and base64-encode
+        # image_undistorted  = base64.b64encode(cv2.imencode('.jpg', ocv_img_out)[1].tostring())
+        # image_with_overlay = base64.b64encode(cv2.imencode('.png', ocv_img_with_overlay)[1].tostring())
 
-        # convert image to jpeg and base64-encode
-        image_undistorted  = base64.b64encode(cv2.imencode('.jpg', ocv_img_out)[1].tostring())
-        image_with_overlay = base64.b64encode(cv2.imencode('.png', ocv_img_with_overlay)[1].tostring())
+        # # collect all fields in dictionary and string-ify
+        # to_send = str({
+        #     "shelf_id"      : shelf_id,
+        #     "camera_id"     : camera_id,
+        #     "light_level"   : light_level,
+        #     "bounds"        : bounds,
+        #     "image"         : image_undistorted
+        # })
 
-        # collect all fields in dictionary and string-ify
-        to_send = str({
-            "shelf_id"      : shelf_id,
-            "camera_id"     : camera_id,
-            "light_level"   : light_level,
-            "bounds"        : bounds,
-            "image"         : image_undistorted
-        })
+        # print "sending parsed image data..."
+        # network.send("receive_image_data", to_send)
+        # print "sent parsed image data ok"
 
-        print "sending parsed image data..."
-        network.send("receive_image_data", to_send)
-        print "sent parsed image data ok"
-
-        print "sending image overlay..."
-        network.send("receive_image_overlay", ("overlay_%s%s.png" % (shelf_id, camera_id),image_with_overlay))
-        print "sent image overlay ok"
+        # print "sending image overlay..."
+        # network.send("receive_image_overlay", ("overlay_%s%s.png" % (shelf_id, camera_id),image_with_overlay))
+        # print "sent image overlay ok"
         
-        print "sending raw images"
-        for i, ocv_img in enumerate(ocv_imgs):
+        # print "sending raw images"
+        # for i, ocv_img in enumerate(ocv_imgs):
 
-            image_raw = base64.b64encode(cv2.imencode('.png', ocv_img)[1].tostring())
-            network.send("receive_image_overlay", ("raw_%s%s_%d.png" % (shelf_id, camera_id, i),image_raw))
+        #     image_raw = base64.b64encode(cv2.imencode('.png', ocv_img)[1].tostring())
+        #     network.send("receive_image_overlay", ("raw_%s%s_%d.png" % (shelf_id, camera_id, i),image_raw))
 
-        print "sent raw images okay"
+        # print "sent raw images okay"
+        # ------------------------------------------------------------------------
 
     def return_raw_images(self):
         filenames = [ filename for filename in os.listdir(self.capture_path) if filename.endswith(".png") ]
