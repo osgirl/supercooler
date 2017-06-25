@@ -6,7 +6,10 @@ scripts = {
         "sudo cp /home/pi/supercooler/scripts/rc.local /etc/rc.local",
         "sudo chmod 755 /etc/rc.local",
     ],
-    "0.07":[
-        "sudo cp /home/pi/supercooler/scripts/wpa_supplicant.conf /etc/wpa_supplicant/wpa_supplicant.conf",
+    "0.08":[
+        "apt-get install -y build-essential libssl-dev libffi-dev",
+        "sudo pip install --upgrade watson-developer-cloud",
+        "sudo apt-get install -y zip"
     ]
 }
+
