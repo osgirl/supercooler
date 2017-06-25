@@ -1,6 +1,6 @@
 # single - unit image cap using watson
-sys.path.append('/usr/local/lib/python2.7/site-packages')
-sys.path.append('/home/pi/.virtualenvs/cv/lib/python2.7/site-packages')
+#sys.path.append('/usr/local/lib/python2.7/site-packages')
+#sys.path.append('/home/pi/.virtualenvs/cv/lib/python2.7/site-packages')
 
 import commands
 import cv2
