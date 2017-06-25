@@ -78,6 +78,8 @@ class Main(threading.Thread):
 
     def parse_and_crop_images(self):
 
+        # PARSE IMAGES
+
         # create instance of image parser and gather captures
         print "getting ready to parse images..."
         parser = Image_Parser()
@@ -96,14 +98,29 @@ class Main(threading.Thread):
         print 'starting parser'
 
         # run parser, get image bounds and undistorted image
-        bounds, ocv_img_with_overlay, ocv_img_out = parser.parse(ocv_imgs[0], ocv_imgs[1], ocv_imgs[2])
+        bounds_list, ocv_img_with_overlay, ocv_img_out = parser.parse(ocv_imgs[0], ocv_imgs[1], ocv_imgs[2])
 
-        # crop image and encode as jpeg
-        print "cropping..."
-        x, y, w, h = cropped_capture["bounds"]
-        img_crop = images.captures[cropped_capture["img_index"]][y:y+h, x:x+w]
-        img_jpg = cv2.imencode('.jpg', img_crop)[1].tobytes()
-        print "cropped image, w,h = ", w, h
+        # CROP IMAGES
+
+        # iterate through list of image bounds, store cropped capture info
+        for bounds in bounds_list:
+
+            # crop image and encode as jpeg
+            print "cropping..."
+            x, y, w, h = bounds
+            img_crop = ocv_img_out[y:y+h, x:x+w]
+            img_jpg = cv2.imencode('.jpg', img_crop)[1].tobytes()
+            print "cropped image, w,h = ", w, h
+
+            # create filename from img data
+            filename = shelf_id + camera_id + "_" + str(x) + "_" + str(y) + ".jpg"
+            filepath = "/home/pi/supercooler/ParsedCaptures/" + filename
+
+            # write to file
+            with open(filepath, 'wb') as f:
+                f.write(img_jpg)
+
+        return bounds_list, ocv_img_with_overlay, ocv_img_out
 
     def send_images_to_conductor(self, raw_images, processed_image, processed_image_with_overlay ):
         # convert image to jpeg and base64-encode
@@ -151,30 +168,15 @@ class Main(threading.Thread):
         bounds, processed_image_with_overlay, processed_image = self.parse_and_crop_images()
 
         # send images to conductor
+        send_images_to_conductor(None, processed_image, processed_image_with_overlay)
 
-
-        # prepare images to send to Watson
-
-
-        # send to Watson for classification
-
-
-        # parse captures and save cropped images in /ParsedCaptures
-
-
-        # prepare images to send to Watson
-
-
-        # send to Watson for classification
-
-
-        # create filename from img data
-        # parse captures and save cropped images in /ParsedCaptures
 
         # prepare images to send to Watson
         filename_zipped = "/home/pi/supercooler/captures_cropped.zip"
         subprocess.call(['zip', '-r', filename_zipped, '/home/pi/supercooler/ParsedCaptures' ])
 
+        # send to Watson for classification
+        send_cropped_images_to_watson()
 
 
     def return_raw_images(self):
