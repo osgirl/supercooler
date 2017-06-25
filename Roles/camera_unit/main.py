@@ -120,7 +120,7 @@ class Main(threading.Thread):
             with open(filepath, 'wb') as f:
                 f.write(img_jpg)
 
-        return bounds, ocv_img_with_overlay, ocv_img_out
+        return bounds_list, ocv_img_with_overlay, ocv_img_out
 
     def send_images_to_conductor(self, raw_images, processed_image, processed_image_with_overlay ):
         # convert image to jpeg and base64-encode
@@ -148,29 +148,15 @@ class Main(threading.Thread):
         bounds, processed_image_with_overlay, processed_image = self.parse_and_crop_images()
 
         # send images to conductor
+        send_images_to_conductor(None, processed_image, processed_image_with_overlay)
 
-
-        # prepare images to send to Watson
-
-        # send to Watson for classification
-
-
-        # parse captures and save cropped images in /ParsedCaptures
-
-
-        # prepare images to send to Watson
-
-
-        # send to Watson for classification
-
-
-        # create filename from img data
-        # parse captures and save cropped images in /ParsedCaptures
 
         # prepare images to send to Watson
         filename_zipped = "/home/pi/supercooler/captures_cropped.zip"
         subprocess.call(['zip', '-r', filename_zipped, '/home/pi/supercooler/ParsedCaptures' ])
 
+        # send to Watson for classification
+        send_cropped_images_to_watson()
 
 
     def return_raw_images(self):
