@@ -135,7 +135,7 @@ class Images():
 images = Images()
     
 class Thirtybirds_Client_Monitor_Server(threading.Thread):
-    def __init__(self, network, hostnames, update_period=120):
+    def __init__(self, network, hostnames, update_period=60):
         threading.Thread.__init__(self)
         self.update_period = update_period
         self.current_clients = {}

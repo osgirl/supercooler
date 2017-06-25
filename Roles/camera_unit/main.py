@@ -241,21 +241,21 @@ class Main(threading.Thread):
             #print "parse ok for image at light level " + light_level
 
             # for now, only send max brightness image
-            if light_level == "0":
-                print "sending image..."
-                network.send("receive_image_data", to_send)
-                print "sent image ok"
-                print "sending image overlay..."
-                network.send("receive_image_overlay", ("overlay_"+filename,image_with_overlay))
-                print "sent image overlay ok"
+            #if light_level == "0":
+            print "sending image..."
+            network.send("receive_image_data", to_send)
+            print "sent image ok"
+            print "sending image overlay..."
+            network.send("receive_image_overlay", ("overlay_"+filename,image_with_overlay))
+            print "sent image overlay ok"
 
-                with open("{}{}".format(self.capture_path, filename), "rb") as image_file:
-                    raw_image_data = [
-                        filename, 
-                        base64.b64encode(image_file.read())
-                    ]
-                    network.send("receive_image_overlay", ("raw_"+filename,raw_image_data))
-                    #network.send("image_capture_from_camera_unit", image_data)
+            with open("{}{}".format(self.capture_path, filename), "rb") as image_file:
+                raw_image_data = [
+                    filename, 
+                    base64.b64encode(image_file.read())
+                ]
+                network.send("receive_image_overlay", ("raw_"+filename,raw_image_data))
+                #network.send("image_capture_from_camera_unit", image_data)
 
 
     def run(self):
