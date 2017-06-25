@@ -54,7 +54,7 @@ network = network_init(
 
 
 class Thirtybirds_Client_Monitor_Server(threading.Thread):
-    def __init__(self, network, hostnames, update_period=120):
+    def __init__(self, network, hostnames, update_period=45):
         threading.Thread.__init__(self)
         self.update_period = update_period
         self.current_clients = {}
@@ -128,16 +128,17 @@ client_monitor_server.start()
 
 
 
-camera_units.send_update_command(cool=True, birds=False, update=False, upgrade=False)
+#camera_units.send_update_command(cool=True, birds=False, update=False, upgrade=False)
 time.sleep(60)
+camera_units.send_update_scripts_command()
 
-camera_units.send_update_command(cool=True, birds=False, update=False, upgrade=False)
-time.sleep(60)
-
-camera_units.send_update_command(cool=True, birds=False, update=False, upgrade=False)
+#camera_units.send_update_command(cool=True, birds=False, update=False, upgrade=False)
 #time.sleep(60)
-print "done"
-#camera_units.send_update_scripts_command()
+
+#camera_units.send_update_command(cool=True, birds=False, update=False, upgrade=False)
+#time.sleep(60)
+#print "done"
+#
 
 
 
