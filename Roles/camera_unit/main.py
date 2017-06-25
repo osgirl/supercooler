@@ -138,33 +138,24 @@ class Main(threading.Thread):
         pass
 
     def send_cropped_images_to_watson(self):
-        print "send_cropped_images_to_watson 0"
         visual_recognition = VisualRecognitionV3('2016-05-20', api_key='753a741d6f32d80e1935503b40a8a00f317e85c6')
-        print "send_cropped_images_to_watson 1"
+        filepath = "/home/pi/supercooler/captures_cropped.zip"
         classification_data = []
-        filenames = [ filename for filename in os.listdir(self.parsed_capture_path) if filename.endswith(".jpg") ]
-        print "send_cropped_images_to_watson 2", filenames
-        for filename in filenames:
-            print "send_cropped_images_to_watson 3", filename
-            filepath = os.path.join(self.capture_path, filename)
-            print "send_cropped_images_to_watson 4", filename
-            with open( filepath, 'rb') as image_file:
-                try:
-                    result = visual_recognition.classify(images_file=image_file,  classifier_ids=['beercaps_697951100'], threshold=0.99)
-                    classifiers = result[u'images'][0][u'classifiers']
-                    print "send_cropped_images_to_watson 5", classifiers
-                    if len(classifiers) > 0:
-                        classification_data.append(
-                            {
-                                "filename":filename,
-                                "label":classifiers[0][u'classes'][0][u'class'],
-                                "confidence":classifiers[0][u'classes'][0][u'score'],
-                            }
-                        )
-                except Exception as e:
-                    print "exception in send_cropped_images_to_watson ", e
-
-
+        with open( filepath, 'rb') as image_file:
+            try:
+                result = visual_recognition.classify(images_file=image_file,  classifier_ids=['beercaps_697951100'], threshold=0.99)
+                classifiers = result[u'images'][0][u'classifiers']
+                print "send_cropped_images_to_watson 5", classifiers
+                if len(classifiers) > 0:
+                    classification_data.append(
+                        {
+                            "filename":filename,
+                            "label":classifiers[0][u'classes'][0][u'class'],
+                            "confidence":classifiers[0][u'classes'][0][u'score'],
+                        }
+                    )
+            except Exception as e:
+                print "exception in send_cropped_images_to_watson ", e
 
 
     def process_images_and_report(self):
