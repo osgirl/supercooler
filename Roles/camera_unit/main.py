@@ -161,6 +161,8 @@ class Main(threading.Thread):
                     "class":image[u'classifiers'][0][u'classes'][0][u'class'],
                 }
         print classified_image_metadata
+        print ""
+        print cropped_image_metadata
         for key,val in classified_image_metadata.items():
             classified_image_metadata[key]['x'] = cropped_image_metadata[str(key)]['x']
             classified_image_metadata[key]['y'] = cropped_image_metadata[str(key)]['y']
