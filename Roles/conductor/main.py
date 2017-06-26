@@ -181,8 +181,8 @@ class Thirtybirds_Client_Monitor_Server(threading.Thread):
             self.print_current_clients()
 
 class Classification_Accumulator(threading.Thread):
-    def __init__(self):
-        threading.Thread.__init__(self, all_records_received_callback )
+    def __init__(self, all_records_received_callback ):
+        threading.Thread.__init__(self)
         self.all_records_received_callback = all_records_received_callback
         #self.duration_to_wait_for_records = 300
         #self.end_time = time.time()
