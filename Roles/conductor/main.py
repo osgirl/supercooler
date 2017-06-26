@@ -295,11 +295,24 @@ class Main(): # rules them all
 
         print "all records received"
         for shelf in ['A','B','C','D']:
-            for i, camera in enumerate(records[shelf]):
-                print shelf, i, camera
+            for i, camera_data in enumerate(records[shelf]):
+                print shelf, i, camera_data
+                add_to_inventory(shelf, camera_data)
 
         print records
 
+
+    def add_to_inventory(self, shelf_id, data):
+
+        for (i, data) in camera.iteritems():
+            if data_score < 0.8: continue;
+
+            inventory.append({
+                "type"  : self.label_lookup[data['class']],
+                "shelf" : shelf_id,
+                "x"     : data['x'] + data['w']/2,
+                "y"     : data['y'] + data['h']/2,
+            })
 
 
         #if len(self.inventory) == 0:
@@ -353,8 +366,10 @@ class Main(): # rules them all
         #    print "empty... add dummy beer"
         #    self.inventory.append({"type":1,"shelf":"A","x":10,"y":10})
         #
-        #print "update web interface"
-        #self.web_interface.send_report(self.inventory)
+
+        print "update web interface"
+        self.web_interface.send_report(self.inventory)
+        
         #for item in self.inventory:
         #    self.web_interface.send_report(item)
 

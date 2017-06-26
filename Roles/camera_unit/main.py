@@ -161,7 +161,7 @@ class Main(threading.Thread):
 
         # send to watson
         with open(filepath, 'rb') as image_file:
-            res = visual_recognition.classify(images_file=image_file, classifier_ids=['supercoolersmall_1966117566'])
+            res = visual_recognition.classify(images_file=image_file, classifier_ids=['supercooler3_1124392282'])
 
         print res
 
