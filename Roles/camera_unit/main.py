@@ -133,17 +133,18 @@ class Main(threading.Thread):
             image_raw = base64.b64encode(cv2.imencode('.png', ocv_img)[1].tostring())
             network.send("receive_image_overlay", ("raw_%s%s_%d.png" % (shelf_id, camera_id, i),image_raw))
 
-
-    def prepare_cropped_images_for_classification(self):
-        pass
-
     def send_cropped_images_to_watson(self):
         visual_recognition = VisualRecognitionV3('2016-05-20', api_key='753a741d6f32d80e1935503b40a8a00f317e85c6')
         filepath = "/home/pi/supercooler/captures_cropped.zip"
         classification_data = []
         with open( filepath, 'rb') as image_file:
+            return visual_recognition.classify(images_file=image_file,  classifier_ids=['beercaps_697951100'], threshold=0.99)
+
+    def collate_classifcation_metadata(self, classification_results):
+        print repr(classification_results)
+        """
             try:
-                result = visual_recognition.classify(images_file=image_file,  classifier_ids=['beercaps_697951100'], threshold=0.99)
+                result = 
                 classifiers = result[u'images'][0][u'classifiers']
                 print "send_cropped_images_to_watson 5", classifiers
                 if len(classifiers) > 0:
@@ -156,24 +157,22 @@ class Main(threading.Thread):
                     )
             except Exception as e:
                 print "exception in send_cropped_images_to_watson ", e
+        """
 
 
     def process_images_and_report(self):
-        # get capture filenames
-
         # parse and crop Captures 
         bounds, processed_image_with_overlay, processed_image = self.parse_and_crop_images()
-
-        # send images to conductor
         # send_images_to_conductor(None, processed_image, processed_image_with_overlay)
-
 
         # prepare images to send to Watson
         filename_zipped = "/home/pi/supercooler/captures_cropped.zip"
         subprocess.call(['zip', '-r', filename_zipped, '/home/pi/supercooler/ParsedCaptures' ])
-
         # send to Watson for classification
-        self.send_cropped_images_to_watson()
+        classification_results = self.send_cropped_images_to_watson()
+
+        self.collate_classifcation_metadata(classification_results)
+
 
 
     def return_raw_images(self):

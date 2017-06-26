@@ -112,6 +112,7 @@ class Camera_Units():
     def send_reboot(self):
         self.network.send("reboot")
 
+
 camera_units = Camera_Units(network)
 time.sleep(60)
 
@@ -137,7 +138,7 @@ camera_units.send_update_command(cool=True, birds=False, update=False, upgrade=F
 
 #camera_units.send_update_command(cool=True, birds=False, update=False, upgrade=False)
 #time.sleep(60)
-#print "done"
+print "done"
 #
 
 
