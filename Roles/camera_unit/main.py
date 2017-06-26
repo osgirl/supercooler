@@ -168,7 +168,7 @@ class Main(threading.Thread):
         # parse and crop Captures 
         cropped_image_metadata, processed_image_with_overlay, processed_image = self.parse_and_crop_images()
         # send_images_to_conductor(None, processed_image, processed_image_with_overlay)
-
+        time.sleep(5)
         # prepare images to send to Watson
         filename_zipped = "/home/pi/supercooler/captures_cropped.zip"
         subprocess.call(['zip', '-j', filename_zipped, '/home/pi/supercooler/ParsedCaptures/*' ])
