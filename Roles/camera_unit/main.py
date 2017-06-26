@@ -100,6 +100,12 @@ class Main(threading.Thread):
         # run parser, get image bounds and undistorted image
         bounds_list, ocv_img_with_overlay, ocv_img_out = parser.parse(ocv_imgs[0], ocv_imgs[1], ocv_imgs[2])
 
+
+        previous_filenames = [ previous_filename for previous_filename in os.listdir("/home/pi/supercooler/ParsedCaptures/") if previous_filename.endswith(".jpg") ]
+        print "delete previous cropped images", previous_filenames
+        for previous_filename in previous_filenames:
+            os.remove(   "{}{}".format("/home/pi/supercooler/ParsedCaptures/",  previous_filename) )
+
         # CROP IMAGES
 
         # iterate through list of image bounds, store cropped capture info
