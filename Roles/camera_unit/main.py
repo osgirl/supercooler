@@ -186,6 +186,8 @@ class Main(threading.Thread):
         time.sleep(5)
         # prepare images to send to Watson
         filename_zipped = "/home/pi/supercooler/captures_cropped.zip"
+        commands.getstatusoutput("rm /home/pi/supercooler/captures_cropped.zip")
+        time.sleep(2)
         commands.getstatusoutput("cd /home/pi/supercooler/; zip -j captures_cropped.zip ParsedCaptures/*")
 
         #subprocess.call(['zip', '-j', filename_zipped, '/home/pi/supercooler/ParsedCaptures/*' ])
@@ -193,7 +195,7 @@ class Main(threading.Thread):
         # send to Watson for classification
         classification_results = self.send_cropped_images_to_watson()
         collated_metadata = self.collate_classifcation_metadata(classification_results, cropped_image_metadata)
-        print collated_metadata
+        self.network.send("classification_data_to_conductor", (self.hostname, collated_metadata))
 
     def return_raw_images(self):
         if "coolerB" in self.hostname:

@@ -430,7 +430,10 @@ def network_message_handler(msg):
                 main.client_monitor_add_to_queue(payload[0],payload[2],payload[1])
 
         if topic == "receive_image_data":
-            images.receive_image_data(payload)       
+            images.receive_image_data(payload)
+
+        if topic == "classification_data_to_conductor":
+            print "classification_data_to_conductor", payload[0], payload[1]
 
     except Exception as e:
         print "exception in network_message_handler", e
@@ -459,6 +462,8 @@ def init(HOSTNAME):
     network.subscribe_to_topic("client_monitor_response")
     network.subscribe_to_topic("receive_image_overlay")
     network.subscribe_to_topic("receive_image_data")
+    network.subscribe_to_topic("classification_data_to_conductor")
+
 
     main = Main(network)
     return main
