@@ -111,31 +111,33 @@ class Main(threading.Thread):
         # iterate through list of image bounds, store cropped capture info
         cropped_image_metadata = {}
         for bounds in bounds_list:
+            try:
+                # crop image and encode as jpeg
+                print "cropping..."
+                x, y, w, h = bounds
+                print "bounds >>>>>", x, y, w, h
+                img_crop = ocv_img_out[y:y+h, x:x+w]
+                print "img_crop >>>>>", repr(img_crop)
+                img_jpg = cv2.imencode('.jpg', img_crop)[1].tobytes()
+                print "cropped image, w,h = ", w, h
 
-            # crop image and encode as jpeg
-            print "cropping..."
-            x, y, w, h = bounds
-            print "bounds >>>>>", x, y, w, h
-            img_crop = ocv_img_out[y:y+h, x:x+w]
-            print "img_crop >>>>>", repr(img_crop)
-            img_jpg = cv2.imencode('.jpg', img_crop)[1].tobytes()
-            print "cropped image, w,h = ", w, h
+                # create filename from img data
+                filename = shelf_id + camera_id + "_" + str(x) + "_" + str(y) + ".jpg"
+                filepath = "/home/pi/supercooler/ParsedCaptures/" + filename
+                print "filepath=", filepath
+                cropped_image_metadata[filename] = {
+                    'x' :  x,
+                    'y' :  y,
+                    'w' :  w,
+                    'h' :  h,
+                }
+                print "cropped_image_metadata=", cropped_image_metadata
 
-            # create filename from img data
-            filename = shelf_id + camera_id + "_" + str(x) + "_" + str(y) + ".jpg"
-            filepath = "/home/pi/supercooler/ParsedCaptures/" + filename
-            print "filepath=", filepath
-            cropped_image_metadata[filename] = {
-                'x' :  x,
-                'y' :  y,
-                'w' :  w,
-                'h' :  h,
-            }
-            print "cropped_image_metadata=", cropped_image_metadata
-
-            # write to file
-            with open(filepath, 'wb') as f:
-                f.write(img_jpg)
+                # write to file
+                with open(filepath, 'wb') as f:
+                    f.write(img_jpg)
+            except Exception as e:
+                print "exception in parse_and_crop_images", e
 
         return cropped_image_metadata, ocv_img_with_overlay, ocv_img_out
 
