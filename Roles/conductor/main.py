@@ -309,12 +309,16 @@ class Main(): # rules them all
             if data['score'] < 0.8: continue;
 
             print "adding data..."
-            inventory.append({
-                "type"  : self.label_lookup[data['class']],
-                "shelf" : shelf_id,
-                "x"     : data['x'] + data['w']/2,
-                "y"     : data['y'] + data['h']/2,
-            })
+            try:
+                inventory.append({
+                    "type"  : self.label_lookup[data['class']],
+                    "shelf" : shelf_id,
+                    "x"     : data['x'] + data['w']/2,
+                    "y"     : data['y'] + data['h']/2,
+                })
+            except Exception as e:
+                print "could not add item to inventory, check label name"
+
 
 
         #if len(self.inventory) == 0:
