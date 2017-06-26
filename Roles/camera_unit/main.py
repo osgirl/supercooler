@@ -133,7 +133,7 @@ class Main(threading.Thread):
             image_raw = base64.b64encode(cv2.imencode('.png', ocv_img)[1].tostring())
             network.send("receive_image_overlay", ("raw_%s%s_%d.png" % (shelf_id, camera_id, i),image_raw))
 
-    def send_cropped_images_to_watson(self):
+    def send_cropped_images_to_watsonsend_cropped_images_to_watson(self):
         visual_recognition = VisualRecognitionV3('2016-05-20', api_key='753a741d6f32d80e1935503b40a8a00f317e85c6')
         filepath = "/home/pi/supercooler/captures_cropped.zip"
         classification_data = []
@@ -176,21 +176,22 @@ class Main(threading.Thread):
 
 
     def return_raw_images(self):
-        filenames = [ filename for filename in os.listdir(self.capture_path) if filename.endswith(".png") ]
-        ocv_imgs  = [None, None, None]
+        if "coolerB" in self.hostname:
+            filenames = [ filename for filename in os.listdir(self.capture_path) if filename.endswith(".png") ]
+            ocv_imgs  = [None, None, None]
 
-        for filename in filenames:
-            shelf_id, camera_id, light_level = self.return_env_data(filename)
-            print 'loading %s' % (filename)
-            ocv_imgs[int(light_level)] = cv2.imread(os.path.join(self.capture_path, filename))
+            for filename in filenames:
+                shelf_id, camera_id, light_level = self.return_env_data(filename)
+                print 'loading %s' % (filename)
+                ocv_imgs[int(light_level)] = cv2.imread(os.path.join(self.capture_path, filename))
 
-        print "sending raw images"
-        for i, ocv_img in enumerate(ocv_imgs):
+            print "sending raw images"
+            for i, ocv_img in enumerate(ocv_imgs):
 
-            image_raw = base64.b64encode(cv2.imencode('.png', ocv_img)[1].tostring())
-            network.send("receive_image_overlay", ("raw_%s%s_%d.png" % (shelf_id, camera_id, i),image_raw))
+                image_raw = base64.b64encode(cv2.imencode('.png', ocv_img)[1].tostring())
+                network.send("receive_image_overlay", ("raw_%s%s_%d.png" % (shelf_id, camera_id, i),image_raw))
 
-        print "sent raw images okay"
+            print "sent raw images okay"
 
     def run(self):
         while True:
