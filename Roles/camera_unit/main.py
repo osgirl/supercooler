@@ -115,7 +115,9 @@ class Main(threading.Thread):
             # crop image and encode as jpeg
             print "cropping..."
             x, y, w, h = bounds
+            print "bounds >>>>>", x, y, w, h
             img_crop = ocv_img_out[y:y+h, x:x+w]
+            print "img_crop >>>>>", repr(img_crop)
             img_jpg = cv2.imencode('.jpg', img_crop)[1].tobytes()
             print "cropped image, w,h = ", w, h
 
