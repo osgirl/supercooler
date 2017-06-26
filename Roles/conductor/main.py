@@ -209,8 +209,8 @@ class Classification_Accumulator(threading.Thread):
         while True:
             _ = self.queue.get(True)
             time.sleep(self.duration_to_wait_for_records)
-                self.all_records_received_callback(dict(self.shelves))
-                self.clear_records()
+            self.all_records_received_callback(dict(self.shelves))
+            self.clear_records()
 
 class Main(): # rules them all
     def __init__(self, network):
