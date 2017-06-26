@@ -207,9 +207,13 @@ class Classification_Accumulator(threading.Thread):
 
     def run(self):
         while True:
+            print "Classification_Accumulator", 0
             _ = self.queue.get(True)
+            print "Classification_Accumulator", 1
             time.sleep(self.duration_to_wait_for_records)
+            print "Classification_Accumulator", 2
             self.all_records_received_callback(dict(self.shelves))
+            print "Classification_Accumulator", 3
             self.clear_records()
 
 class Main(): # rules them all
@@ -225,6 +229,7 @@ class Main(): # rules them all
         self.camera_units = Camera_Units(self.network)
         self.camera_capture_delay = 3
         self.classifier = Classifier()
+        self.last_closure = time.time()
 
         hostnames = [
             "supercoolerA0","supercoolerA1","supercoolerA2","supercoolerA3","supercoolerA4","supercoolerA5","supercoolerA6","supercoolerA7","supercoolerA8","supercoolerA9","supercoolerA10","supercoolerA11",
