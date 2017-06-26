@@ -297,7 +297,7 @@ class Main(): # rules them all
         for shelf in ['A','B','C','D']:
             for i, camera_data in enumerate(records[shelf]):
                 print shelf, i, camera_data
-                add_to_inventory(shelf, camera_data)
+                self.add_to_inventory(shelf, camera_data)
 
         print records
 
@@ -369,7 +369,7 @@ class Main(): # rules them all
 
         print "update web interface"
         self.web_interface.send_report(self.inventory)
-        
+
         #for item in self.inventory:
         #    self.web_interface.send_report(item)
 
