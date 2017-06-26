@@ -195,7 +195,9 @@ class Main(threading.Thread):
         # send to Watson for classification
         classification_results = self.send_cropped_images_to_watson()
         collated_metadata = self.collate_classifcation_metadata(classification_results, cropped_image_metadata)
-        self.network.send("classification_data_to_conductor", (self.hostname, collated_metadata))
+        shelf = self.hostname[11:][:1]
+        camera = self.hostname[12:]
+        self.network.send("classification_data_to_conductor", (shelf, camera, collated_metadata))
 
     def return_raw_images(self):
         if "coolerB" in self.hostname:
