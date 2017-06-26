@@ -103,6 +103,7 @@ class Main(threading.Thread):
         # CROP IMAGES
 
         # iterate through list of image bounds, store cropped capture info
+        cropped_image_metadata = {}
         for bounds in bounds_list:
 
             # crop image and encode as jpeg
@@ -115,12 +116,19 @@ class Main(threading.Thread):
             # create filename from img data
             filename = shelf_id + camera_id + "_" + str(x) + "_" + str(y) + ".jpg"
             filepath = "/home/pi/supercooler/ParsedCaptures/" + filename
+            
+            cropped_image_metadata[filename] = {
+                'x' =  x,
+                'y' =  y,
+                'w' =  w,
+                'h' =  h,
+            }
 
             # write to file
             with open(filepath, 'wb') as f:
                 f.write(img_jpg)
 
-        return bounds_list, ocv_img_with_overlay, ocv_img_out
+        return cropped_image_metadata, ocv_img_with_overlay, ocv_img_out
 
     def send_images_to_conductor(self, raw_images, processed_image, processed_image_with_overlay ):
         # convert image to jpeg and base64-encode
@@ -133,48 +141,42 @@ class Main(threading.Thread):
             image_raw = base64.b64encode(cv2.imencode('.png', ocv_img)[1].tostring())
             network.send("receive_image_overlay", ("raw_%s%s_%d.png" % (shelf_id, camera_id, i),image_raw))
 
-    def send_cropped_images_to_watsonsend_cropped_images_to_watson(self):
+    def send_cropped_images_to_watson(self):
         visual_recognition = VisualRecognitionV3('2016-05-20', api_key='753a741d6f32d80e1935503b40a8a00f317e85c6')
         filepath = "/home/pi/supercooler/captures_cropped.zip"
         classification_data = []
         with open( filepath, 'rb') as image_file:
             return visual_recognition.classify(images_file=image_file,  classifier_ids=['beercaps_697951100'], threshold=0.99)
 
-    def collate_classifcation_metadata(self, classification_results):
-        print repr(classification_results)
-        """
-            try:
-                result = 
-                classifiers = result[u'images'][0][u'classifiers']
-                print "send_cropped_images_to_watson 5", classifiers
-                if len(classifiers) > 0:
-                    classification_data.append(
-                        {
-                            "filename":filename,
-                            "label":classifiers[0][u'classes'][0][u'class'],
-                            "confidence":classifiers[0][u'classes'][0][u'score'],
-                        }
-                    )
-            except Exception as e:
-                print "exception in send_cropped_images_to_watson ", e
-        """
-
+    def collate_classifcation_metadata(self, classification_results, cropped_image_metadata):
+        classified_image_metadata = {}
+        for image in classification_results[u'images']:
+            if len(image[u'classifiers']) > 0:
+                classified_image_metadata[ os.path.basename(image[u'image']) ] = {
+                    "score":image[u'classifiers'][0][u'classes'][0][u'score'],
+                    "class":image[u'classifiers'][0][u'classes'][0][u'class'],
+                }
+        print classified_image_metadata
+        for key,val in classified_image_metadata.items():
+            classified_image_metadata[key]['x'] = cropped_image_metadata[key]['x']
+            classified_image_metadata[key]['y'] = cropped_image_metadata[key]['y']
+            classified_image_metadata[key]['w'] = cropped_image_metadata[key]['w']
+            classified_image_metadata[key]['h'] = cropped_image_metadata[key]['h']
+        return classified_image_metadata
 
     def process_images_and_report(self):
         # parse and crop Captures 
-        bounds, processed_image_with_overlay, processed_image = self.parse_and_crop_images()
+        cropped_image_metadata, processed_image_with_overlay, processed_image = self.parse_and_crop_images()
         # send_images_to_conductor(None, processed_image, processed_image_with_overlay)
 
         # prepare images to send to Watson
         filename_zipped = "/home/pi/supercooler/captures_cropped.zip"
-        subprocess.call(['zip', '-r', filename_zipped, '/home/pi/supercooler/ParsedCaptures' ])
-        
+        subprocess.call(['zip', '-j', filename_zipped, '/home/pi/supercooler/ParsedCaptures' ])
+
         # send to Watson for classification
         classification_results = self.send_cropped_images_to_watson()
-
-        self.collate_classifcation_metadata(classification_results)
-
-
+        collated_metadata = self.collate_classifcation_metadata(classification_results, cropped_image_metadata)
+        print collated_metadata
 
     def return_raw_images(self):
         if "coolerB" in self.hostname:
