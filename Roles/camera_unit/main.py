@@ -162,10 +162,10 @@ class Main(threading.Thread):
                 }
         print classified_image_metadata
         for key,val in classified_image_metadata.items():
-            classified_image_metadata[key]['x'] = cropped_image_metadata[key]['x']
-            classified_image_metadata[key]['y'] = cropped_image_metadata[key]['y']
-            classified_image_metadata[key]['w'] = cropped_image_metadata[key]['w']
-            classified_image_metadata[key]['h'] = cropped_image_metadata[key]['h']
+            classified_image_metadata[key]['x'] = cropped_image_metadata[str(key)]['x']
+            classified_image_metadata[key]['y'] = cropped_image_metadata[str(key)]['y']
+            classified_image_metadata[key]['w'] = cropped_image_metadata[str(key)]['w']
+            classified_image_metadata[key]['h'] = cropped_image_metadata[str(key)]['h']
         return classified_image_metadata
 
     def process_images_and_report(self):
