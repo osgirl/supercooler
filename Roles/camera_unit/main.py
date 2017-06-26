@@ -143,7 +143,7 @@ class Main(threading.Thread):
 
     def send_cropped_images_to_watson(self):
         visual_recognition = VisualRecognitionV3('2016-05-20', api_key='753a741d6f32d80e1935503b40a8a00f317e85c6')
-        filepath = "/home/pi/supercooler/captures_cropped.zip"
+        filepath = "/home/pi/supercooler/captures_cropped.`"
         classification_data = []
         with open( filepath, 'rb') as image_file:
             return visual_recognition.classify(images_file=image_file,  classifier_ids=['beercaps_697951100'], threshold=0.99)
@@ -171,7 +171,7 @@ class Main(threading.Thread):
 
         # prepare images to send to Watson
         filename_zipped = "/home/pi/supercooler/captures_cropped.zip"
-        subprocess.call(['zip', '-j', filename_zipped, '/home/pi/supercooler/ParsedCaptures' ])
+        subprocess.call(['zip', '-j', filename_zipped, '/home/pi/supercooler/ParsedCaptures/*' ])
 
         # send to Watson for classification
         classification_results = self.send_cropped_images_to_watson()
