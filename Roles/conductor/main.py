@@ -305,8 +305,10 @@ class Main(): # rules them all
     def add_to_inventory(self, shelf_id, data):
 
         for (i, data) in camera.iteritems():
-            if data_score < 0.8: continue;
+            print "looking at", data
+            if data['score'] < 0.8: continue;
 
+            print "adding data..."
             inventory.append({
                 "type"  : self.label_lookup[data['class']],
                 "shelf" : shelf_id,
