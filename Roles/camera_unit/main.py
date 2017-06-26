@@ -154,11 +154,20 @@ class Main(threading.Thread):
             network.send("receive_image_overlay", ("raw_%s%s_%d.png" % (shelf_id, camera_id, i),image_raw))
 
     def send_cropped_images_to_watson(self):
-        visual_recognition = VisualRecognitionV3('2016-05-20', api_key='753a741d6f32d80e1935503b40a8a00f317e85c6')
+
+        # TODO: delete this API key from Bluemix after the demo
+        visual_recognition = VisualRecognitionV3('2016-05-20', api_key='4fd7cd5854ae7a1c63f1835ddd63a2a7779a73d0')
         filepath = "/home/pi/supercooler/captures_cropped.zip"
-        classification_data = []
-        with open( filepath, 'rb') as image_file:
-            return visual_recognition.classify(images_file=image_file,  classifier_ids=['beercaps_697951100'], threshold=0.99)
+
+        # send to watson
+        res = visual_recognition.clasify(images_file=filepath, classifier_ids=['supercoolersmall_1966117566'])
+
+        print res
+
+        return res
+
+        # with open( filepath, 'rb') as image_file:
+        #     return visual_recognition.classify(images_file=image_file,  classifier_ids=['beercaps_697951100'], threshold=0.99)
 
     def collate_classifcation_metadata(self, classification_results, cropped_image_metadata):
         print "collate_classifcation_metadata"
@@ -187,6 +196,7 @@ class Main(threading.Thread):
         cropped_image_metadata, processed_image_with_overlay, processed_image = self.parse_and_crop_images()
         # send_images_to_conductor(None, processed_image, processed_image_with_overlay)
         print cropped_image_metadata, processed_image_with_overlay, processed_image
+
         #catch case of empty directory
         if len(cropped_image_metadata.keys()):
             time.sleep(5)
@@ -200,11 +210,13 @@ class Main(threading.Thread):
 
             # send to Watson for classification
             classification_results = self.send_cropped_images_to_watson()
+
             collated_metadata = self.collate_classifcation_metadata(classification_results, cropped_image_metadata)
             shelf = self.hostname[11:][:1]
             camera = self.hostname[12:]
         else:
             collated_metadata = {}
+            
         self.network.send("classification_data_to_conductor", (shelf, camera, collated_metadata))
 
     def return_raw_images(self):
