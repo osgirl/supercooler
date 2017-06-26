@@ -193,7 +193,7 @@ class Main(threading.Thread):
         filename_zipped = "/home/pi/supercooler/captures_cropped.zip"
         commands.getstatusoutput("rm /home/pi/supercooler/captures_cropped.zip")
         time.sleep(2)
-        commands.getstatusoutput("cd /home/pi/supercooler/; zip -j captures_cropped.zip ParsedCaptures/*")
+        commands.getstatusoutput("cd /home/pi/supercooler/; zip -j captures_cropped.zip ParsedCaptures/*.jpg")
 
         #subprocess.call(['zip', '-j', filename_zipped, '/home/pi/supercooler/ParsedCaptures/*' ])
 
