@@ -203,6 +203,7 @@ class Classification_Accumulator(threading.Thread):
 
     def start_timer(self):
         #self.end_time = time.time() + self.duration_to_wait_for_records
+        print "Classification_Accumulator.start_timer"
         self.queue.put(True)
 
     def run(self):
