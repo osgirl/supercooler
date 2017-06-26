@@ -302,9 +302,9 @@ class Main(): # rules them all
         print records
 
 
-    def add_to_inventory(self, shelf_id, data):
+    def add_to_inventory(self, shelf_id, camera_data):
 
-        for (i, data) in camera.iteritems():
+        for (i, data) in camera_data.iteritems():
             print "looking at", data
             if data['score'] < 0.8: continue;
 
