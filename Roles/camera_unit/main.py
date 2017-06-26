@@ -188,20 +188,23 @@ class Main(threading.Thread):
         # send_images_to_conductor(None, processed_image, processed_image_with_overlay)
         print cropped_image_metadata, processed_image_with_overlay, processed_image
         #catch case of empty directory
-        time.sleep(5)
-        # prepare images to send to Watson
-        filename_zipped = "/home/pi/supercooler/captures_cropped.zip"
-        commands.getstatusoutput("rm /home/pi/supercooler/captures_cropped.zip")
-        time.sleep(2)
-        commands.getstatusoutput("cd /home/pi/supercooler/; zip -j captures_cropped.zip ParsedCaptures/*.jpg")
+        if len(cropped_image_metadata.keys()):
+            time.sleep(5)
+            # prepare images to send to Watson
+            filename_zipped = "/home/pi/supercooler/captures_cropped.zip"
+            commands.getstatusoutput("rm /home/pi/supercooler/captures_cropped.zip")
+            time.sleep(2)
+            commands.getstatusoutput("cd /home/pi/supercooler/; zip -j captures_cropped.zip ParsedCaptures/*.jpg")
 
-        #subprocess.call(['zip', '-j', filename_zipped, '/home/pi/supercooler/ParsedCaptures/*' ])
+            #subprocess.call(['zip', '-j', filename_zipped, '/home/pi/supercooler/ParsedCaptures/*' ])
 
-        # send to Watson for classification
-        classification_results = self.send_cropped_images_to_watson()
-        collated_metadata = self.collate_classifcation_metadata(classification_results, cropped_image_metadata)
-        shelf = self.hostname[11:][:1]
-        camera = self.hostname[12:]
+            # send to Watson for classification
+            classification_results = self.send_cropped_images_to_watson()
+            collated_metadata = self.collate_classifcation_metadata(classification_results, cropped_image_metadata)
+            shelf = self.hostname[11:][:1]
+            camera = self.hostname[12:]
+        else:
+            collated_metadata = {}
         self.network.send("classification_data_to_conductor", (shelf, camera, collated_metadata))
 
     def return_raw_images(self):
