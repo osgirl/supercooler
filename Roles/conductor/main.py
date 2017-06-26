@@ -471,7 +471,7 @@ def network_message_handler(msg):
 
         if topic == "classification_data_to_conductor":
             print "classification_data_to_conductor", payload[0], payload[1], payload[2]
-            main.classification_accumulator.add_records(shelf, camera, records):
+            main.classification_accumulator.add_records(shelf, camera, records)
 
     except Exception as e:
         print "exception in network_message_handler", e
