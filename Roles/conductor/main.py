@@ -471,6 +471,7 @@ def network_message_handler(msg):
 
         if topic == "classification_data_to_conductor":
             print "classification_data_to_conductor", payload[0], payload[1], payload[2]
+            main.classification_accumulator.add_records(shelf, camera, records):
 
     except Exception as e:
         print "exception in network_message_handler", e
@@ -500,6 +501,7 @@ def init(HOSTNAME):
     network.subscribe_to_topic("receive_image_overlay")
     network.subscribe_to_topic("receive_image_data")
     network.subscribe_to_topic("classification_data_to_conductor")
+
 
     main = Main(network)
     return main
