@@ -207,24 +207,46 @@ class Main(): # rules them all
         # initialize inventory -- this will be recalculated on door close events
         self.inventory = []
 
-        # map tensorflow labels to corresponding ints for web interface
+        # # map tensorflow labels to corresponding ints for web interface
+        # self.label_lookup = {
+        #     "can busch"                 : 0,
+        #     "bottle shocktop raspberry" : 1,
+        #     "bottle ultra"              : 2,
+        #     "bottle hoegaarden"         : 3,
+        #     "bottle bud light"          : 4,
+        #     "can bud light"             : 5,
+        #     "bottle bud america"        : 6,
+        #     "can natty"                 : 7,
+        #     "can bud america"           : 8,
+        #     "bottle shocktop pretzel"   : 9,
+        #     "bottle becks"              : 10,
+        #     "can bud ice"               : 11,
+        #     "bottle platinum"           : 12,
+        #     "bottle stella"             : 13,
+        #     "bottle corona"             : 14,
+        #     "other"                     : 15
+        # }
+
+        # map watson labels to corresponding ints for web interface
         self.label_lookup = {
-            "can busch"                 : 0,
-            "bottle shocktop raspberry" : 1,
-            "bottle ultra"              : 2,
-            "bottle hoegaarden"         : 3,
-            "bottle bud light"          : 4,
-            "can bud light"             : 5,
-            "bottle bud america"        : 6,
-            "can natty"                 : 7,
-            "can bud america"           : 8,
-            "bottle shocktop pretzel"   : 9,
-            "bottle becks"              : 10,
-            "can bud ice"               : 11,
-            "bottle platinum"           : 12,
-            "bottle stella"             : 13,
-            "bottle corona"             : 14,
-            "other"                     : 15
+            "bottlebecks"               : 1,
+            "bottlebudamerica"          : 2,
+            "bottlebudlight"            : 3,
+            "bottleplatinum"            : 4,
+            "bottlecorona"              : 5,
+            "bottlehoegaarden"          : 6,
+            "bottleultra"               : 7,
+            "bottleshocktopraspberry"   : 8,
+            "bottleshocktoppretzel"     : 9,
+            "bottlestella"              : 10,
+            "canbudamerica"             : 11,
+            "canbudlight"               : 12,
+            "canbusch"                  : 13,
+            "canbusch"                  : 14,
+            "cannaturallight"           : 15,
+            "canbudamerica"             : 16,
+            "canbudice"                 : 17,
+            "canbudlight"               : 18
         }
 
     def client_monitor_add_to_queue(self,hostname, git_pull_date, pickle_version):
