@@ -287,6 +287,8 @@ class Main(): # rules them all
             "canbudlight"               : 18
         }
         self.classification_accumulator = Classification_Accumulator(self.all_records_received)
+        self.classification_accumulator.daemon = True
+        self.classification_accumulator.start()
 
     def all_records_received(self, records):
         print "all records received"
