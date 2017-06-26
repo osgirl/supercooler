@@ -160,7 +160,8 @@ class Main(threading.Thread):
         filepath = "/home/pi/supercooler/captures_cropped.zip"
 
         # send to watson
-        res = visual_recognition.clasify(images_file=filepath, classifier_ids=['supercoolersmall_1966117566'])
+        with open(filepath, 'rb') as image_file:
+            res = visual_recognition.classify(images_file=image_file, classifier_ids=['supercoolersmall_1966117566'])
 
         print res
 
@@ -217,6 +218,7 @@ class Main(threading.Thread):
         else:
             collated_metadata = {}
             
+        print collated_metadata
         self.network.send("classification_data_to_conductor", (shelf, camera, collated_metadata))
 
     def return_raw_images(self):
@@ -271,7 +273,7 @@ def network_message_handler(msg):
         os.system("sudo reboot now")
 
     elif topic == "remote_update":
-        print "satarting remote_update"
+        print "starting remote_update"
         [cool, birds, update, upgrade] = eval(msg[1])
         print repr([cool, birds, update, upgrade])
         if cool:
