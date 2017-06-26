@@ -168,6 +168,7 @@ class Main(threading.Thread):
         # prepare images to send to Watson
         filename_zipped = "/home/pi/supercooler/captures_cropped.zip"
         subprocess.call(['zip', '-r', filename_zipped, '/home/pi/supercooler/ParsedCaptures' ])
+        
         # send to Watson for classification
         classification_results = self.send_cropped_images_to_watson()
 

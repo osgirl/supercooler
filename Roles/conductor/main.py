@@ -269,7 +269,7 @@ class Main(): # rules them all
 
         if len(self.inventory) == 0:
             print "empty... add dummy beer"
-            self.inventory[0] = {"type":1,"shelf":"A","x":10,"y":10}
+            self.inventory.append({"type":1,"shelf":"A","x":10,"y":10})
 
         print "update web interface"
         self.web_interface.send_report(self.inventory)
