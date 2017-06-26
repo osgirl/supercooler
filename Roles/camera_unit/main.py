@@ -116,13 +116,14 @@ class Main(threading.Thread):
             # create filename from img data
             filename = shelf_id + camera_id + "_" + str(x) + "_" + str(y) + ".jpg"
             filepath = "/home/pi/supercooler/ParsedCaptures/" + filename
-            
+            print "filepath=", filepath
             cropped_image_metadata[filename] = {
                 'x' :  x,
                 'y' :  y,
                 'w' :  w,
                 'h' :  h,
             }
+            print "cropped_image_metadata=", cropped_image_metadata
 
             # write to file
             with open(filepath, 'wb') as f:
@@ -168,6 +169,8 @@ class Main(threading.Thread):
         # parse and crop Captures 
         cropped_image_metadata, processed_image_with_overlay, processed_image = self.parse_and_crop_images()
         # send_images_to_conductor(None, processed_image, processed_image_with_overlay)
+
+        #catch case of empty directory
         time.sleep(5)
         # prepare images to send to Watson
         filename_zipped = "/home/pi/supercooler/captures_cropped.zip"
