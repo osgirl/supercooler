@@ -171,7 +171,7 @@ class Main(threading.Thread):
         time.sleep(5)
         # prepare images to send to Watson
         filename_zipped = "/home/pi/supercooler/captures_cropped.zip"
-        commands.getstatusoutput("cd /home/pi/supercooler/; zip -j ParsedCaptures/*")
+        commands.getstatusoutput("cd /home/pi/supercooler/; zip -j captures_cropped.zip ParsedCaptures/*")
 
         #subprocess.call(['zip', '-j', filename_zipped, '/home/pi/supercooler/ParsedCaptures/*' ])
 
