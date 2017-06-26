@@ -295,10 +295,19 @@ class Main(): # rules them all
 
         print "all records received"
         for shelf in ['A','B','C','D']:
-            for i, camera in enumerate(shelf):
+            for i, camera in enumerate(records[shelf]):
                 print shelf, i, camera
 
         print records
+
+
+
+        #if len(self.inventory) == 0:
+        #    print "empty... add dummy beer"
+        #    self.inventory.append({"type":1,"shelf":"A","x":10,"y":10})
+        #
+        #print "update web interface"
+        #self.web_interface.send_report(self.inventory)
 
     def client_monitor_add_to_queue(self,hostname, git_pull_date, pickle_version):
         self.client_monitor_server.add_to_queue(hostname, git_pull_date, pickle_version)
@@ -328,8 +337,8 @@ class Main(): # rules them all
         self.camera_units.process_images_and_report()
 
         # pause while conductor waits for captures, then start classification
-        print "waiting for captures... see you in 120 seconds!"
-        time.sleep(120)
+        print "waiting for captures... "
+        time.sleep(240)
 
         # --------------------------------------------------------------------------
         # TODO: After the demo, put this back in. For now, we'll have watson clients
@@ -340,12 +349,12 @@ class Main(): # rules them all
         # --------------------------------------------------------------------------
 
 
-        if len(self.inventory) == 0:
-            print "empty... add dummy beer"
-            self.inventory.append({"type":1,"shelf":"A","x":10,"y":10})
-
-        print "update web interface"
-        self.web_interface.send_report(self.inventory)
+        #if len(self.inventory) == 0:
+        #    print "empty... add dummy beer"
+        #    self.inventory.append({"type":1,"shelf":"A","x":10,"y":10})
+        #
+        #print "update web interface"
+        #self.web_interface.send_report(self.inventory)
         #for item in self.inventory:
         #    self.web_interface.send_report(item)
 
