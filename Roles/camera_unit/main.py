@@ -150,9 +150,12 @@ class Main(threading.Thread):
             return visual_recognition.classify(images_file=image_file,  classifier_ids=['beercaps_697951100'], threshold=0.99)
 
     def collate_classifcation_metadata(self, classification_results, cropped_image_metadata):
+        print "collate_classifcation_metadata"
         classified_image_metadata = {}
         for image in classification_results[u'images']:
+            print "collate_classifcation_metadata 2", image
             if len(image[u'classifiers']) > 0:
+                print "collate_classifcation_metadata 1", image
                 classified_image_metadata[ os.path.basename(image[u'image']) ] = {
                     "score":image[u'classifiers'][0][u'classes'][0][u'score'],
                     "class":image[u'classifiers'][0][u'classes'][0][u'class'],
@@ -169,7 +172,7 @@ class Main(threading.Thread):
         # parse and crop Captures 
         cropped_image_metadata, processed_image_with_overlay, processed_image = self.parse_and_crop_images()
         # send_images_to_conductor(None, processed_image, processed_image_with_overlay)
-
+        print cropped_image_metadata, processed_image_with_overlay, processed_image
         #catch case of empty directory
         time.sleep(5)
         # prepare images to send to Watson
