@@ -118,7 +118,7 @@ class Main(threading.Thread):
                 print "bounds >>>>>", x, y, w, h
                 img_crop = ocv_img_out[y:y+h, x:x+w]
                 print "img_crop >>>>>", repr(img_crop)
-                img_jpg = cv2.imencode('.jpg', img_crop)[1].tobytes()
+                #img_jpg = cv2.imencode('.jpg', img_crop)[1].tobytes()
                 print "cropped image, w,h = ", w, h
 
                 # create filename from img data
@@ -134,8 +134,9 @@ class Main(threading.Thread):
                 print "cropped_image_metadata=", cropped_image_metadata
 
                 # write to file
-                with open(filepath, 'wb') as f:
-                    f.write(img_jpg)
+                #with open(filepath, 'wb') as f:
+                #    f.write(img_jpg)
+                cv2.imwrite(filepath, img_crop)
             except Exception as e:
                 print "exception in parse_and_crop_images", e
 
