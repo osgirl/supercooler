@@ -184,8 +184,8 @@ class Classification_Accumulator(threading.Thread):
     def __init__(self, all_records_received_callback ):
         threading.Thread.__init__(self)
         self.all_records_received_callback = all_records_received_callback
-        #self.duration_to_wait_for_records = 300
-        #self.end_time = time.time()
+        self.duration_to_wait_for_records = 300
+        self.end_time = time.time()
         self.queue = Queue.Queue()
         self.clear_records()
     def clear_records(self):
@@ -199,16 +199,16 @@ class Classification_Accumulator(threading.Thread):
     def add_records(self, shelf, camera, records):
         self.records_received += 1
         self.shelves[shelf][camera] = records
-        self.queue.put(self.records_received)
+        #self.queue.put(self.records_received)
 
-    #def start_timer(self):
-    #    self.end_time = time.time() + self.duration_to_wait_for_records
-    #    self.queue.put(end_time)
+    def start_timer(self):
+        #self.end_time = time.time() + self.duration_to_wait_for_records
+        self.queue.put(True)
 
     def run(self):
         while True:
-            received = self.queue.get(True)
-            if received >=48 :
+            _ = self.queue.get(True)
+            time.sleep(self.duration_to_wait_for_records)
                 self.all_records_received_callback(dict(self.shelves))
                 self.clear_records()
 
@@ -297,7 +297,7 @@ class Main(): # rules them all
     def door_close_event_handler(self):
         print "Main.door_close_event_handler"
         self.web_interface.send_door_close()
-
+        self.classification_accumulator.start_timer()
         images.clear_captures()
 
         # clear inventory (will be populated after classification)

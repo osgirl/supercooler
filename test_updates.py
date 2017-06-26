@@ -41,6 +41,15 @@ def network_status_handler(msg):
 def network_message_handler(msg):
     print "network_message_handler", msg
 
+    topic = msg[0]
+    payload = eval(msg[1])
+    if topic == "client_monitor_response":
+        if payload == None:
+            return
+        if main:
+            main.client_monitor_add_to_queue(payload[0],payload[2],payload[1])
+
+
 network = network_init(
     hostname=HOSTNAME,
     role="server",
@@ -52,6 +61,7 @@ network = network_init(
     status_callback=network_status_handler
 )
 
+network.subscribe_to_topic("client_monitor_response")
 
 class Thirtybirds_Client_Monitor_Server(threading.Thread):
     def __init__(self, network, hostnames, update_period=45):
