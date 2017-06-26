@@ -433,7 +433,7 @@ def network_message_handler(msg):
             images.receive_image_data(payload)
 
         if topic == "classification_data_to_conductor":
-            print "classification_data_to_conductor", payload[0], payload[1]
+            print "classification_data_to_conductor", payload[0], payload[1], payload[2]
 
     except Exception as e:
         print "exception in network_message_handler", e
