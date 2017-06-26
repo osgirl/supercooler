@@ -160,12 +160,13 @@ class Main(threading.Thread):
         classified_image_metadata = {}
         for image in classification_results[u'images']:
             print "collate_classifcation_metadata 2", image
-            if len(image[u'classifiers']) > 0:
-                print "collate_classifcation_metadata 1", image
-                classified_image_metadata[ os.path.basename(image[u'image']) ] = {
-                    "score":image[u'classifiers'][0][u'classes'][0][u'score'],
-                    "class":image[u'classifiers'][0][u'classes'][0][u'class'],
-                }
+            if image.has_key(u'classifiers'):
+                if len(image[u'classifiers']) > 0:
+                    print "collate_classifcation_metadata 1", image
+                    classified_image_metadata[ os.path.basename(image[u'image']) ] = {
+                        "score":image[u'classifiers'][0][u'classes'][0][u'score'],
+                        "class":image[u'classifiers'][0][u'classes'][0][u'class'],
+                    }
         print classified_image_metadata
         print ""
         print cropped_image_metadata
