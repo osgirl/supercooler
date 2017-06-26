@@ -180,6 +180,38 @@ class Thirtybirds_Client_Monitor_Server(threading.Thread):
                 self.hosts[hostname]["git_pull_date"] = git_pull_date
             self.print_current_clients()
 
+class Classification_Accumulator(threading.Thread):
+    def __init__(self):
+        threading.Thread.__init__(self, all_records_received_callback )
+        self.all_records_received_callback = all_records_received_callback
+        #self.duration_to_wait_for_records = 300
+        #self.end_time = time.time()
+        self.queue = Queue.Queue()
+        self.clear_records()
+    def clear_records(self):
+        self.records_received = 0
+        self.shelves = {
+            'a':[{},{},{},{},{},{},{},{},{},{},{},{}],
+            'b':[{},{},{},{},{},{},{},{},{},{},{},{}],
+            'c':[{},{},{},{},{},{},{},{},{},{},{},{}],
+            'd':[{},{},{},{},{},{},{},{},{},{},{},{}]
+        }
+    def add_records(self, shelf, camera, records):
+        self.records_received += 1
+        self.shelves[shelf][camera] = records
+        self.queue.put(self.records_received)
+
+    #def start_timer(self):
+    #    self.end_time = time.time() + self.duration_to_wait_for_records
+    #    self.queue.put(end_time)
+
+    def run(self):
+        while True:
+            received = self.queue.get(True)
+            if received >=48 :
+                self.all_records_received_callback(dict(self.shelves))
+                self.clear_records()
+
 class Main(): # rules them all
     def __init__(self, network):
         self.network = network
@@ -248,6 +280,11 @@ class Main(): # rules them all
             "canbudice"                 : 17,
             "canbudlight"               : 18
         }
+        self.classification_accumulator = Classification_Accumulator(self.all_records_received)
+
+    def all_records_received(self, records):
+        print "all records received"
+        print records
 
     def client_monitor_add_to_queue(self,hostname, git_pull_date, pickle_version):
         self.client_monitor_server.add_to_queue(hostname, git_pull_date, pickle_version)
@@ -434,6 +471,7 @@ def network_message_handler(msg):
 
         if topic == "classification_data_to_conductor":
             print "classification_data_to_conductor", payload[0], payload[1], payload[2]
+            main.classification_accumulator.add_records(shelf, camera, records):
 
     except Exception as e:
         print "exception in network_message_handler", e
