@@ -118,10 +118,10 @@ class Main(threading.Thread):
             filepath = "/home/pi/supercooler/ParsedCaptures/" + filename
             
             cropped_image_metadata[filename] = {
-                'x' =  x,
-                'y' =  y,
-                'w' =  w,
-                'h' =  h,
+                'x' :  x,
+                'y' :  y,
+                'w' :  w,
+                'h' :  h,
             }
 
             # write to file
