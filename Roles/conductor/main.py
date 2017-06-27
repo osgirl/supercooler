@@ -310,8 +310,13 @@ class Main(): # rules them all
 
             print "adding data..."
             try:
+                print data
                 print data['class']
                 print self.label_lookup
+                print shelf_id
+                print self.label_lookup[data['class']]
+                print float(data['x']) + data['w']/2
+                print float(data['y']) + data['h']/2
                 inventory.append({
                     "type"  : self.label_lookup[data['class']],
                     "shelf" : shelf_id,
