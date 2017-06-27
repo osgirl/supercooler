@@ -4,6 +4,7 @@ import commands
 import cv2
 import importlib
 import json
+from operator import itemgetter
 import os
 import Queue
 import settings 
@@ -11,6 +12,7 @@ import sys
 import subprocess
 import threading
 import time
+
 
 from thirtybirds_2_0.Network.manager import init as network_init
 from thirtybirds_2_0.Network.email_simple import init as email_init
@@ -174,14 +176,15 @@ class Main(threading.Thread):
         print "collate_classifcation_metadata"
         classified_image_metadata = {}
         for image in classification_results[u'images']:
-            print "collate_classifcation_metadata 2", image
             if image.has_key(u'classifiers'):
                 if len(image[u'classifiers']) > 0:
-                    print "collate_classifcation_metadata 1", image
-                    classified_image_metadata[ os.path.basename(image[u'image']) ] = {
-                        "score":image[u'classifiers'][0][u'classes'][0][u'score'],
-                        "class":image[u'classifiers'][0][u'classes'][0][u'class'],
-                    }
+                    highest_confidence_classification = sorted(image[u'classifiers'][0][u'classes'], key=itemgetter('score'))[-1]
+                    if highest_confidence_classification[u'score'] >0.99:
+                        print "collate_classifcation_metadata 1", image
+                        classified_image_metadata[ os.path.basename(image[u'image']) ] = {
+                            "score":highest_confidence_classification[u'score'],
+                            "class":highest_confidence_classification[u'class'],
+                        }
         print classified_image_metadata
         print ""
         print cropped_image_metadata
@@ -211,6 +214,10 @@ class Main(threading.Thread):
 
             # send to Watson for classification
             classification_results = self.send_cropped_images_to_watson()
+
+            print "++++++++++++++++++"
+            print "classification_results", classification_results
+            print "++++++++++++++++++"
 
             collated_metadata = self.collate_classifcation_metadata(classification_results, cropped_image_metadata)
             shelf = self.hostname[11:][:1]
