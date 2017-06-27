@@ -183,7 +183,7 @@ class Main(threading.Thread):
 
                     # stella won't be in the fridge for the demo, so remove that as a possibility
                     # 'candidates' is a list of dicts in the form {'class':str, 'score':float} 
-                    candidates = [d for d in image[u'classifiers'][0][u'classes'] if not (i[u'class'] == 'bottlestella')]
+                    candidates = [d for d in image[u'classifiers'][0][u'classes'] if not (d[u'class'] == 'bottlestella')]
 
                     # skip to next image if there's no remaining candidates
                     if len(candidates) == 0: continue
