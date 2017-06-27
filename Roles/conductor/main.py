@@ -333,7 +333,7 @@ class Main(): # rules them all
         self.product_specific_confidence_thresholds = {
             "bottlebecks"               : 0.99,
             "bottlebudamerica"     : 0.99,
-            "bottlebudlight"           : 0.98,
+            "bottlebudlight"           : 0.99,
             "bottleplatinum"          : 0.99,
             "bottlecorona"             : 0.95,
             "bottlehoegaarden"     : 0.99,
@@ -341,11 +341,11 @@ class Main(): # rules them all
             "bottleshocktopraspberry"   : 0.99,
             "bottleshocktoppretzel"        : 0.98,
             "bottlestella"                : 0.99,
-            "canbudamerica"         : 0.99,
+            "canbudamerica"         : 0.95,
             "canbudlight"               : 0.99,
+            "canbusch"                  : 0.95,
             "canbusch"                  : 0.99,
-            "canbusch"                  : 0.99,
-            "cannaturallight"         : 0.99,
+            "cannaturallight"         : 0.95,
             "canbudamerica"        : 0.99,
             "canbudice"                 : 0.99,
             "canbudlight"               : 0.99
