@@ -380,7 +380,6 @@ class Main(): # rules them all
 
     def all_records_received(self, records):
         print "all records received"
-        self.duplicate_filter.filter_duplicates(records)
         for shelf in ['A','B','C','D']:
             for camera_id, camera_data in enumerate(records[shelf]):
                 print shelf, camera_id, camera_data
