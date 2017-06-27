@@ -338,7 +338,7 @@ class Main(): # rules them all
             "bottlecorona"             : 0.95,
             "bottlehoegaarden"     : 0.99,
             "bottleultra"                 : 0.99,
-            "bottleshocktopraspberry"   : 0.97,
+            "bottleshocktopraspberry"   : 0.98,
             "bottleshocktoppretzel"        : 0.97,
             "bottlestella"                : 0.99,
             "canbudamerica"         : 0.99,
