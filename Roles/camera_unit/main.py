@@ -180,7 +180,18 @@ class Main(threading.Thread):
         for image in classification_results[u'images']:
             if image.has_key(u'classifiers'):
                 if len(image[u'classifiers']) > 0:
-                    highest_confidence_classification = sorted(image[u'classifiers'][0][u'classes'], key=itemgetter('score'))[-1]
+
+                    # stella won't be in the fridge for the demo, so remove that as a possibility
+                    # 'candidates' is a list of dicts in the form {'class':str, 'score':float} 
+                    candidates = [d for d in image[u'classifiers'][0][u'classes'] if not (i[u'class'] == 'bottlestella')]
+
+                    # skip to next image if there's no remaining candidates
+                    if len(candidates) == 0: continue
+
+
+                    # highest_confidence_classification = sorted(image[u'classifiers'][0][u'classes'], key=itemgetter('score'))[-1]
+
+                    highest_confidence_classification = sorted(candidates, key=itemgetter('score'))[-1]                    
                     #if highest_confidence_classification[u'score'] >0.95:
                     # print "collate_classifcation_metadata 1", image
                     classified_image_metadata[ os.path.basename(image[u'image']) ] = {
@@ -190,6 +201,7 @@ class Main(threading.Thread):
         print classified_image_metadata
         print ""
         print cropped_image_metadata
+
         for key,val in classified_image_metadata.items():
             classified_image_metadata[key]['x'] = cropped_image_metadata[str(key)]['x']
             classified_image_metadata[key]['y'] = cropped_image_metadata[str(key)]['y']
