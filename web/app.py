@@ -18,9 +18,11 @@ auth = HTTPBasicAuth()
 
 @auth.verify_password
 def get_pw(username, password):
+    #return True
     user = os.environ['SMART_COOLER_LOGIN']
     pw = os.environ['SMART_COOLER_PASSWORD']
     return username == user and password == pw
+
 
 @app.route("/")
 @auth.login_required
@@ -298,6 +300,7 @@ if __name__ == '__main__':
     except Exception as e:
         print ('cannot find .env file')
     load_dotenv(dotenv_path)
+    
 
     # prepare s3
     bucket_name = "smart-fridge-dark-matter"
@@ -310,7 +313,7 @@ if __name__ == '__main__':
         region_name="us-east-1"
     )
     s3 = session.resource("s3")
-
+    
     port = 9000
     if len(sys.argv) > 1:
         port = int(sys.argv[1])
