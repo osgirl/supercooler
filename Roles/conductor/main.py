@@ -318,7 +318,7 @@ class Main(): # rules them all
                 x_camera = float(data['x']) + data['w']/2
                 y_camera = float(data['y']) + data['h']/2
 
-                print "---> map_camera_coords_to_shelf_coords", self.map_camera_coords_to_shelf_coords(shelf, camera_id, x_camera, y_camera)
+                print "---> map_camera_coords_to_shelf_coords", self.map_camera_coords_to_shelf_coords(shelf_id, camera_id, x_camera, y_camera)
 
                 self.inventory.append({
                     "type"  : self.label_lookup[data['class']],
