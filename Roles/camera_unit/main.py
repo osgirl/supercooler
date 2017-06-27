@@ -101,7 +101,9 @@ class Main(threading.Thread):
             print 'loading %s' % (filename)
             ocv_imgs[int(light_level)] = cv2.imread(os.path.join(self.capture_path, filename))
 
-        if ocv_imgs[0] is None: print 'error: no image found'; return
+        if ocv_imgs[0] is None: 
+                print 'error: no image found'
+                return False, None, None, None, None
         print 'starting parser'
 
         # run parser, get image bounds and undistorted image
@@ -142,7 +144,7 @@ class Main(threading.Thread):
             except Exception as e:
                 print "exception in parse_and_crop_images", e
 
-        return cropped_image_metadata, ocv_img_with_overlay, ocv_img_out
+        return True, cropped_image_metadata, ocv_img_with_overlay, ocv_img_out
 
     def send_images_to_conductor(self, raw_images, processed_image, processed_image_with_overlay ):
         # convert image to jpeg and base64-encode
@@ -199,7 +201,10 @@ class Main(threading.Thread):
 
     def process_images_and_report(self):
         # parse and crop Captures 
-        cropped_image_metadata, processed_image_with_overlay, processed_image = self.parse_and_crop_images()
+        status, cropped_image_metadata, processed_image_with_overlay, processed_image = self.parse_and_crop_images()
+        if not status:
+            print "Exception in parse_and_crop_images.  Probably camera trouble"
+            return
         # send_images_to_conductor(None, processed_image, processed_image_with_overlay)
         print cropped_image_metadata, processed_image_with_overlay, processed_image
 
