@@ -461,8 +461,7 @@ class Main(): # rules them all
             "bottlestella"                : 0.99,
             "canbudamerica"         : 0.95,
             "canbudlight"               : 0.99,
-            "canbusch"                  : 0.95,
-            "canbusch"                  : 0.99,
+            "canbusch"                  : 0.94,
             "cannaturallight"         : 0.95,
             "canbudamerica"        : 0.99,
             "canbudice"                 : 0.99,
@@ -472,7 +471,7 @@ class Main(): # rules them all
     def map_camera_coords_to_shelf_coords(self, shelf_id, camera_id, x, y):
 
         # standard x and y distances between camera origins. adjust as necessary
-        delta_x = 1050
+        delta_x = 1200
         delta_y = 600
 
         # start by doing a rough transformation with standard offsets
