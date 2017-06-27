@@ -246,26 +246,6 @@ class Main(): # rules them all
         # initialize inventory -- this will be recalculated on door close events
         self.inventory = []
 
-        # # map tensorflow labels to corresponding ints for web interface
-        # self.label_lookup = {
-        #     "can busch"                 : 0,
-        #     "bottle shocktop raspberry" : 1,
-        #     "bottle ultra"              : 2,
-        #     "bottle hoegaarden"         : 3,
-        #     "bottle bud light"          : 4,
-        #     "can bud light"             : 5,
-        #     "bottle bud america"        : 6,
-        #     "can natty"                 : 7,
-        #     "can bud america"           : 8,
-        #     "bottle shocktop pretzel"   : 9,
-        #     "bottle becks"              : 10,
-        #     "can bud ice"               : 11,
-        #     "bottle platinum"           : 12,
-        #     "bottle stella"             : 13,
-        #     "bottle corona"             : 14,
-        #     "other"                     : 15
-        # }
-
         # map watson labels to corresponding ints for web interface
         self.label_lookup = {
             "bottlebecks"               : 1,
@@ -291,40 +271,63 @@ class Main(): # rules them all
         self.classification_accumulator.daemon = True
         self.classification_accumulator.start()
 
+        self.camera_specific_offsets = []
+        self.camera_resolution = [1280, 720]
+
+    def map_camera_coords_to_shelf_coords(self, shelf, camera, x, y):
+            x_prime = x
+            y_prime = y
+            camera_resolution_x = self.camera_resolution[0]
+            camera_resolution_y = self.camera_resolution[1]
+            if camera in [0,4,8]:
+                x_prime = x + (0 * camera_resolution_x)
+            if camera in [1,5,9]:
+                x_prime = x + (1 * camera_resolution_x)
+            if camera in [2,6,10]:
+                x_prime = x + (2 * camera_resolution_x)
+            if camera in [3,7,11]:
+                x_prime = x + (3 * camera_resolution_x)
+
+            if camera in [0,1,2,3]:
+                y_prime = y + (0 * camera_resolution_y)
+            if camera in [4, 5, 6, 7]:
+                y_prime = y + (1 * camera_resolution_y)
+            if camera in [8, 9, 10, 11]:
+                y_prime = y + (2 * camera_resolution_y)
+            # camera-specific offsets will be added to and referenced from self.camera_offsets
+            return [x_prime, y_prime]
+
+
     def all_records_received(self, records):
 
         print "all records received"
         for shelf in ['A','B','C','D']:
-            for i, camera_data in enumerate(records[shelf]):
-                print shelf, i, camera_data
-                self.add_to_inventory(shelf, camera_data)
+            for camera_id, camera_data in enumerate(records[shelf]):
+                print shelf, camera_id, camera_data
+                self.add_to_inventory(shelf, camera_id, camera_data)
+        #print records
 
-        print records
-
-
-    def add_to_inventory(self, shelf_id, camera_data):
+    def add_to_inventory(self, shelf_id, camera_id, camera_data):
 
         for (i, data) in camera_data.iteritems():
             print "looking at", data
-            if data['score'] < 0.8: continue;
+            #if data['score'] < 0.8: continue;
 
             print "adding data..."
             try:
-                print data
-                print data['class']
-                print self.label_lookup
-                print shelf_id
-                print self.label_lookup[data['class']]
-                print float(data['x']) + data['w']/2
-                print float(data['y']) + data['h']/2
+                x_camera = float(data['x']) + data['w']/2
+                y_camera = float(data['y']) + data['h']/2
+
+                print "---> map_camera_coords_to_shelf_coords", self.map_camera_coords_to_shelf_coords(shelf, camera_id, x_camera, y_camera)
+
                 self.inventory.append({
                     "type"  : self.label_lookup[data['class']],
                     "shelf" : shelf_id,
-                    "x"     : float(data['x']) + data['w']/2,
-                    "y"     : float(data['y']) + data['h']/2
+                    "x"     : x_camera,
+                    "y"     : y_camera
                 })
             except Exception as e:
-                print "could not add item to inventory, check label name", e
+                print "exception in Main.add_to_inventory", e
 
 
 
