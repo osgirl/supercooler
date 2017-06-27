@@ -179,12 +179,12 @@ class Main(threading.Thread):
             if image.has_key(u'classifiers'):
                 if len(image[u'classifiers']) > 0:
                     highest_confidence_classification = sorted(image[u'classifiers'][0][u'classes'], key=itemgetter('score'))[-1]
-                    if highest_confidence_classification[u'score'] >0.95:
-                        print "collate_classifcation_metadata 1", image
-                        classified_image_metadata[ os.path.basename(image[u'image']) ] = {
-                            "score":highest_confidence_classification[u'score'],
-                            "class":highest_confidence_classification[u'class'],
-                        }
+                    #if highest_confidence_classification[u'score'] >0.95:
+                    print "collate_classifcation_metadata 1", image
+                    classified_image_metadata[ os.path.basename(image[u'image']) ] = {
+                        "score":highest_confidence_classification[u'score'],
+                        "class":highest_confidence_classification[u'class'],
+                    }
         print classified_image_metadata
         print ""
         print cropped_image_metadata
