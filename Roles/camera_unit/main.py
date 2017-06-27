@@ -203,6 +203,8 @@ class Main(threading.Thread):
         # send_images_to_conductor(None, processed_image, processed_image_with_overlay)
         print cropped_image_metadata, processed_image_with_overlay, processed_image
 
+        shelf = self.hostname[11:][:1]
+        camera = self.hostname[12:]
         #catch case of empty directory
         if len(cropped_image_metadata.keys()):
             time.sleep(5)
@@ -222,8 +224,6 @@ class Main(threading.Thread):
             print "++++++++++++++++++"
 
             collated_metadata = self.collate_classifcation_metadata(classification_results, cropped_image_metadata)
-            shelf = self.hostname[11:][:1]
-            camera = self.hostname[12:]
         else:
             collated_metadata = {}
             
