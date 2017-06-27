@@ -215,127 +215,6 @@ class Classification_Accumulator(threading.Thread):
             self.clear_records()
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-class ProcessInventory():
-    def __init__(self):
-        self.confidence_threshold = 0.5
-        self.overlap_threshold = 200
-        self.data_raw = None
-        self.data_processed = None
-        self.inventory_template = {
-            "budlight":0,
-            "budweiser":0,
-            "corona":0,
-            "hoegaarden":0,
-            "platinum":0,
-            "stella":0,
-            "ultra":0
-        }
-        self.confidence_threshold_by_product = {
-            "budlight":0.90,
-            "budweiser":0.90,
-            "corona":0.90,
-            "hoegaarden":0.90,
-            "platinum":0.90,
-            "stella":0.90,
-            "ultra":0.90
-        }
-
-    def process_inventory_data(self, data):
-        self.data_raw = data
-        data_filtered = self.filter_low_confidence(self.data_raw)
-        self.data_processed =self.detect_overlaps(data_filtered)
-        return self.data_processed
-        #return self.collate_inventory()
-    def filter_low_confidence(self, data):
-        data_new = []
-        for cam in self.data_raw:
-            cam_new = []
-            data_new.append(cam_new)
-            for product in cam:
-                if product["label"] == "":
-                    continue
-                if product["confidence"] >= self.confidence_threshold_by_product[product["label"]]:
-                    cam_new.append(product)
-        return data_new
-    def detect_overlaps(self, data):
-        for cam_outer in data:
-            for product_outer in cam_outer:
-                if product_outer['duplicate']:
-                    continue
-                for cam_inner in data:
-                    for product_inner in cam_inner:
-                        if product_inner['label'] == product_outer['label']:
-                            if product_inner['pathName'] == product_outer['pathName']:
-                                continue
-                            if product_inner['duplicate']:
-                                continue
-                            distance = math.sqrt(math.pow((product_outer['totalX']-product_inner['totalX']) ,2) + math.pow((product_outer['totalY']-product_inner['totalY']) ,2))
-                            print distance, product_inner['label'], product_inner['capture'], product_outer['capture']
-                            if distance < self.overlap_threshold:
-                                product_inner['duplicate'] = True
-        return data
-
-    def filter_duplicates(self, data):
-        data_new = []
-        for cam in data:
-            cam_new = []
-            data_new.append(cam_new)
-            for product in cam:
-                if not product["duplicate"] :
-                    cam_new.append(product)
-        return data_new
-
-
-    def collate_inventory(self):
-        inventory = dict(self.inventory_template)
-        for cam in self.data_processed:
-            for product in cam:
-                if product['duplicate']:
-                    continue
-                productName = product["label"]
-                if productName in inventory.keys():
-                    inventory[productName] += 1
-                else:
-                    print "ProcessInventory.collate_inventory: product name not found:", repr(product)
-        return inventory
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 class Main(): # rules them all
     def __init__(self, network):
         self.network = network
@@ -447,6 +326,7 @@ class Main(): # rules them all
                 11  : (0, 0)
             }
         }
+
         self.camera_resolution = [1280, 720]
         self.product_specific_confidence_thresholds = {
             "bottlebecks"               : 0.99,
@@ -499,35 +379,15 @@ class Main(): # rules them all
 
         return (x_web, y_web)
 
-        # x_prime = x
-        # y_prime = y
-        # camera_resolution_x = self.camera_resolution[0]
-        # camera_resolution_y = self.camera_resolution[1]
-        # if camera in [0,4,8]:
-        #     x_prime = x + (0 * camera_resolution_x)
-        # if camera in [1,5,9]:
-        #     x_prime = x + (1 * camera_resolution_x)
-        # if camera in [2,6,10]:
-        #     x_prime = x + (2 * camera_resolution_x)
-        # if camera in [3,7,11]:
-        #     x_prime = x + (3 * camera_resolution_x)
-
-        # if camera in [0,1,2,3]:
-        #     y_prime = y + (0 * camera_resolution_y)
-        # if camera in [4, 5, 6, 7]:
-        #     y_prime = y + (1 * camera_resolution_y)
-        # if camera in [8, 9, 10, 11]:
-        #     y_prime = y + (2 * camera_resolution_y)
-            # camera-specific offsets will be added to and referenced from self.camera_offsets
-
-
     def all_records_received(self, records):
-
         print "all records received"
+        self.duplicate_filter.filter_duplicates(records)
         for shelf in ['A','B','C','D']:
             for camera_id, camera_data in enumerate(records[shelf]):
                 print shelf, camera_id, camera_data
                 self.add_to_inventory(shelf, camera_id, camera_data)
+
+        self.filter_duplicates()
         #print records
 
     def add_to_inventory(self, shelf_id, camera_id, camera_data):
@@ -549,19 +409,34 @@ class Main(): # rules them all
                     "type"  : self.label_lookup[data['class']],
                     "shelf" : shelf_id,
                     "x"     : x_global,
-                    "y"     : y_global
+                    "y"     : y_global,
+                    "camera" : camera_id,
+                    "duplicate" : False, 
+                    "score" :  data['score']
                 })
             except Exception as e:
                 print "exception in Main.add_to_inventory", e
 
-
-
-        #if len(self.inventory) == 0:
-        #    print "empty... add dummy beer"
-        #    self.inventory.append({"type":1,"shelf":"A","x":10,"y":10})
-        #
-        #print "update web interface"
-        #self.web_interface.send_report(self.inventory)
+    def filter_duplicates(self):
+        return # until mapping of camera coords to shelf coords is complete
+        # tag duplicates
+        overlap_threshold = 100
+        for product_outer in self.inventory:
+            for product_inner in self.inventory:
+                if product_outer['camera'] == product_inner['camera']: # there will be no duplicates from the same camera
+                    continue
+                distance = math.sqrt(math.pow((product_outer['x']-product_inner['x']) ,2) + math.pow((product_outer['x']-product_inner['x']) ,2))
+                if distance < overlap_threshold:
+                    if product_inner['score'] < product_outer['score']:
+                        product_inner['duplicate'] = True 
+                    else:
+                        product_outer['duplicate'] = True 
+        # filter out duplicates
+        new_inventory = []
+        for product in self.inventory:
+            if not product ['duplicate']:
+                new_inventory.append(product)
+        self.inventory = new_inventory
 
     def client_monitor_add_to_queue(self,hostname, git_pull_date, pickle_version):
         self.client_monitor_server.add_to_queue(hostname, git_pull_date, pickle_version)
