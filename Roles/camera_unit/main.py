@@ -7,12 +7,12 @@ import json
 from operator import itemgetter
 import os
 import Queue
+import random
 import settings 
 import sys
 import subprocess
 import threading
 import time
-
 
 from thirtybirds_2_0.Network.manager import init as network_init
 from thirtybirds_2_0.Network.email_simple import init as email_init
@@ -161,6 +161,8 @@ class Main(threading.Thread):
         visual_recognition = VisualRecognitionV3('2016-05-20', api_key='4fd7cd5854ae7a1c63f1835ddd63a2a7779a73d0')
         filepath = "/home/pi/supercooler/captures_cropped.zip"
 
+
+        time.sleep(random.randrange(0,15))
         # send to watson
         with open(filepath, 'rb') as image_file:
             res = visual_recognition.classify(images_file=image_file, classifier_ids=['supercooler3_1124392282'])
