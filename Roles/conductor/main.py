@@ -330,6 +330,26 @@ class Main(): # rules them all
             }
         }
         self.camera_resolution = [1280, 720]
+        self.product_specific_confidence_thresholds = {
+            "bottlebecks"               : 0.99,
+            "bottlebudamerica"     : 0.99,
+            "bottlebudlight"           : 0.99,
+            "bottleplatinum"          : 0.99,
+            "bottlecorona"             : 0.95,
+            "bottlehoegaarden"     : 0.99,
+            "bottleultra"                 : 0.99,
+            "bottleshocktopraspberry"   : 0.95,
+            "bottleshocktoppretzel"        : 0.95,
+            "bottlestella"                : 0.99,
+            "canbudamerica"         : 0.99,
+            "canbudlight"               : 0.99,
+            "canbusch"                  : 0.99,
+            "canbusch"                  : 0.99,
+            "cannaturallight"         : 0.99,
+            "canbudamerica"        : 0.99,
+            "canbudice"                 : 0.99,
+            "canbudlight"               : 0.99
+        }
 
     def map_camera_coords_to_shelf_coords(self, shelf_id, camera_id, x, y):
 
@@ -397,8 +417,10 @@ class Main(): # rules them all
     def add_to_inventory(self, shelf_id, camera_id, camera_data):
 
         for (i, data) in camera_data.iteritems():
+            productname = self.label_lookup[data['class']]
+            product_confidence_threshold = self.product_specific_confidence_thresholds[productname]
             print "looking at", data
-            if data['score'] < 0.99: continue;
+            if data['score'] < product_confidence_threshold: continue;
             print "adding data..."
             try:
                 x_local = float(data['x']) + data['w']/2
@@ -412,7 +434,7 @@ class Main(): # rules them all
                 #print "---> map_camera_coords_to_shelf_coords", self.map_camera_coords_to_shelf_coords(shelf_id, camera_id, x_camera, y_camera)
 
                 self.inventory.append({
-                    "type"  : self.label_lookup[data['class']],
+                    "type"  : productname,
                     "shelf" : shelf_id,
                     "x"     : x_global,
                     "y"     : y_global
