@@ -271,31 +271,119 @@ class Main(): # rules them all
         self.classification_accumulator.daemon = True
         self.classification_accumulator.start()
 
-        self.camera_specific_offsets = []
+        self.camera_specific_offsets = {
+            'A' : {
+                0   : (0, 0),
+                1   : (0, 0),
+                2   : (0, 0),
+                3   : (0, 0),
+                4   : (0, 0),
+                5   : (0, 0),
+                6   : (0, 0),
+                7   : (0, 0),
+                8   : (0, 0),
+                9   : (0, 0),
+                10  : (0, 0),
+                11  : (0, 0)
+            },
+            'B' : {
+                0   : (0, 0),
+                1   : (0, 0),
+                2   : (0, 0),
+                3   : (0, 0),
+                4   : (0, 0),
+                5   : (0, 0),
+                6   : (0, 0),
+                7   : (0, 0),
+                8   : (0, 0),
+                9   : (0, 0),
+                10  : (0, 0),
+                11  : (0, 0)
+            },
+            'C' : {
+                0   : (0, 0),
+                1   : (0, 0),
+                2   : (0, 0),
+                3   : (0, 0),
+                4   : (0, 0),
+                5   : (0, 0),
+                6   : (0, 0),
+                7   : (0, 0),
+                8   : (0, 0),
+                9   : (0, 0),
+                10  : (0, 0),
+                11  : (0, 0)
+            },
+            'D' : {
+                0   : (0, 0),
+                1   : (0, 0),
+                2   : (0, 0),
+                3   : (0, 0),
+                4   : (0, 0),
+                5   : (0, 0),
+                6   : (0, 0),
+                7   : (0, 0),
+                8   : (0, 0),
+                9   : (0, 0),
+                10  : (0, 0),
+                11  : (0, 0)
+            }
+        }
         self.camera_resolution = [1280, 720]
 
-    def map_camera_coords_to_shelf_coords(self, shelf, camera, x, y):
-            x_prime = x
-            y_prime = y
-            camera_resolution_x = self.camera_resolution[0]
-            camera_resolution_y = self.camera_resolution[1]
-            if camera in [0,4,8]:
-                x_prime = x + (0 * camera_resolution_x)
-            if camera in [1,5,9]:
-                x_prime = x + (1 * camera_resolution_x)
-            if camera in [2,6,10]:
-                x_prime = x + (2 * camera_resolution_x)
-            if camera in [3,7,11]:
-                x_prime = x + (3 * camera_resolution_x)
+    def map_camera_coords_to_shelf_coords(self, shelf_id, camera_id, x, y):
 
-            if camera in [0,1,2,3]:
-                y_prime = y + (0 * camera_resolution_y)
-            if camera in [4, 5, 6, 7]:
-                y_prime = y + (1 * camera_resolution_y)
-            if camera in [8, 9, 10, 11]:
-                y_prime = y + (2 * camera_resolution_y)
-            # camera-specific offsets will be added to and referenced from self.camera_specific_offsets
-            return [x_prime, y_prime]
+        # standard x and y distances between camera origins. adjust as necessary
+        delta_x = 640
+        delta_y = 360
+
+        # start by doing a rough transformation with standard offsets
+        x_prime = x + delta_x * (camera_id // 4)
+        y_prime = y + delta_y * (3 - camera_id % 4)
+
+        # now apply specific offsets as defined in self.camera_specific_offsets
+        x_prime = x_prime + self.camera_specific_offsets[shelf_id][camera_id][0]
+        y_prime = y_prime + self.camera_specific_offsets[shelf_id][camera_id][1]
+        print x_prime, y_prime
+
+        # full-scale x and y in terms of camera coordinates, for scaling (adjust as necessary)
+        x_full_scale = delta_x * 2 + 1280
+        y_full_scale = delta_y * 3 + 720
+
+        # scale to web coordinates
+        x_full_scale_web = 492
+        y_full_scale_web = 565
+         
+        # scale and swap x and y coordinates
+        x_web = y_prime / y_full_scale * y_full_scale_web
+        y_web = x_prime / x_full_scale * x_full_scale_web
+        print x_web, y_web
+
+        # reverse x (so origin is top left, not top right)
+        x_web = x_full_scale_web - x_web
+
+        return (x_web, y_web)
+
+        # x_prime = x
+        # y_prime = y
+        # camera_resolution_x = self.camera_resolution[0]
+        # camera_resolution_y = self.camera_resolution[1]
+        # if camera in [0,4,8]:
+        #     x_prime = x + (0 * camera_resolution_x)
+        # if camera in [1,5,9]:
+        #     x_prime = x + (1 * camera_resolution_x)
+        # if camera in [2,6,10]:
+        #     x_prime = x + (2 * camera_resolution_x)
+        # if camera in [3,7,11]:
+        #     x_prime = x + (3 * camera_resolution_x)
+
+        # if camera in [0,1,2,3]:
+        #     y_prime = y + (0 * camera_resolution_y)
+        # if camera in [4, 5, 6, 7]:
+        #     y_prime = y + (1 * camera_resolution_y)
+        # if camera in [8, 9, 10, 11]:
+        #     y_prime = y + (2 * camera_resolution_y)
+            # camera-specific offsets will be added to and referenced from self.camera_offsets
 
 
     def all_records_received(self, records):
@@ -315,16 +403,21 @@ class Main(): # rules them all
 
             print "adding data..."
             try:
-                x_camera = float(data['x']) + data['w']/2
-                y_camera = float(data['y']) + data['h']/2
+                x_local = float(data['x']) + data['w']/2
+                y_local = float(data['y']) + data['h']/2
 
-                print "---> map_camera_coords_to_shelf_coords", self.map_camera_coords_to_shelf_coords(shelf_id, camera_id, x_camera, y_camera)
+                print "map from camera coords to shelf coords"
+                x_global, y_global = self.map_camera_coords_to_shelf_coords(shelf_id, camera_id, x_local, y_local)
+
+                print x_local, y_local
+                print x_global, y_global
+                #print "---> map_camera_coords_to_shelf_coords", self.map_camera_coords_to_shelf_coords(shelf_id, camera_id, x_camera, y_camera)
 
                 self.inventory.append({
                     "type"  : self.label_lookup[data['class']],
                     "shelf" : shelf_id,
-                    "x"     : x_camera,
-                    "y"     : y_camera
+                    "x"     : x_global,
+                    "y"     : y_global
                 })
             except Exception as e:
                 print "exception in Main.add_to_inventory", e
