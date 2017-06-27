@@ -310,11 +310,13 @@ class Main(): # rules them all
 
             print "adding data..."
             try:
+                print data['class']
+                print self.label_lookup
                 inventory.append({
                     "type"  : self.label_lookup[data['class']],
                     "shelf" : shelf_id,
-                    "x"     : data['x'] + data['w']/2,
-                    "y"     : data['y'] + data['h']/2,
+                    "x"     : float(data['x']) + data['w']/2,
+                    "y"     : float(data['y']) + data['h']/2,
                 })
             except Exception as e:
                 print "could not add item to inventory, check label name"
