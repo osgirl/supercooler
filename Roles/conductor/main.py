@@ -399,28 +399,28 @@ class Main(): # rules them all
 
         for (i, data) in camera_data.iteritems():
             print "looking at", data
-            #if data['score'] < 0.8: continue;
+            if data['score'] < 0.97: continue;
 
-            print "adding data..."
-            try:
-                x_local = float(data['x']) + data['w']/2
-                y_local = float(data['y']) + data['h']/2
+                print "adding data..."
+                try:
+                    x_local = float(data['x']) + data['w']/2
+                    y_local = float(data['y']) + data['h']/2
 
-                print "map from camera coords to shelf coords"
-                x_global, y_global = self.map_camera_coords_to_shelf_coords(shelf_id, camera_id, x_local, y_local)
+                    print "map from camera coords to shelf coords"
+                    x_global, y_global = self.map_camera_coords_to_shelf_coords(shelf_id, camera_id, x_local, y_local)
 
-                print x_local, y_local
-                print x_global, y_global
-                #print "---> map_camera_coords_to_shelf_coords", self.map_camera_coords_to_shelf_coords(shelf_id, camera_id, x_camera, y_camera)
+                    print x_local, y_local
+                    print x_global, y_global
+                    #print "---> map_camera_coords_to_shelf_coords", self.map_camera_coords_to_shelf_coords(shelf_id, camera_id, x_camera, y_camera)
 
-                self.inventory.append({
-                    "type"  : self.label_lookup[data['class']],
-                    "shelf" : shelf_id,
-                    "x"     : x_global,
-                    "y"     : y_global
-                })
-            except Exception as e:
-                print "exception in Main.add_to_inventory", e
+                    self.inventory.append({
+                        "type"  : self.label_lookup[data['class']],
+                        "shelf" : shelf_id,
+                        "x"     : x_global,
+                        "y"     : y_global
+                    })
+                except Exception as e:
+                    print "exception in Main.add_to_inventory", e
 
 
 
