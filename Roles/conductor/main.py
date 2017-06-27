@@ -380,6 +380,9 @@ class Main(): # rules them all
 
     def all_records_received(self, records):
         print "all records received"
+        records_with_shelf_coords = self.map_camera_coords_to_shelf_coords(records)
+        print records_with_shelf_coords
+        print "all records received"
         for shelf in ['A','B','C','D']:
             for camera_id, camera_data in enumerate(records[shelf]):
                 print shelf, camera_id, camera_data
