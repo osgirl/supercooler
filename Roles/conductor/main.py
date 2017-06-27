@@ -331,7 +331,6 @@ class Main(): # rules them all
         }
         self.camera_resolution = [1280, 720]
 
-<<<<<<< HEAD
     def map_camera_coords_to_shelf_coords(self, shelf_id, camera_id, x, y):
 
         # standard x and y distances between camera origins. adjust as necessary
