@@ -417,7 +417,7 @@ class Main(): # rules them all
     def add_to_inventory(self, shelf_id, camera_id, camera_data):
 
         for (i, data) in camera_data.iteritems():
-            productname = self.label_lookup[data['class']]
+            productname = data['class']
             product_confidence_threshold = self.product_specific_confidence_thresholds[productname]
             print "looking at", data
             if data['score'] < product_confidence_threshold: continue;
@@ -434,7 +434,7 @@ class Main(): # rules them all
                 #print "---> map_camera_coords_to_shelf_coords", self.map_camera_coords_to_shelf_coords(shelf_id, camera_id, x_camera, y_camera)
 
                 self.inventory.append({
-                    "type"  : productname,
+                    "type"  : self.label_lookup[data['class']],
                     "shelf" : shelf_id,
                     "x"     : x_global,
                     "y"     : y_global
