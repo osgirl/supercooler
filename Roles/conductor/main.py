@@ -294,7 +294,7 @@ class Main(): # rules them all
                 y_prime = y + (1 * camera_resolution_y)
             if camera in [8, 9, 10, 11]:
                 y_prime = y + (2 * camera_resolution_y)
-            # camera-specific offsets will be added to and referenced from self.camera_offsets
+            # camera-specific offsets will be added to and referenced from self.camera_specific_offsets
             return [x_prime, y_prime]
 
 
