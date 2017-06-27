@@ -214,6 +214,129 @@ class Classification_Accumulator(threading.Thread):
             self.all_records_received_callback(dict(self.shelves))
             self.clear_records()
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+""
+class ProcessInventory():
+    def __init__(self):
+        self.confidence_threshold = 0.5
+        self.overlap_threshold = 200
+        self.data_raw = None
+        self.data_processed = None
+        self.inventory_template = {
+            "budlight":0,
+            "budweiser":0,
+            "corona":0,
+            "hoegaarden":0,
+            "platinum":0,
+            "stella":0,
+            "ultra":0
+        }
+        self.confidence_threshold_by_product = {
+            "budlight":0.90,
+            "budweiser":0.90,
+            "corona":0.90,
+            "hoegaarden":0.90,
+            "platinum":0.90,
+            "stella":0.90,
+            "ultra":0.90
+        }
+
+    def process_inventory_data(self, data):
+        self.data_raw = data
+        data_filtered = self.filter_low_confidence(self.data_raw)
+        self.data_processed =self.detect_overlaps(data_filtered)
+        return self.data_processed
+        #return self.collate_inventory()
+    def filter_low_confidence(self, data):
+        data_new = []
+        for cam in self.data_raw:
+            cam_new = []
+            data_new.append(cam_new)
+            for product in cam:
+                if product["label"] == "":
+                    continue
+                if product["confidence"] >= self.confidence_threshold_by_product[product["label"]]:
+                    cam_new.append(product)
+        return data_new
+    def detect_overlaps(self, data):
+        for cam_outer in data:
+            for product_outer in cam_outer:
+                if product_outer['duplicate']:
+                    continue
+                for cam_inner in data:
+                    for product_inner in cam_inner:
+                        if product_inner['label'] == product_outer['label']:
+                            if product_inner['pathName'] == product_outer['pathName']:
+                                continue
+                            if product_inner['duplicate']:
+                                continue
+                            distance = math.sqrt(math.pow((product_outer['totalX']-product_inner['totalX']) ,2) + math.pow((product_outer['totalY']-product_inner['totalY']) ,2))
+                            print distance, product_inner['label'], product_inner['capture'], product_outer['capture']
+                            if distance < self.overlap_threshold:
+                                product_inner['duplicate'] = True
+        return data
+
+    def filter_duplicates(self, data):
+        data_new = []
+        for cam in data:
+            cam_new = []
+            data_new.append(cam_new)
+            for product in cam:
+                if not product["duplicate"] :
+                    cam_new.append(product)
+        return data_new
+
+
+    def collate_inventory(self):
+        inventory = dict(self.inventory_template)
+        for cam in self.data_processed:
+            for product in cam:
+                if product['duplicate']:
+                    continue
+                productName = product["label"]
+                if productName in inventory.keys():
+                    inventory[productName] += 1
+                else:
+                    print "ProcessInventory.collate_inventory: product name not found:", repr(product)
+        return inventory
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 class Main(): # rules them all
     def __init__(self, network):
         self.network = network
