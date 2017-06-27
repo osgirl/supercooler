@@ -334,8 +334,8 @@ class Main(): # rules them all
     def map_camera_coords_to_shelf_coords(self, shelf_id, camera_id, x, y):
 
         # standard x and y distances between camera origins. adjust as necessary
-        delta_x = 850
-        delta_y = 400
+        delta_x = 900
+        delta_y = 550
 
         # start by doing a rough transformation with standard offsets
         x_prime = x + delta_x * (camera_id // 4)
@@ -354,7 +354,7 @@ class Main(): # rules them all
         x_full_scale_web = 492.0
         y_full_scale_web = 565.0
         x_offset_web = 120
-        y_offset_web = -120
+        y_offset_web = -110
          
         # scale and swap x and y coordinates
         x_web = x_full_scale_web - (y_prime / y_full_scale * y_full_scale_web) + x_offset_web
@@ -398,7 +398,7 @@ class Main(): # rules them all
 
         for (i, data) in camera_data.iteritems():
             print "looking at", data
-            if data['score'] < 0.97: continue;
+            if data['score'] < 0.99: continue;
             print "adding data..."
             try:
                 x_local = float(data['x']) + data['w']/2
