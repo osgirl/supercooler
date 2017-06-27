@@ -169,8 +169,6 @@ class Main(threading.Thread):
         with open(filepath, 'rb') as image_file:
             res = visual_recognition.classify(images_file=image_file, classifier_ids=['supercooler3_1124392282'])
 
-        print res
-
         return res
 
         # with open( filepath, 'rb') as image_file:
@@ -184,7 +182,7 @@ class Main(threading.Thread):
                 if len(image[u'classifiers']) > 0:
                     highest_confidence_classification = sorted(image[u'classifiers'][0][u'classes'], key=itemgetter('score'))[-1]
                     #if highest_confidence_classification[u'score'] >0.95:
-                    print "collate_classifcation_metadata 1", image
+                    # print "collate_classifcation_metadata 1", image
                     classified_image_metadata[ os.path.basename(image[u'image']) ] = {
                         "score":highest_confidence_classification[u'score'],
                         "class":highest_confidence_classification[u'class'],
@@ -255,9 +253,9 @@ class Main(threading.Thread):
 
     def run(self):
         while True:
-            print "Main.run 1"
+            # print "Main.run 1"
             topic, msg = self.queue.get(True)
-            print "Main.run 2"
+            # print "Main.run 2"
             if topic == "capture_image":
                 if msg in [0, "0"]: # on request 0, empty directory
                     previous_filenames = [ previous_filename for previous_filename in os.listdir(self.capture_path) if previous_filename.endswith(".png") ]
