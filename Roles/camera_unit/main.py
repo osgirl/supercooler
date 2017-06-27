@@ -184,6 +184,35 @@ class Main(threading.Thread):
                     # stella won't be in the fridge for the demo, so remove that as a possibility
                     # 'candidates' is a list of dicts in the form {'class':str, 'score':float} 
                     candidates = [d for d in image[u'classifiers'][0][u'classes'] if not (d[u'class'] == 'bottlestella')]
+                    if len(candidates) == 0: continue
+
+                    candidates = [d for d in candidates if not (d[u'class'] == 'bottleplatinum')]
+                    if len(candidates) == 0: continue
+
+                    candidates = [d for d in candidates if not (d[u'class'] == 'bottlebecks')]
+                    if len(candidates) == 0: continue
+
+                    candidates = [d for d in candidates if not (d[u'class'] == 'bottleultra')]  
+                    if len(candidates) == 0: continue
+
+                    candidates = [d for d in candidates if not (d[u'class'] == 'bottlehoegaarden')]
+                    if len(candidates) == 0: continue
+
+                    candidates = [d for d in candidates if not (d[u'class'] == 'bottleshocktoppretzel')]
+                    if len(candidates) == 0: continue
+
+                    candidates = [d for d in candidates if not (d[u'class'] == 'bottleshcoktopraspberry')]
+                    if len(candidates) == 0: continue
+
+                    candidates = [d for d in candidates if not (d[u'class'] == 'bottlecorona')]
+                    if len(candidates) == 0: continue
+
+                    candidates = [d for d in candidates if not (d[u'class'] == 'cannaturallight')]
+                    if len(candidates) == 0: continue
+
+                    candidates = [d for d in candidates if not (d[u'class'] == 'canbudlight')]
+                    if len(candidates) == 0: continue
+
 
                     # skip to next image if there's no remaining candidates
                     if len(candidates) == 0: continue
@@ -192,6 +221,7 @@ class Main(threading.Thread):
                     # highest_confidence_classification = sorted(image[u'classifiers'][0][u'classes'], key=itemgetter('score'))[-1]
 
                     highest_confidence_classification = sorted(candidates, key=itemgetter('score'))[-1]                    
+
                     #if highest_confidence_classification[u'score'] >0.95:
                     # print "collate_classifcation_metadata 1", image
                     classified_image_metadata[ os.path.basename(image[u'image']) ] = {

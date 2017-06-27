@@ -370,7 +370,7 @@ class Main(): # rules them all
         x_full_scale_web = 492.0
         y_full_scale_web = 565.0
         x_offset_web = 120
-        y_offset_web = -110
+        y_offset_web = -80
          
         # scale and swap x and y coordinates
         x_web = x_full_scale_web - (y_prime / y_full_scale * y_full_scale_web) + x_offset_web
