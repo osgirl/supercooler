@@ -334,33 +334,32 @@ class Main(): # rules them all
     def map_camera_coords_to_shelf_coords(self, shelf_id, camera_id, x, y):
 
         # standard x and y distances between camera origins. adjust as necessary
-        delta_x = 640
-        delta_y = 360
+        delta_x = 850
+        delta_y = 400
 
         # start by doing a rough transformation with standard offsets
         x_prime = x + delta_x * (camera_id // 4)
         y_prime = y + delta_y * (3 - camera_id % 4)
 
         # now apply specific offsets as defined in self.camera_specific_offsets
-        x_prime = x_prime + self.camera_specific_offsets[shelf_id][camera_id][0]
-        y_prime = y_prime + self.camera_specific_offsets[shelf_id][camera_id][1]
+        x_prime = float(x_prime + self.camera_specific_offsets[shelf_id][camera_id][0])
+        y_prime = float(y_prime + self.camera_specific_offsets[shelf_id][camera_id][1])
         print x_prime, y_prime
 
         # full-scale x and y in terms of camera coordinates, for scaling (adjust as necessary)
-        x_full_scale = delta_x * 2 + 1280
-        y_full_scale = delta_y * 3 + 720
+        x_full_scale = float(delta_x * 2 + 1280)
+        y_full_scale = float(delta_y * 3 + 720)
 
         # scale to web coordinates
-        x_full_scale_web = 492
-        y_full_scale_web = 565
+        x_full_scale_web = 492.0
+        y_full_scale_web = 565.0
+        x_offset_web = 120
+        y_offset_web = -120
          
         # scale and swap x and y coordinates
-        x_web = y_prime / y_full_scale * y_full_scale_web
-        y_web = x_prime / x_full_scale * x_full_scale_web
+        x_web = x_full_scale_web - (y_prime / y_full_scale * y_full_scale_web) + x_offset_web
+        y_web = x_prime / x_full_scale * x_full_scale_web + y_offset_web
         print x_web, y_web
-
-        # reverse x (so origin is top left, not top right)
-        x_web = x_full_scale_web - x_web
 
         return (x_web, y_web)
 
