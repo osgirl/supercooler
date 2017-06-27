@@ -334,8 +334,8 @@ class Main(): # rules them all
     def map_camera_coords_to_shelf_coords(self, shelf_id, camera_id, x, y):
 
         # standard x and y distances between camera origins. adjust as necessary
-        delta_x = 700
-        delta_y = 380
+        delta_x = 850
+        delta_y = 400
 
         # start by doing a rough transformation with standard offsets
         x_prime = x + delta_x * (camera_id // 4)
