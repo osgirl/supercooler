@@ -230,7 +230,6 @@ class Classification_Accumulator(threading.Thread):
 
 
 
-""
 class ProcessInventory():
     def __init__(self):
         self.confidence_threshold = 0.5
