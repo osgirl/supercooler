@@ -103,7 +103,7 @@ class Main(threading.Thread):
 
         if ocv_imgs[0] is None: 
                 print 'error: no image found'
-                return False, None, None, None, None
+                return False, None, None, None
         print 'starting parser'
 
         # run parser, get image bounds and undistorted image
