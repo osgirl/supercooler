@@ -209,13 +209,9 @@ class Classification_Accumulator(threading.Thread):
 
     def run(self):
         while True:
-            print "Classification_Accumulator", 0
             _ = self.queue.get(True)
-            print "Classification_Accumulator", 1
             time.sleep(self.duration_to_wait_for_records)
-            print "Classification_Accumulator", 2
             self.all_records_received_callback(dict(self.shelves))
-            print "Classification_Accumulator", 3
             self.clear_records()
 
 class Main(): # rules them all
@@ -354,8 +350,8 @@ class Main(): # rules them all
     def map_camera_coords_to_shelf_coords(self, shelf_id, camera_id, x, y):
 
         # standard x and y distances between camera origins. adjust as necessary
-        delta_x = 900
-        delta_y = 550
+        delta_x = 1050
+        delta_y = 600
 
         # start by doing a rough transformation with standard offsets
         x_prime = x + delta_x * (camera_id // 4)
@@ -364,7 +360,6 @@ class Main(): # rules them all
         # now apply specific offsets as defined in self.camera_specific_offsets
         x_prime = float(x_prime + self.camera_specific_offsets[shelf_id][camera_id][0])
         y_prime = float(y_prime + self.camera_specific_offsets[shelf_id][camera_id][1])
-        print x_prime, y_prime
 
         # full-scale x and y in terms of camera coordinates, for scaling (adjust as necessary)
         x_full_scale = float(delta_x * 2 + 1280)
@@ -379,7 +374,6 @@ class Main(): # rules them all
         # scale and swap x and y coordinates
         x_web = x_full_scale_web - (y_prime / y_full_scale * y_full_scale_web) + x_offset_web
         y_web = x_prime / x_full_scale * x_full_scale_web + y_offset_web
-        print x_web, y_web
 
         return (x_web, y_web)
 
@@ -419,7 +413,7 @@ class Main(): # rules them all
         for (i, data) in camera_data.iteritems():
             productname = data['class']
             product_confidence_threshold = self.product_specific_confidence_thresholds[productname]
-            print "looking at", data
+
             if data['score'] < product_confidence_threshold: continue;
             print "adding data..."
             try:
@@ -428,10 +422,6 @@ class Main(): # rules them all
 
                 print "map from camera coords to shelf coords"
                 x_global, y_global = self.map_camera_coords_to_shelf_coords(shelf_id, camera_id, x_local, y_local)
-
-                print x_local, y_local
-                print x_global, y_global
-                #print "---> map_camera_coords_to_shelf_coords", self.map_camera_coords_to_shelf_coords(shelf_id, camera_id, x_camera, y_camera)
 
                 self.inventory.append({
                     "type"  : self.label_lookup[data['class']],
