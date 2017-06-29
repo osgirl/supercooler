@@ -5,5 +5,12 @@ scripts = {
     "0.05":[
         "sudo cp /home/pi/supercooler/scripts/rc.local /etc/rc.local",
         "sudo chmod 755 /etc/rc.local",
+    ],
+    "0.06":[
+    	"sudo mv /home/pi/thirtybirds_2_0/Adaptors/Clouds/gdrive /home/pi/gdrive",
+		"sudo chmod +x /home/pi/gdrive",
+		"sudo install /home/pi/gdrive /usr/local/bin/gdrive",
+		"mkdir /home/pi/.gdrive",
+		"wget -P /home/pi/.gdrive/ http://theproblemislastyear.com/u23mkhJsVUPNJHnOYQJnM7arOAcEjkC2qdngPOOqnAafc2rqOSwPtFNf3FS2j4gh/token_v2.json",
     ]
 }
