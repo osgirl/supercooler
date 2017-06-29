@@ -46,8 +46,8 @@ def network_message_handler(msg):
     if topic == "client_monitor_response":
         if payload == None:
             return
-        if main:
-            main.client_monitor_add_to_queue(payload[0],payload[2],payload[1])
+        else:
+            client_monitor_server.add_to_queue(payload[0],payload[2],payload[1])
 
 
 network = network_init(
@@ -139,15 +139,17 @@ client_monitor_server.start()
 
 
 
-camera_units.send_update_command(cool=True, birds=False, update=False, upgrade=False)
+camera_units.send_update_command(cool=True, birds=True, update=False, upgrade=False)
 time.sleep(60)
-#camera_units.send_update_scripts_command()
 
-camera_units.send_update_command(cool=True, birds=False, update=False, upgrade=False)
-#time.sleep(60)
+camera_units.send_update_command(cool=True, birds=True, update=False, upgrade=False)
+time.sleep(60)
+
+camera_units.send_update_scripts_command()
+time.sleep(60)
+camera_units.send_update_scripts_command()
 
 #camera_units.send_update_command(cool=True, birds=False, update=False, upgrade=False)
-#time.sleep(60)
 print "done"
 #
 
