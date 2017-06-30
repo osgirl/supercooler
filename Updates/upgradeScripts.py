@@ -6,7 +6,7 @@ scripts = {
         "sudo cp /home/pi/supercooler/scripts/rc.local /etc/rc.local",
         "sudo chmod 755 /etc/rc.local",
     ],
-    "0.07":[
+    "0.08":[
     	"sudo cp /home/pi/thirtybirds_2_0/Adaptors/Clouds/gdrive /home/pi/gdrive",
 		"sudo chmod +x /home/pi/gdrive",
 		"sudo install /home/pi/gdrive /usr/local/bin/gdrive",
