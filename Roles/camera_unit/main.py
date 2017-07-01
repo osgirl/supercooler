@@ -81,7 +81,7 @@ class Main(threading.Thread):
 
     # ---->  NETWORK
     def copy_to_gdrive(self,filename):
-        print "copy_to_gdrive:", commands.getstatusoutput("gdrive upload {}".format(os.path.join(self.capture_path, filename)))[]
+        print "copy_to_gdrive:", commands.getstatusoutput("gdrive upload {}".format(os.path.join(self.capture_path, filename)))[1]
         
     # ---> UTILS
     def return_env_data(self, filename):
