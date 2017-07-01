@@ -315,7 +315,7 @@ def network_message_handler(msg):
     elif topic == "client_monitor_request":
         network.send("client_monitor_response", main.thirtybirds_client_monitor_client.send_client_status())
     else: # [ "capture_image" ]
-        main.add_to_queue(topic, data)
+        main.add_to_queue(topic, eval(data))
         
     """    
     elif topic == hostname:
