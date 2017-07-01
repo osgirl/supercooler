@@ -145,9 +145,9 @@ time.sleep(60)
 camera_units.send_update_command(cool=True, birds=True, update=False, upgrade=False)
 time.sleep(60)
 
-camera_units.send_update_scripts_command()
-time.sleep(60)
-camera_units.send_update_scripts_command()
+#camera_units.send_update_scripts_command()
+#time.sleep(60)
+#camera_units.send_update_scripts_command()
 
 #camera_units.send_update_command(cool=True, birds=False, update=False, upgrade=False)
 print "done"
