@@ -273,7 +273,8 @@ class Main(threading.Thread):
             topic, msg = self.queue.get(True)
             # print "Main.run 2"
             if topic == "capture_image":
-                light_level, timestamp = msg
+                print ">>>>>>>>>>>>>>" repr(msg)
+                light_level, timestamp = msg[0],msg[1]
                 if light_level in [0, "0"]: # on request 0, empty directory
                     previous_filenames = [ previous_filename for previous_filename in os.listdir(self.capture_path) if previous_filename.endswith(".png") ]
                     for previous_filename in previous_filenames:
