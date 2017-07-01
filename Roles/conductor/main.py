@@ -77,8 +77,8 @@ class Lights():
 class Camera_Units():
     def __init__(self, network):
             self.network = network
-    def capture_image(self, light_level_sequence_position):
-        self.network.send("capture_image", light_level_sequence_position)
+    def capture_image(self, light_level_sequence_position, timestamp):
+        self.network.send("capture_image", (light_level_sequence_position, timestamp))
     def process_images_and_report(self):
         self.network.send("process_images_and_report", "")
     def send_update_command(self, cool=False, birds=False, update=False, upgrade=False):
@@ -456,10 +456,11 @@ class Main(): # rules them all
         # clear inventory (will be populated after classification)
         self.inventory = []
 
+        timestamp = time.strftime("%Y-%m-%d-%H-%m-%S")
         # tell camera units to captures images at each light level
         for light_level_sequence_position in range(3):
             self.lights.play_sequence_step(light_level_sequence_position)
-            self.camera_units.capture_image(light_level_sequence_position)
+            self.camera_units.capture_image(light_level_sequence_position, timestamp)
             time.sleep(self.camera_capture_delay)
         self.lights.all_off()
 
@@ -583,11 +584,11 @@ class Main(): # rules them all
 
     def get_raw_images(self):
         images.clear_captures()
-
+        timestamp = time.strftime("%Y-%m-%d-%H-%m-%S")
         # tell camera units to captures images at each light level
         for light_level_sequence_position in range(3):
             self.lights.play_sequence_step(light_level_sequence_position)
-            self.camera_units.capture_image(light_level_sequence_position)
+            self.camera_units.capture_image(light_level_sequence_position, timestamp)
             time.sleep(self.camera_capture_delay)
         self.lights.all_off()
 
