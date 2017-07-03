@@ -87,7 +87,7 @@ class Main(threading.Thread):
     def return_env_data(self, filename):
         shelf_id = filename[:-4][:1]
         camera_id = filename[1:-6]
-        light_level = filename[:-4][-1:]
+        light_level = filename[:-8][-1:]
         return shelf_id, camera_id, light_level
 
     def send_images_to_conductor(self, raw_images, processed_image, processed_image_with_overlay ):
