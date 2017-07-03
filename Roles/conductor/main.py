@@ -226,7 +226,7 @@ class Main(): # rules them all
         self.door.daemon = True
         self.door.start()
         self.camera_units = Camera_Units(self.network)
-        self.camera_capture_delay = 35
+        self.camera_capture_delay = 25
         self.classifier = Classifier()
         self.last_closure = time.time()
 
