@@ -60,3 +60,12 @@ conductor_names = [
     "supercooler-conductor",
     "action",
 ]
+
+hardware_control_names = [
+    "supercooler-hardware"
+]
+
+jetson_names = [
+    "jetson",
+    "supercooler-jetson"
+]

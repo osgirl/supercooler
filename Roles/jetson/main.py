@@ -163,7 +163,7 @@ class Main(): # rules them all
         self.capture_path = "/home/pi/supercooler/Captures/"
         self.parsed_capture_path = "/home/pi/supercooler/ParsedCaptures/"
         self.web_interface = WebInterface()
-        self.lights = Lights()
+        #self.lights = Lights()
         self.camera_units = Camera_Units(self.network)
         self.camera_capture_delay = 15
         self.classifier = Classifier()
@@ -399,7 +399,7 @@ class Main(): # rules them all
         timestamp = time.strftime("%Y-%m-%d-%H-%m-%S")
         # tell camera units to captures images at each light level
         for light_level_sequence_position in range(3):
-            network.send("set_light_level", light_level_sequence[light_level_sequence_position]
+            network.send("set_light_level", light_level_sequence[light_level_sequence_position])
             self.camera_units.capture_image(light_level_sequence_position, timestamp)
             time.sleep(self.camera_capture_delay)
 
