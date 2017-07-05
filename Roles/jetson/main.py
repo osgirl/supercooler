@@ -1,7 +1,3 @@
-"""
-
-"""
-
 import base64
 import json
 import os
@@ -18,20 +14,11 @@ from thirtybirds_2_0.Network.manager import init as network_init
 from web_interface import WebInterface
 from classifier import Classifier
 
-# use wiringpi for software PWM
-import wiringpi as wpi
-
-import tensorflow as tf
-import numpy as np
-
-
 class Main(): # rules them all
     def __init__(self, network):
         self.network = network
         self.capture_path = "/home/pi/supercooler/Captures/"
         self.parsed_capture_path = "/home/pi/supercooler/ParsedCaptures/"
-        self.web_interface = WebInterface()
-        self.lights = Lights()
 
         hostnames = [
             "supercoolerA0","supercoolerA1","supercoolerA2","supercoolerA3","supercoolerA4","supercoolerA5","supercoolerA6","supercoolerA7","supercoolerA8","supercoolerA9","supercoolerA10","supercoolerA11",
@@ -46,7 +33,6 @@ class Main(): # rules them all
 
     def client_monitor_add_to_queue(self,hostname, git_pull_date, pickle_version):
         self.client_monitor_server.add_to_queue(hostname, git_pull_date, pickle_version)
-
 
 main = None
 

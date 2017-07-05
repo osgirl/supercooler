@@ -1,4 +1,11 @@
+import os
+import time
+import threading
+import settings
+import subprocess
 import wiringpi as wpi
+
+from thirtybirds_2_0.Network.manager import init as network_init
 
 class Door(threading.Thread):
     def __init__(self, door_close_event_callback, door_open_event_callback):
@@ -68,11 +75,11 @@ class Main(): # rules them all
         self.door.start()
         self.last_closure = time.time()
 
-    def door_close_event_handler():
-        network.send("door_closed")
+    def door_close_event_handler(self):
+        network.send("door_closed", "")
 
-    def door_open_event_handler():
-        network.send("door_opened")
+    def door_open_event_handler(self):
+        network.send("door_opened", "")
 
 
 def network_status_handler(msg):
@@ -92,8 +99,8 @@ def network_message_handler(msg):
     elif topic == "set_light_level":
         lights = main.lights.set_level_all(eval(data))
 
-    elif topic == "client_monitor_request":
-        network.send("client_monitor_response", main.thirtybirds_client_monitor_client.send_client_status())
+    #elif topic == "client_monitor_request":
+    #    network.send("client_monitor_response", main.thirtybirds_client_monitor_client.send_client_status())
     
     else: # [ "capture_image" ]
         main.add_to_queue(topic, data)
@@ -101,6 +108,7 @@ def network_message_handler(msg):
 
 def init(HOSTNAME):
     global main
+    global network
 
     wpi.wiringPiSetup()
 
@@ -115,12 +123,12 @@ def init(HOSTNAME):
         status_callback=network_status_handler
     )
 
-    main = Main(HOSTNAME, network)
-    main.daemon = True
-    main.start()
+    main = Main(network)
+    #main.daemon = True
+    #main.start()
 
     network.subscribe_to_topic("system")  # subscribe to all system messages
     network.subscribe_to_topic("set_light_level")
-    network.subscribe_to_topic("client_monitor_request")
+    #network.subscribe_to_topic("client_monitor_request")
 
     return main

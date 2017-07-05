@@ -8,3 +8,4 @@ ParsedCaptures/*.png
 ParsedCaptures/*.jpg
 settings_private.py
 .vscode
+Roles/jetson/tf_files
