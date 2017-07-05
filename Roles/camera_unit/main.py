@@ -286,6 +286,99 @@ class Main(threading.Thread):
                 self.return_raw_images()
 
 
+# TODO: this function is used for generating training data and contains some
+# duplicate functionality -- maybe get rid of later?
+def capture_and_upload_image(timestamp, light, gdir, clear_dir):
+    print "capture and upload image"
+
+    if clear_dir:
+        # first, remove all existing files from the captures directory
+        old_filenames = os.listdir('/home/pi/supercooler/Captures')
+        for filename in old_filenames:
+            os.remove('/home/pi/supercooler/Captures/' + filename)
+
+    # create filename from time, light, and location
+    id_str = main.hostname[11] + main.hostname[12:].zfill(2)
+    filename = id_str + "_" + str(light) + "_" + timestamp + ".png"
+
+    # take picture and save image to file
+    self.camera.take_capture(filename)
+    time.sleep(0.5)
+
+    # upload image to specified directory in google drive
+    filepath = '/home/pi/supercooler/Captures/' + filename
+    subprocess.call(['gdrive', 'upload', '-p', gdir, filepath])
+
+# TODO: this function is used for generating training data and contains some
+# duplicate functionality -- maybe get rid of later?
+def parse_and_annotate_images(timestamp, gdir_annotated, gdir_parsed):
+    print "parse and annotate images"
+
+    # ------- PARSE IMAGES ----------------------------------------------------
+
+    # set up image parser and get list of recent captures
+    parser = Image_Parser()
+    capture_path = '/home/pi/supercooler/Captures'
+    filenames = [ filename for filename in os.listdir(capture_path) \
+        if filename.endswith(".png") ]
+    
+    # store references to images (will be nparrays for opencv)
+    ocv_imgs = [None, None, None]
+    
+    # convert images in capture directory to nparrays
+    for filename in filenames:
+        ocv_imgs[int(filename[4])] = \
+            cv2.imread(os.path.join(self.capture_path, filename))
+
+    # run parser, get image bounds and undistorted image
+    bounds_list, ocv_img_with_overlay, ocv_img_out = \
+        parser.parse(ocv_imgs[0], ocv_imgs[1], ocv_imgs[2])
+
+    # empty ParsedCaptures directory
+    old_filenames = os.listdir('/home/pi/supercooler/ParsedCaptures')
+    for filename in old_filenames:
+        os.remove('/home/pi/supercooler/Captures/' + filename)
+
+
+    # ------- SAVE ANNOTATION -------------------------------------------------
+
+    # prep for writing to file (construct filename + filepath)
+    id_str = main.hostname[11] + main.hostname[12:].zfill(2)
+    filename = id_str + "_annotated_" timestamp + ".jpg"
+    filepath = "/home/pi/supercooler/ParsedCaptures/" + filename
+    
+    # encode as jpeg and write to file
+    overlay_jpg = cv2.imencode('.jpg', ocv_img_with_overlay)[1].tobytes()
+    with open(filepath, 'wb') as f:
+        f.write(overlay_jpg)
+    
+    # upload to google drive
+    subprocess.call(['gdrive', 'upload', '-p', gdir_annotated, filepath])
+
+    
+    # -------- CROP & UPLOAD IMAGES -------------------------------------------
+
+    # make a new directory for parsed images
+    mkdir_stdout = \
+        subprocess.check_output(['gdrive', 'mkdir', '-p', gdir_parsed, id_str])
+    gdir_cam = mkdir_stdout.split(" ")[1]
+
+    for bounds in bounds_list:
+        # crop image and encode as jpeg
+        x, y, w, h = bounds
+        img_crop = ocv_img_out[y:y+h, x:x+w]
+        img_jpg = cv2.imencode('.jpg', img_crop)[1].tobytes()
+            
+        # create filename from img data
+        filename = id_str + "_" timestamp + "_" + str(x) + "_" + str(y) + ".jpg"
+        filepath = "/home/pi/supercooler/ParsedCaptures/" + filename
+            
+        # write cropped image to file and upload to drive
+        with open(filepath, 'wb') as f:
+            f.write(img_jpg)
+        subprocess.call(['gdrive', 'upload', '-p', gdir_cam, filepath])
+
+
 def network_status_handler(msg):
     print "network_status_handler", msg
 
@@ -309,6 +402,14 @@ def network_message_handler(msg):
             print "birds"
             subprocess.call(['sudo', 'git', 'pull'], cwd='/home/pi/thirtybirds_2_0')
         network.send("update_complete", network_info.getHostName())
+
+    # take a picture and upload the image to google drive
+    elif topic == "capture_and_upload":
+        capture_and_upload_image(*eval(data))
+
+    elif topic == "parse_and_annotate":
+        parse_and_annotate_images(*eval(data))
+
     elif topic == "remote_update_scripts":
         updates_init("/home/pi/supercooler", False, True)
         network.send("update_complete", network_info.getHostName())
