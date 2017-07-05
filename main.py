@@ -76,8 +76,7 @@ if HOSTNAME in settings.camera_unit_names:
     role = "camera_unit"
 
 elif HOSTNAME in settings.hardware_control_names:
-    # TODO: change this to hardware_control, or something
-    role = "conductor"
+    role = "hardware_control"
 
 elif HOSTNAME in settings.jetson_names:
     role = "jetson"
