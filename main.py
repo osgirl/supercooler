@@ -74,13 +74,15 @@ print result
 
 if HOSTNAME in settings.camera_unit_names:
     role = "camera_unit"
-else:
-#if HOSTNAME in settings.conductor_names:
+
+elif HOSTNAME in settings.hardware_control_names:
+    # TODO: change this to hardware_control, or something
     role = "conductor"
+
+elif HOSTNAME in settings.jetson_names:
+    role = "jetson"
 
 host = importlib.import_module("Roles.%s.main" % (role))
 
-if role == "conductor":
-    conductor = host.init(HOSTNAME)
-else:
-    cam = host.init(HOSTNAME)
+# grab a reference to instantiated main class of the host module
+unit = host.init(HOSTNAME)

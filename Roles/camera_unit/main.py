@@ -447,7 +447,7 @@ def init(HOSTNAME):
     #global hostname
     #hostname = HOSTNAME
     global main 
-    main = Main(HOSTNAME,  network)
+    main = Main(HOSTNAME, network)
     main.daemon = True
     main.start()
 
