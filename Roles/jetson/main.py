@@ -20,20 +20,6 @@ class Main(): # rules them all
         self.capture_path = "/home/pi/supercooler/Captures/"
         self.parsed_capture_path = "/home/pi/supercooler/ParsedCaptures/"
 
-        hostnames = [
-            "supercoolerA0","supercoolerA1","supercoolerA2","supercoolerA3","supercoolerA4","supercoolerA5","supercoolerA6","supercoolerA7","supercoolerA8","supercoolerA9","supercoolerA10","supercoolerA11",
-            "supercoolerB0","supercoolerB1","supercoolerB2","supercoolerB3","supercoolerB4","supercoolerB5","supercoolerB6","supercoolerB7","supercoolerB8","supercoolerB9","supercoolerB10","supercoolerB11",
-            "supercoolerC0","supercoolerC1","supercoolerC2","supercoolerC3","supercoolerC4","supercoolerC5","supercoolerC6","supercoolerC7","supercoolerC8","supercoolerC9","supercoolerC10","supercoolerC11",
-            "supercoolerD0","supercoolerD1","supercoolerD2","supercoolerD3","supercoolerD4","supercoolerD5","supercoolerD6","supercoolerD7","supercoolerD8","supercoolerD9","supercoolerD10","supercoolerD11"
-        ]
-
-        self.client_monitor_server = Thirtybirds_Client_Monitor_Server(network, hostnames)
-        self.client_monitor_server.daemon = True
-        self.client_monitor_server.start()
-
-    def client_monitor_add_to_queue(self,hostname, git_pull_date, pickle_version):
-        self.client_monitor_server.add_to_queue(hostname, git_pull_date, pickle_version)
-
 main = None
 
 def network_status_handler(msg):
@@ -48,12 +34,6 @@ def network_message_handler(msg):
         #print "topic", topic
         if topic == "__heartbeat__":
             print "heartbeat received", msg
-
-        if topic == "client_monitor_response":
-            if payload == None:
-                return
-            if main:
-                main.client_monitor_add_to_queue(payload[0],payload[2],payload[1])
 
     except Exception as e:
         print "exception in network_message_handler", e
