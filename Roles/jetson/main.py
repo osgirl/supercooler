@@ -168,7 +168,7 @@ class Main(): # rules them all
         #self.lights = Lights()
         self.light_level_sequence = [10, 5, 0]
         self.camera_units = Camera_Units(self.network)
-        self.camera_capture_delay = 15
+        self.camera_capture_delay = 25
         self.classifier = Classifier()
         self.last_closure = time.time()
 
@@ -552,6 +552,9 @@ class Main(): # rules them all
         # tell camera units to parse images and send back the data
         network.send("parse_and_annotate", str([timestamp, dir_annotated, dir_parsed]))
 
+        print "wait for cameras and sleep for three minutes..."
+        time.sleep(180)
+
 main = None
 
 
@@ -600,7 +603,8 @@ def network_message_handler(msg):
             images.receive_image_data(payload)
 
         if topic == "door_closed":
-            main.door_close_event_handler()
+            main.get_raw_images()
+            #main.door_close_event_handler()
 
         if topic == "door_opened":
             main.door_open_event_handler()
