@@ -97,6 +97,7 @@ def network_message_handler(msg):
         os.system("sudo reboot now")
   
     elif topic == "set_light_level":
+        print "set light level", data
         lights = main.lights.set_level_all(eval(data))
 
     #elif topic == "client_monitor_request":
