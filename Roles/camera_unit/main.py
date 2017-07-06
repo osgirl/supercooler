@@ -302,7 +302,7 @@ def capture_and_upload_image(timestamp, light, gdir, clear_dir):
     filename = id_str + "_" + str(light) + "_" + timestamp + ".png"
 
     # take picture and save image to file
-    self.camera.take_capture(filename)
+    main.camera.take_capture(filename)
     time.sleep(0.5)
 
     # upload image to specified directory in google drive
@@ -328,27 +328,27 @@ def parse_and_annotate_images(timestamp, gdir_annotated, gdir_parsed):
     # convert images in capture directory to nparrays
     for filename in filenames:
         ocv_imgs[int(filename[4])] = \
-            cv2.imread(os.path.join(self.capture_path, filename))
+            cv2.imread(os.path.join(capture_path, filename))
 
     # run parser, get image bounds and undistorted image
     bounds_list, ocv_img_with_overlay, ocv_img_out = \
         parser.parse(ocv_imgs[0], ocv_imgs[1], ocv_imgs[2])
 
     # empty ParsedCaptures directory
-    old_filenames = os.listdir('/home/pi/supercooler/ParsedCaptures')
-    for filename in old_filenames:
-        os.remove('/home/pi/supercooler/Captures/' + filename)
+    for filename in os.listdir('/home/pi/supercooler/ParsedCaptures'):
+        if filename.endswith(".jpg"):
+            os.remove('/home/pi/supercooler/ParsedCaptures/' + filename)
 
 
     # ------- SAVE ANNOTATION -------------------------------------------------
 
     # prep for writing to file (construct filename + filepath)
     id_str = main.hostname[11] + main.hostname[12:].zfill(2)
-    filename = id_str + "_annotated_" timestamp + ".jpg"
+    filename = id_str + "_annotated_" + timestamp + ".jpg"
     filepath = "/home/pi/supercooler/ParsedCaptures/" + filename
     
     # encode as jpeg and write to file
-    overlay_jpg = cv2.imencode('.jpg', ocv_img_with_overlay)[1].tobytes()
+    overlay_jpg = cv2.imencode('.jpg', ocv_img_with_overlay)[1].tostring()
     with open(filepath, 'wb') as f:
         f.write(overlay_jpg)
     
@@ -367,10 +367,10 @@ def parse_and_annotate_images(timestamp, gdir_annotated, gdir_parsed):
         # crop image and encode as jpeg
         x, y, w, h = bounds
         img_crop = ocv_img_out[y:y+h, x:x+w]
-        img_jpg = cv2.imencode('.jpg', img_crop)[1].tobytes()
+        img_jpg = cv2.imencode('.jpg', img_crop)[1].tostring()
             
         # create filename from img data
-        filename = id_str + "_" timestamp + "_" + str(x) + "_" + str(y) + ".jpg"
+        filename = id_str + "_" + timestamp + "_" + str(x) + "_" + str(y) + ".jpg"
         filepath = "/home/pi/supercooler/ParsedCaptures/" + filename
             
         # write cropped image to file and upload to drive
@@ -408,6 +408,7 @@ def network_message_handler(msg):
         capture_and_upload_image(*eval(data))
 
     elif topic == "parse_and_annotate":
+        print 'parse_and_annotate'
         parse_and_annotate_images(*eval(data))
 
     elif topic == "remote_update_scripts":
@@ -459,6 +460,8 @@ def init(HOSTNAME):
     network.subscribe_to_topic(HOSTNAME)
     network.subscribe_to_topic("client_monitor_request")
     network.subscribe_to_topic("return_raw_images")
+    network.subscribe_to_topic("capture_and_upload")
+    network.subscribe_to_topic("parse_and_annotate")
 
     return main
 
