@@ -35,7 +35,7 @@ class Camera_Units():
 
 class Images():
     def __init__(self):
-        self.capture_path = "/home/pi/supercooler/Captures/"
+        self.capture_path = "/home/nvidia/supercooler/Captures/"
         # self.dir_classify = "/home/pi/supercooler/Captures/"
         # self.dir_stitch = "/home/pi/supercooler/Captures_Stitching/"
         self.captures = []
@@ -164,6 +164,7 @@ class Main(): # rules them all
         self.parsed_capture_path = "/home/pi/supercooler/ParsedCaptures/"
         self.web_interface = WebInterface()
         #self.lights = Lights()
+        self.light_level_sequence = [10, 5, 0]
         self.camera_units = Camera_Units(self.network)
         self.camera_capture_delay = 15
         self.classifier = Classifier()
@@ -398,8 +399,9 @@ class Main(): # rules them all
 
         timestamp = time.strftime("%Y-%m-%d-%H-%m-%S")
         # tell camera units to captures images at each light level
+        print "start light sequence"
         for light_level_sequence_position in range(3):
-            network.send("set_light_level", light_level_sequence[light_level_sequence_position])
+            network.send("set_light_level", self.light_level_sequence[light_level_sequence_position])
             self.camera_units.capture_image(light_level_sequence_position, timestamp)
             time.sleep(self.camera_capture_delay)
 
@@ -545,10 +547,14 @@ def network_status_handler(msg):
 def network_message_handler(msg):
     try:
         global main
-        #print "network_message_handler", msg
+        print "network_message_handler", msg
         topic = msg[0]
-        payload = eval(msg[1])
-        #print "topic", topic
+
+        if len(msg[1]) > 0:
+            payload = eval(msg[1])
+        else:
+            payload = None
+
         if topic == "__heartbeat__":
             print "heartbeat received", msg
 
