@@ -542,7 +542,7 @@ class Main(): # rules them all
             network.send("set_light_level", self.light_level_sequence[light_level])
             time.sleep(1)
             network.send("capture_and_upload",
-                str([timestamp, light_level, gdir_unprocessed, light_level == 0]))
+                str([timestamp, light_level, dir_unprocessed, light_level == 0]))
 
             time.sleep(self.camera_capture_delay)
 
@@ -550,7 +550,7 @@ class Main(): # rules them all
         network.send("set_light_level", 0)
 
         # tell camera units to parse images and send back the data
-        network.send("parse_and_annotate", timestamp, dir_annotated, dir_parsed)
+        network.send("parse_and_annotate", str([timestamp, dir_annotated, dir_parsed]))
 
 main = None
 
