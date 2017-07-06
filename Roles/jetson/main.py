@@ -160,8 +160,10 @@ class Classification_Accumulator(threading.Thread):
 class Main(): # rules them all
     def __init__(self, network):
         self.network = network
-        self.capture_path = "/home/pi/supercooler/Captures/"
-        self.parsed_capture_path = "/home/pi/supercooler/ParsedCaptures/"
+        self.capture_path = "/home/nvidia/supercooler/Captures/"
+        self.parsed_capture_path = "/home/nvidia/supercooler/ParsedCaptures/"
+        self.gdir_captures = "0BzpNPyJoi6uoSGlhTnN5RWhXRFU"
+
         self.web_interface = WebInterface()
         #self.lights = Lights()
         self.light_level_sequence = [10, 5, 0]
@@ -504,7 +506,7 @@ class Main(): # rules them all
     def test_classification(self):
 
         # read in a test image for parsing/classification
-        with open("/home/pi/supercooler/Roles/conductor/test_img.png", "rb") as f:
+        with open("/home/nvidia/supercooler/Roles/conductor/test_img.png", "rb") as f:
             img = base64.b64encode(f.read())
 
         # clear inventory (will be populated after classification)
@@ -527,19 +529,42 @@ class Main(): # rules them all
         self.classify_images(threshold=0.1)      # classify images
 
     def get_raw_images(self):
-        images.clear_captures()
+
+        # create directories on google drive for storing captures
         timestamp = time.strftime("%Y-%m-%d-%H-%m-%S")
+        dir_captures_now = mkdir_gdrive(self.gdir_captures, 'captures_' + timestamp)
+        dir_unprocessed = mkdir_gdrive(dir_captures_now, 'unprocessed')
+        dir_annotated = mkdir_gdrive(dir_captures_now, 'annotated')
+        dir_parsed = mkdir_gdrive(dir_captures_now, 'parsed')
+        
         # tell camera units to captures images at each light level
-        for light_level_sequence_position in range(3):
-            self.lights.play_sequence_step(light_level_sequence_position)
-            self.camera_units.capture_image(light_level_sequence_position, timestamp)
+        for light_level in range(3):
+            network.send("set_light_level", self.light_level_sequence[light_level])
+            time.sleep(1)
+            network.send("capture_and_upload",
+                str([timestamp, light_level, gdir_unprocessed, light_level == 0]))
+
             time.sleep(self.camera_capture_delay)
-        self.lights.all_off()
+
+        # turn off the lights
+        network.send("set_light_level", 0)
 
         # tell camera units to parse images and send back the data
-        self.camera_units.return_raw_images()
+        network.send("parse_and_annotate", timestamp, dir_annotated, dir_parsed)
 
 main = None
+
+
+def mkdir_gdrive(parent_dir, new_dir):
+    if parent_dir == None:
+        mkdir_stdout = \
+            subprocess.check_output(['gdrive', 'mkdir', new_dir])
+    else:
+        mkdir_stdout = \
+            subprocess.check_output(['gdrive', 'mkdir', '-p', parent_dir, new_dir])
+
+    return mkdir_stdout.split(" ")[1]
+
 
 def network_status_handler(msg):
     print "network_status_handler", msg
