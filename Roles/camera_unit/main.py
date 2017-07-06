@@ -344,7 +344,7 @@ def parse_and_annotate_images(timestamp, gdir_annotated, gdir_parsed):
 
     # prep for writing to file (construct filename + filepath)
     id_str = main.hostname[11] + main.hostname[12:].zfill(2)
-    filename = id_str + "_annotated_" timestamp + ".jpg"
+    filename = id_str + "_annotated_" + timestamp + ".jpg"
     filepath = "/home/pi/supercooler/ParsedCaptures/" + filename
     
     # encode as jpeg and write to file
@@ -370,7 +370,7 @@ def parse_and_annotate_images(timestamp, gdir_annotated, gdir_parsed):
         img_jpg = cv2.imencode('.jpg', img_crop)[1].tobytes()
             
         # create filename from img data
-        filename = id_str + "_" timestamp + "_" + str(x) + "_" + str(y) + ".jpg"
+        filename = id_str + "_" + timestamp + "_" + str(x) + "_" + str(y) + ".jpg"
         filepath = "/home/pi/supercooler/ParsedCaptures/" + filename
             
         # write cropped image to file and upload to drive
@@ -459,6 +459,8 @@ def init(HOSTNAME):
     network.subscribe_to_topic(HOSTNAME)
     network.subscribe_to_topic("client_monitor_request")
     network.subscribe_to_topic("return_raw_images")
+    network.subscribe_to_topic("capture_and_upload")
+    network.subscribe_to_topic("parse_and_annotate")
 
     return main
 
