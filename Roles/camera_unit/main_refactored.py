@@ -117,7 +117,6 @@ class Images(object):
 
 class Network(object):
     def __init__(self, hostname, network_message_handler, network_status_handler):
-        threading.Thread.__init__(self)
         self.hostname = hostname
         self.thirtybirds = thirtybirds_network(
         hostname=HOSTNAME,
