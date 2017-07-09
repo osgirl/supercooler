@@ -93,7 +93,7 @@ class Images(object):
         self.capture_path = capture_path
         self.camera = camera_init(self.capture_path)
 
-    def capture_image(self, filename)
+    def capture_image(self, filename):
         self.camera.take_capture(filename)
 
     def delete_captures(self):
