@@ -13,6 +13,7 @@ import sys
 import subprocess
 import threading
 import time
+import traceback
 
 from thirtybirds_2_0.Network.manager import init as thirtybirds_network
 from thirtybirds_2_0.Network.email_simple import init as email_init
@@ -194,47 +195,49 @@ class Main(threading.Thread):
 
     def run(self):
         while True:
-            topic, msg = self.queue.get(True)
+            try:
+                topic, msg = self.queue.get(True)
 
-            if topic == "reboot":
-                self.utils.reboot()
+                if topic == "reboot":
+                    self.utils.reboot()
 
-            if topic == "remote_update":
-                supercooler, thirtybirds, update, upgrade = msg
-                self.utils.remote_update_git(supercooler, thirtybirds, update, upgrade)
-                self.network.thirtybirds.send("update_complete", self.hostname)
+                if topic == "remote_update":
+                    supercooler, thirtybirds, update, upgrade = msg
+                    self.utils.remote_update_git(supercooler, thirtybirds, update, upgrade)
+                    self.network.thirtybirds.send("update_complete", self.hostname)
 
-            if topic == "remote_update_scripts":
-                self.utils.remote_update_scripts()
-                self.network.thirtybirds.send("update_complete", self.hostname)
+                if topic == "remote_update_scripts":
+                    self.utils.remote_update_scripts()
+                    self.network.thirtybirds.send("update_complete", self.hostname)
 
-            if topic == "capture_image":
-                light_level, timestamp = eval(msg)
-                if light_level in [0, "0"]: # on request 0, empty directory
-                    self.images.delete_captures()
-                filename = self.utils.create_image_file_name(timestamp, light_level, "raw")
-                self.images.capture_image(filename)
+                if topic == "capture_image":
+                    light_level, timestamp = eval(msg)
+                    if light_level in [0, "0"]: # on request 0, empty directory
+                        self.images.delete_captures()
+                    filename = self.utils.create_image_file_name(timestamp, light_level, "raw")
+                    self.images.capture_image(filename)
 
-            if topic == "client_monitor_request":
-                self.network.thirtybirds.send("client_monitor_response", self.utils.get_client_status())
+                if topic == "client_monitor_request":
+                    self.network.thirtybirds.send("client_monitor_response", self.utils.get_client_status())
 
-            if topic == "capture_and_upload":
-                print msg
-                print repr(msg)
-                timestamp, light_level, google_drive_directory_id, clear_dir = msg
-                if clear_dir: self.images.delete_captures()
-                self.images.capture_image(utils.create_image_file_name(timestamp, light_level, "raw"))
-                self.network.copy_to_gdrive(google_drive_directory_id, os.path.join(self.capture_path, filename))
+                if topic == "capture_and_upload":
+                    print msg
+                    print repr(msg)
+                    timestamp, light_level, google_drive_directory_id, clear_dir = msg
+                    if clear_dir: self.images.delete_captures()
+                    self.images.capture_image(utils.create_image_file_name(timestamp, light_level, "raw"))
+                    self.network.copy_to_gdrive(google_drive_directory_id, os.path.join(self.capture_path, filename))
 
-            if topic == "perform_object_detection":
-              pass  
+                if topic == "perform_object_detection":
+                  pass  
 
-            #if topic == "process_images_and_report":
-            #if topic == self.hostname:
-            #if topic == "return_raw_images":
-            #if topic == "capture_and_upload":
-            #if topic == "parse_and_annotate":
-
+                #if topic == "process_images_and_report":
+                #if topic == self.hostname:
+                #if topic == "return_raw_images":
+                #if topic == "capture_and_upload":
+                #if topic == "parse_and_annotate":
+            except Exception as e:
+                print e, repr(traceback.format_exception(exc_type, exc_value,exc_traceback))
 
 ########################
 ## INIT
