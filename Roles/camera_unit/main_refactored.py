@@ -582,7 +582,7 @@ class Main(threading.Thread):
                     self.images.capture_image(self.utils.create_image_file_name(timestamp, light_level, "raw"))
                     self.network.copy_to_gdrive(google_drive_directory_id, os.path.join(self.capture_path, filename))
 
-                if topic == "perform_object_detection":
+                if topic in ["perform_object_detection", "process_images_and_report"]:
                     for filepath in self.images.get_capture_filepaths():
                         capture_raw_ocv = cv_helpers.read_image(filepath)
                         distortion_map_ocv = cv_helpers.read_image(os.path.join(distortion_map, self.distortion_map_names[4])) 
