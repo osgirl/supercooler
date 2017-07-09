@@ -218,6 +218,8 @@ class Main(threading.Thread):
                 self.network.thirtybirds.send("client_monitor_response", self.utils.get_client_status())
 
             if topic == "capture_and_upload":
+                print msg
+                print repr(msg)
                 timestamp, light_level, google_drive_directory_id, clear_dir = msg
                 if clear_dir: self.images.delete_captures()
                 self.images.capture_image(utils.create_image_file_name(timestamp, light_level, "raw"))
