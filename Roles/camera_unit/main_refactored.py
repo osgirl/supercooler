@@ -565,7 +565,7 @@ class Main(threading.Thread):
                     self.network.thirtybirds.send("update_complete", self.hostname)
 
                 if topic == "capture_image":
-                    light_level, timestamp = eval(msg)
+                    light_level, timestamp = msg
                     if light_level in [0, "0"]: # on request 0, empty directory
                         self.images.delete_captures()
                     filename = self.utils.create_image_file_name(timestamp, light_level, "raw")
