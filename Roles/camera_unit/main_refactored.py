@@ -200,7 +200,7 @@ class Main(threading.Thread):
 
             if topic == "remote_update":
                 supercooler, thirtybirds, update, upgrade = msg
-                utils.remote_update_git(supercooler, thirtybirds, update, upgrade)
+                self.utils.remote_update_git(supercooler, thirtybirds, update, upgrade)
                 self.network.thirtybirds.send("update_complete", self.hostname)
 
             if topic == "remote_update_scripts":
@@ -211,7 +211,7 @@ class Main(threading.Thread):
                 light_level, timestamp = eval(msg)
                 if light_level in [0, "0"]: # on request 0, empty directory
                     self.images.delete_captures()
-                filename = utils.create_image_file_name(self, timestamp, light_level, "raw")
+                filename = self.utils.create_image_file_name(self, timestamp, light_level, "raw")
                 self.images.capture_image(filename)
 
             if topic == "client_monitor_request":
