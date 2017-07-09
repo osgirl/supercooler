@@ -550,7 +550,8 @@ class Main(threading.Thread):
         while True:
             try:
                 topic, msg = self.queue.get(True)
-
+                print "main.run topic=",repr(topic)
+                print "main.run msg=",repr(msg)
                 if topic == "reboot":
                     self.utils.reboot()
 
