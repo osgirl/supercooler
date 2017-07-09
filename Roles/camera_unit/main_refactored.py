@@ -161,7 +161,7 @@ class Main(threading.Thread):
         self.parsed_capture_path = "/home/pi/supercooler/ParsedCaptures/"
         self.queue = Queue.Queue()
         self.network = Network(hostname, self.network_message_handler, self.network_status_handler)
-        self.utils = Utils()
+        self.utils = Utils(hostname)
         self.images = Images(self.capture_path)
 
         self.network.thirtybirds.subscribe_to_topic("reboot")
