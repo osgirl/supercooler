@@ -81,7 +81,7 @@ class Utils(object):
 
     def get_client_status(self):
         return (self.hostname, self.get_pickle_version(), self.get_git_timestamp())
-        self.network.send("client_monitor_response", (self.hostname,pickle_version, git_timestamp))
+        self.network.thirtybirds.send("client_monitor_response", (self.hostname,pickle_version, git_timestamp))
 
 
 ########################
@@ -215,7 +215,7 @@ class Main(threading.Thread):
                 self.images.capture_image(filename)
 
             if topic == "client_monitor_request":
-                self.network.send("client_monitor_response", self.utils.get_client_status())
+                self.network.thirtybirds.send("client_monitor_response", self.utils.get_client_status())
 
             if topic == "capture_and_upload":
                 timestamp, light_level, google_drive_directory_id, clear_dir = msg
