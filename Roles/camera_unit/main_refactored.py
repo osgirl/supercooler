@@ -585,7 +585,7 @@ class Main(threading.Thread):
                 if topic in ["perform_object_detection", "process_images_and_report"]:
                     for filepath in self.images.get_capture_filepaths():
                         capture_raw_ocv = cv_helpers.read_image(filepath)
-                        distortion_map_ocv = cv_helpers.read_image(os.path.join(distortion_map, self.distortion_map_names[4])) 
+                        distortion_map_ocv = cv_helpers.read_image(os.path.join(self.distortion_map_dir, self.distortion_map_names[4])) 
                         lens_correction = Lens_Correction(distortion_map_ocv)
                         capture_corrected_ocv = lens_correction.correct(capture_raw_ocv)
                         capture_with_bottles_ocv, bottle_circles = self.object_detection.bottle_detection( capture_corrected_ocv )
