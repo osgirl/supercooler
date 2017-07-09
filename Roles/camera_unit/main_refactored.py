@@ -578,7 +578,7 @@ class Main(threading.Thread):
                     print repr(msg)
                     timestamp, light_level, google_drive_directory_id, clear_dir = msg
                     if clear_dir: self.images.delete_captures()
-                    self.images.capture_image(utils.create_image_file_name(timestamp, light_level, "raw"))
+                    self.images.capture_image(self.utils.create_image_file_name(timestamp, light_level, "raw"))
                     self.network.copy_to_gdrive(google_drive_directory_id, os.path.join(self.capture_path, filename))
 
                 if topic == "perform_object_detection":
@@ -596,6 +596,7 @@ class Main(threading.Thread):
                 #if topic == "capture_and_upload":
                 #if topic == "parse_and_annotate":
             except Exception as e:
+                exc_type, exc_value, exc_traceback = sys.exc_info()
                 print e, repr(traceback.format_exception(exc_type, exc_value,exc_traceback))
 
 ########################
