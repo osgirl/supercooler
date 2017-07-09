@@ -59,7 +59,7 @@ class Utils(object):
         return self.hostname[12:]
 
     def create_image_file_name(self, timestamp, light_level, process_type):
-        return "{}_{}_{}_{}_{}.png".format(timestamp, self.get_shelf_id() ,  self.get_camera_id(), light_level, raw_or_processed) 
+        return "{}_{}_{}_{}_{}.png".format(timestamp, self.get_shelf_id() ,  self.get_camera_id(), light_level, process_type) 
 
     def remote_update_git(self, supercooler, thirtybirds, update, upgrade):
         if supercooler:
