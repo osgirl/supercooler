@@ -29,6 +29,7 @@ BASE_PATH = os.path.dirname(os.path.realpath(__file__))
 UPPER_PATH = os.path.split(os.path.dirname(os.path.realpath(__file__)))[0]
 DEVICES_PATH = "%s/Hosts/" % (BASE_PATH )
 THIRTYBIRDS_PATH = "%s/thirtybirds_2_0" % (UPPER_PATH )
+DISTORTION_MAP_PATH = os.path.join(BASE_PATH, "Roles", "camera_unit", "distortion_maps")
 
 sys.path.append(BASE_PATH)
 sys.path.append(UPPER_PATH)
@@ -103,7 +104,7 @@ cv_helpers = CV_Helpers()
 
 class Object_Detection(object):
     def __init__(self):
-        self.cv_helpers = CV_Helpers()
+        pass
 
     def bottle_and_can_detection(self, image):
         #visualisation = image.copy()
@@ -208,9 +209,6 @@ class Object_Detection(object):
                     identical_candidates[(x, y, r)] += [(nx, ny, nr)]
 
         return identical_candidates
-
-
-
 
 ########################
 ## LENS CORRECTION
@@ -459,7 +457,7 @@ class Images(object):
         light_level = filename[:-8][-1:]
         return shelf_id, camera_id, light_level
 
-    def get_current_capture_names(self):
+    def get_capture_filepaths(self):
         filenames = self.get_capture_filenames()
         return list(map((lambda filename:  os.path.join(self.capture_path, filename)), filenames))
         #return [ os.path.join(self.capture_path, current_filename) for current_filename in os.listdir(self.capture_path) if current_filename.endswith(".png") ]
@@ -516,6 +514,9 @@ class Main(threading.Thread):
         self.network = Network(hostname, self.network_message_handler, self.network_status_handler)
         self.utils = Utils(hostname)
         self.images = Images(self.capture_path)
+        self.distortion_map_dir = os.path.join(DISTORTION_MAP_PATH, self.utils.get_shelf_id(), self.utils.get_camera_id())
+        self.distortion_map_names = ["125.png", "205.png", "220.png", "230.png", "240.png"]
+        self.object_detection = Object_Detection()
 
         self.network.thirtybirds.subscribe_to_topic("reboot")
         self.network.thirtybirds.subscribe_to_topic("remote_update")
@@ -581,7 +582,13 @@ class Main(threading.Thread):
                     self.network.copy_to_gdrive(google_drive_directory_id, os.path.join(self.capture_path, filename))
 
                 if topic == "perform_object_detection":
-                  pass  
+                    for filepath in self.images.get_capture_filepaths():
+                        capture_raw_ocv = cv_helpers.read_image(filepath)
+                        distortion_map_ocv = cv_helpers.read_image(os.path.join(distortion_map, self.distortion_map_names[4])) 
+                        lens_correction = Lens_Correction(distortion_map_ocv)
+                        capture_corrected_ocv = lens_correction.correct(capture_raw_ocv)
+                        capture_with_bottles_ocv, bottle_circles = self.object_detection.bottle_detection( capture_corrected_ocv )
+                        capture_with_cans_ocv, can_circles = self.object_detection.can_detection( capture_corrected_ocv )
 
                 #if topic == "process_images_and_report":
                 #if topic == self.hostname:
