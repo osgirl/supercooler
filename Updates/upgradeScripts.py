@@ -11,11 +11,5 @@ scripts = {
 		"sudo chmod +x /home/pi/gdrive",
 		"sudo install /home/pi/gdrive /usr/local/bin/gdrive",
 		"mkdir /home/pi/.gdrive",
-    ], 
-    "0.09":[
-        "sudo cp -R .gdrive/ /root/",
-    ],
-
-    
-
+    ]
 }
