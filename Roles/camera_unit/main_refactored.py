@@ -210,7 +210,7 @@ class Main(threading.Thread):
 
             if topic == "remote_update":
                 supercooler, thirtybirds, update, upgrade = msg
-                utils.remote_update_git(supercooler, thirtybirds, update, upgrade):
+                utils.remote_update_git(supercooler, thirtybirds, update, upgrade)
                 self.network.thirtybirds.send("update_complete", self.hostname)
 
             if topic == "remote_update_scripts":
