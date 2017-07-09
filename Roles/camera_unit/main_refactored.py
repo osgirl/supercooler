@@ -184,6 +184,7 @@ class Main(threading.Thread):
 
     def network_status_handler(self, topic_msg):
         # this method runs in the thread of the caller, not the tread of Main
+        print "Main.network_status_handler", topic_msg
         topic, msg =  topic_msg
         print "main.network_status_handler", topic, msg
 
