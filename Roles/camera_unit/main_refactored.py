@@ -136,16 +136,6 @@ class Network(object):
             print "exception in Network.copy_to_gdrive", e
                 
 
-
-send_images_to_conductor
-
-send_client_status
-
-copy_to_gdrive
-
-network_status_handler
-
-network_message_handler
 ########################
 ## DATA 
 ########################
@@ -154,11 +144,11 @@ class Data(threading.Thread):
     def __init__(self, hostname, network):
         threading.Thread.__init__(self)
 
-collate_classifcation_metadata
+#collate_classifcation_metadata
 
-create_object_metadata
+#create_object_metadata
 
-parse_and_annotate_images
+#parse_and_annotate_images
 
 ########################
 ## MAIN
