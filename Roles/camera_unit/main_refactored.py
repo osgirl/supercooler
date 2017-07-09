@@ -29,7 +29,7 @@ BASE_PATH = os.path.dirname(os.path.realpath(__file__))
 UPPER_PATH = os.path.split(os.path.dirname(os.path.realpath(__file__)))[0]
 DEVICES_PATH = "%s/Hosts/" % (BASE_PATH )
 THIRTYBIRDS_PATH = "%s/thirtybirds_2_0" % (UPPER_PATH )
-DISTORTION_MAP_PATH = os.path.join(BASE_PATH, "Roles", "camera_unit", "distortion_maps")
+DISTORTION_MAP_PATH = os.path.join(BASE_PATH, "distortion_maps")
 
 sys.path.append(BASE_PATH)
 sys.path.append(UPPER_PATH)
