@@ -525,7 +525,7 @@ class Main(threading.Thread):
         self.network.thirtybirds.subscribe_to_topic("client_monitor_request")
         self.network.thirtybirds.subscribe_to_topic("capture_and_upload")
         self.network.thirtybirds.subscribe_to_topic("perform_object_detection")
-        #self.network.thirtybirds.subscribe_to_topic("process_images_and_report")
+        self.network.thirtybirds.subscribe_to_topic("process_images_and_report")
         #self.network.thirtybirds.subscribe_to_topic(HOSTNAME)
         #self.network.thirtybirds.subscribe_to_topic("return_raw_images")
         #self.network.thirtybirds.subscribe_to_topic("parse_and_annotate")
