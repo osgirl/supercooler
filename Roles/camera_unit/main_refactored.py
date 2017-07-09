@@ -181,7 +181,8 @@ class Main(threading.Thread):
         # this method runs in the thread of the caller, not the tread of Main
         print "Main.network_message_handler", topic_msg
         topic, msg =  topic_msg # separating just to eval msg.  best to do it early.  it should be done in TB.
-        self.add_to_queue(topic, eval(msg))
+        if msg != "": msg == eval(msg)
+        self.add_to_queue(topic, msg)
 
     def network_status_handler(self, topic_msg):
         # this method runs in the thread of the caller, not the tread of Main
