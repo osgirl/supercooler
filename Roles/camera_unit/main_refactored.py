@@ -211,7 +211,7 @@ class Main(threading.Thread):
                 light_level, timestamp = eval(msg)
                 if light_level in [0, "0"]: # on request 0, empty directory
                     self.images.delete_captures()
-                filename = self.utils.create_image_file_name(self, timestamp, light_level, "raw")
+                filename = self.utils.create_image_file_name(timestamp, light_level, "raw")
                 self.images.capture_image(filename)
 
             if topic == "client_monitor_request":
