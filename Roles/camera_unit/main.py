@@ -29,6 +29,7 @@ sys.path.append(UPPER_PATH)
 capture_path = "/home/pi/supercooler/Captures/"
 camera = camera_init(capture_path)
 network = None
+hostname = None
 
 class Thirtybirds_Client_Monitor_Client():
     def __init__(self, hostname, network ):
@@ -60,11 +61,11 @@ def capture_and_upload_image(timestamp, light, gdir, clear_dir):
             os.remove('/home/pi/supercooler/Captures/' + filename)
 
     # create filename from time, light, and location
-    id_str = main.hostname[11] + main.hostname[12:].zfill(2)
+    id_str = hostname[11] + hostname[12:].zfill(2)
     filename = id_str + "_" + str(light) + "_" + timestamp + ".png"
 
     # take picture and save image to file
-    main.camera.take_capture(filename)
+    camera.take_capture(filename)
     time.sleep(0.5)
 
     # upload image to specified directory in google drive
@@ -104,7 +105,7 @@ def parse_and_annotate_images(timestamp, gdir_annotated, gdir_parsed):
     # ------- SAVE ANNOTATION -------------------------------------------------
 
     # prep for writing to file (construct filename + filepath)
-    id_str = main.hostname[11] + main.hostname[12:].zfill(2)
+    id_str = hostname[11] + hostname[12:].zfill(2)
     filename = id_str + "_annotated_" + timestamp + ".jpg"
     filepath = "/home/pi/supercooler/ParsedCaptures/" + filename
     
@@ -186,12 +187,14 @@ def network_message_handler(msg):
 
     # response to client monitor topics
     elif topic == "client_monitor_request":
-        network.send("client_monitor_response", main.thirtybirds_client_monitor_client.send_client_status())
+        network.send("client_monitor_response", thirtybirds_client_monitor_client.send_client_status())
         
-def init(hostname):
+thirtybirds_client_monitor_client = None
+
+def init(HOSTNAME):
     global network
     network = network_init(
-        hostname=hostname,
+        hostname=HOSTNAME,
         role="client",
         discovery_multicastGroup=settings.discovery_multicastGroup,
         discovery_multicastPort=settings.discovery_multicastPort,
@@ -201,6 +204,10 @@ def init(hostname):
         status_callback=network_status_handler
     )
 
+    global hostname
+    hostname = HOSTNAME
+
+    global thirtybirds_client_monitor_client
     thirtybirds_client_monitor_client = Thirtybirds_Client_Monitor_Client(hostname, network)
 
     network.subscribe_to_topic("system")  # subscribe to all system messages
