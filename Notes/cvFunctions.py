@@ -434,7 +434,7 @@ def remove_border_from_circles(image, circles, border, min_ratio=0.2):
 def bottle_detection( image, number_of_octaves=4 ):
     processed = image.copy()
 
-    octaves = [ cv2.resize( processed, dsize=(0, 0), fx=1/float(x), fy=1/float(x), interpolation=cv2.INTER_AREA ) for x in range(1, number_of_octaves+1) ]
+    octaves = [ cv2.resize( processed, dsize=(0, 0), fx=1/float(x), fy=1/float(x), interpolation=cv2.INTER_LINEAR ) for x in range(1, number_of_octaves+1) ]
     octaves = map( lambda img: cv2.GaussianBlur(img, (5, 5), 0, 0), octaves )
     octaves = map( lambda img: cv2.Canny(img, 150, 250, L2gradient=True, apertureSize=3), octaves )
     
