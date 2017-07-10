@@ -117,15 +117,25 @@ class Object_Detection(object):
         #return (circles, visualisation)
 
     def can_detection(self, image, max_circle_radius=100, draw_circles_on_processed=False):
+        print "debug, can_detection,", 0
         processed = image.copy()
+        print "debug, can_detection,", 1
         vis = image.copy()
+        print "debug, can_detection,", 2
         edges = cv2.Canny(processed, 150, 250, L2gradient=True, apertureSize=3)
+        print "debug, can_detection,", 3
         extendedWidth = edges.shape[0] + 2*max_circle_radius
+        print "debug, can_detection,", 4
         extendedHeight = edges.shape[1] + 2*max_circle_radius
+        print "debug, can_detection,", 5
         processed = np.zeros((extendedWidth, extendedHeight), np.uint8)
+        print "debug, can_detection,", 6
         processed[max_circle_radius:max_circle_radius + edges.shape[0], max_circle_radius:max_circle_radius + edges.shape[1]] = edges
+        print "debug, can_detection,", 7
         kernel = np.ones((3, 3), dtype="uint8")
+        print "debug, can_detection,", 8
         processed = cv2.morphologyEx(processed, cv2.MORPH_CLOSE, kernel)
+        print "debug, can_detection,", 9
         circles = cv2.HoughCircles(
             processed, 
             method=cv2.cv.CV_HOUGH_GRADIENT, 
@@ -136,10 +146,14 @@ class Object_Detection(object):
             minRadius=45, 
             maxRadius=max_circle_radius
         )
+        print "debug, can_detection,", 10
         processed = cv_helpers.gray_to_RGB(processed)
+        print "debug, can_detection,", 11
         if (draw_circles_on_processed):
             processed = cv_helpers.draw_circles(processed, circles)
+        print "debug, can_detection,", 12
         circles = self.remove_border_from_circles(processed, circles, border=max_circle_radius)
+        print "debug, can_detection,", 13
         return processed, circles
 
     def remove_border_from_circles(self, image, circles, border, min_ratio=0.2):
@@ -152,10 +166,15 @@ class Object_Detection(object):
         return np.array([filtered_circles])
 
     def bottle_detection(self,  image, number_of_octaves=4 ):
+        print "debug, bottle_detection,", 0
         processed = image.copy()
+        print "debug, bottle_detection,", 1
         octaves = [ cv2.resize( processed, dsize=(0, 0), fx=1/float(x), fy=1/float(x), interpolation=cv2.INTER_AREA ) for x in range(1, number_of_octaves+1) ]
+        print "debug, bottle_detection,", 2
         octaves = map( lambda img: cv2.GaussianBlur(img, (5, 5), 0, 0), octaves )
+        print "debug, bottle_detection,", 3
         octaves = map( lambda img: cv2.Canny(img, 150, 250, L2gradient=True, apertureSize=3), octaves )
+        print "debug, bottle_detection,", 4
         octave_circles = map( 
                 lambda i: cv2.HoughCircles(
                         octaves[i], 
@@ -167,9 +186,13 @@ class Object_Detection(object):
                 ),
                 range(number_of_octaves) 
             )
+        print "debug, bottle_detection,", 5
         octaves = map( lambda img: cv_helpers.gray_to_RGB(img), octaves)
+        print "debug, bottle_detection,", 6
         circles = self.merge_octave_circles( octave_circles )
+        print "debug, bottle_detection,", 7
         circles = self.filter_octave_circles( circles )
+        print "debug, bottle_detection,", 8
         return processed, circles
 
     def merge_octave_circles(self, octave_circles):
@@ -219,27 +242,31 @@ class Lens_Correction(object):
         self.distortion_map = distortion_map
 
     def correct(self, distorted_image, scale=15):
+        print "debug, correct,", 0
         image_width, image_height, _ = distorted_image.shape
+        print "debug, correct,", 1
         map_width, map_height, _ = self.distortion_map.shape
+        print "debug, correct,", 2
 
         assert (image_height == map_height and image_width ==map_width), "image and map must have equal dimensions"
-
+        print "debug, correct,", 3
         distortion_points = []
         distortion_points_dict = {}
         distortion_point_locations = self.get_distortion_points()
-
+        print "debug, correct,", 4
         for point in distortion_point_locations:
             distortion_points += [self.Distortion_Point(point[1], point[0], self.distortion_map)]
-
+        print "debug, correct,", 5
         for point in distortion_points:
             distortion_points_dict[(point.real_coords_x, point.real_coords_y)] = point
-
+        print "debug, correct,", 6
         min_real_x = min(map(lambda x: x[0], distortion_points_dict.keys()))
         max_real_x = max(map(lambda x: x[0], distortion_points_dict.keys()))
         min_real_y = min(map(lambda x: x[1], distortion_points_dict.keys()))
         max_real_y = max(map(lambda x: x[1], distortion_points_dict.keys()))
-
+        print "debug, correct,", 7
         undistorted_image = np.zeros(((max_real_y-min_real_y)*scale, (max_real_x-min_real_x)*scale, 3), np.uint8)
+        print "debug, correct,", 8
         for x in range(min_real_x, max_real_x, 10):
             for y in range(min_real_y, max_real_y, 10):
                 min_x = x
@@ -250,6 +277,7 @@ class Lens_Correction(object):
                     max_y = 85
                 undistorted_minimal_square = self.undistort_minimal_square(distorted_image, distortion_points_dict, min_x, min_y, max_x, max_y, scale=scale)
                 undistorted_image[(min_y-min_real_y)*scale:(max_y-min_real_y)*scale, (min_x-min_real_x)*scale:(max_x-min_real_x)*scale] = undistorted_minimal_square
+        print "debug, correct,", 10
         return undistorted_image
 
     # This function takes in the manually created distortion map, finds the
@@ -587,10 +615,15 @@ class Main(threading.Thread):
                         capture_raw_ocv = cv_helpers.read_image(filepath)
                         print "distortion map path = ", os.path.join(self.distortion_map_dir, self.distortion_map_names[4])
                         distortion_map_ocv = cv_helpers.read_image(os.path.join(self.distortion_map_dir, self.distortion_map_names[4])) 
+                        print "debug", 0
                         lens_correction = Lens_Correction(distortion_map_ocv)
+                        print "debug", 1
                         capture_corrected_ocv = lens_correction.correct(capture_raw_ocv)
+                        print "debug", 2
                         capture_with_bottles_ocv, bottle_circles = self.object_detection.bottle_detection( capture_corrected_ocv )
+                        print "debug", 3
                         capture_with_cans_ocv, can_circles = self.object_detection.can_detection( capture_corrected_ocv )
+                        print "debug", 4
 
                 #if topic == "process_images_and_report":
                 #if topic == self.hostname:
