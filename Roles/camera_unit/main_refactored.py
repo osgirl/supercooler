@@ -262,7 +262,7 @@ class Lens_Correction(object):
         flattened_image = np.ones((width, height, 3), np.uint8)
         flattened_image = flattened_image * 255
         flattened_image = cv_helpers.paste_transparent(flattened_image, self.distortion_map)
-        detector = cv2.SimpleBlobDetector()
+        detector = cv2.SimpleBlobDetector_create()
         keypoints = detector.detect(flattened_image)
         distortion_points = map(lambda x: (int(x.pt[0]), int(x.pt[1])), keypoints)
         return distortion_points
@@ -331,7 +331,7 @@ class Camera_To_Shelf_Spatial_Mapping(object):
       flattened_image = np.ones((width, height, 3), np.uint8)
       flattened_image = flattened_image * 255
       flattened_image = cv_helpers.paste_transparent(flattened_image, location_map)
-      detector = cv2.SimpleBlobDetector()
+      detector = cv2.SimpleBlobDetector_create()
       keypoints = detector.detect(flattened_image)
       if ( len(keypoints) is not 2):
         raise Value_Error("When initializing location maps, an incorrect number of keypoints has been found. There should be only two.")
