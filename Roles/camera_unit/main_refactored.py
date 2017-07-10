@@ -170,11 +170,11 @@ class Object_Detection(object):
         processed = image.copy()
         print "debug, bottle_detection,", 1
         octaves = [ cv2.resize( processed, dsize=(0, 0), fx=1/float(x), fy=1/float(x), interpolation=cv2.INTER_AREA ) for x in range(1, number_of_octaves+1) ]
-        print "debug, bottle_detection,", 2
+        print "debug, bottle_detection,", 2, octaves
         octaves = map( lambda img: cv2.GaussianBlur(img, (5, 5), 0, 0), octaves )
-        print "debug, bottle_detection,", 3
+        print "debug, bottle_detection,", 3, octaves
         octaves = map( lambda img: cv2.Canny(img, 150, 250, L2gradient=True, apertureSize=3), octaves )
-        print "debug, bottle_detection,", 4
+        print "debug, bottle_detection,", 4, octaves
         octave_circles = map( 
                 lambda i: cv2.HoughCircles(
                         octaves[i], 
