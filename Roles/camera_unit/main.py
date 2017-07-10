@@ -4,6 +4,8 @@ import commands
 import cv2
 import importlib
 import json
+import math
+import numpy as np
 from operator import itemgetter
 import os
 import Queue
@@ -13,430 +15,490 @@ import sys
 import subprocess
 import threading
 import time
+import traceback
 
-from thirtybirds_2_0.Network.manager import init as network_init
+from thirtybirds_2_0.Network.manager import init as thirtybirds_network
 from thirtybirds_2_0.Network.email_simple import init as email_init
 from thirtybirds_2_0.Adaptors.Cameras.elp import init as camera_init
 from thirtybirds_2_0.Updates.manager import init as updates_init
 from thirtybirds_2_0.Network.info import init as network_info_init
-
-from parser import Image_Parser
-
-from watson_developer_cloud import VisualRecognitionV3
 
 network_info = network_info_init()
 
 BASE_PATH = os.path.dirname(os.path.realpath(__file__))
 UPPER_PATH = os.path.split(os.path.dirname(os.path.realpath(__file__)))[0]
 DEVICES_PATH = "%s/Hosts/" % (BASE_PATH )
-THIRTYBIRDS_PATH = "%s/thirtybirds" % (UPPER_PATH )
+THIRTYBIRDS_PATH = "%s/thirtybirds_2_0" % (UPPER_PATH )
+DISTORTION_MAP_PATH = os.path.join(BASE_PATH, "distortion_maps")
 
 sys.path.append(BASE_PATH)
 sys.path.append(UPPER_PATH)
 
-class Thirtybirds_Client_Monitor_Client():
-    def __init__(self, hostname, network ):
-        self.network = network
-        self.hostname = hostname
 
-    def get_pickle_version(self):
+########################
+## CV HELPERS
+########################
+
+class CV_Helpers(object):
+    def __init__(self):
+        pass
+    def read_image(self, path):
+        return cv2.imread(path, -1)
+    # Shows an image without the need to give a name or call waitkey.
+    def show_image(self, image, title=None):
+        if (title == None):
+            title = show_image.window_counter
+            show_image.window_counter += 1
+        cv2.imshow(str(title), image)
+        cv2.waitKey(0)
+        #show_image.window_counter = 0 # scope this to class later
+
+    def paste_transparent(self, background, foreground):
+        image = background.copy()
+        background_width, background_height, _ = background.shape
+        foreground_width, foreground_height, _ = foreground.shape
+        assert (background_height == foreground_height and background_width == foreground_width), "images must have equal dimensions"
+        for x in xrange(background_width):
+            for y in xrange(background_height):
+                if foreground[x][y][3] != 0:
+                    image[x][y] = (foreground[x][y][0], foreground[x][y][1], foreground[x][y][2])
+        return image
+
+    def gray_to_RGB(self, image):
+        return cv2.cvtColor(image, cv2.COLOR_GRAY2RGB)
+
+    #def RGB_to_gray(self, image):
+    #    return cv2.cvtColor(image, cv2.COLOR_RGB2GRAY)
+
+    #def LAB_CLAHE(self, image):
+    #        output = image.copy()
+    #        output = cv2.cvtColor(output, cv2.COLOR_BGR2LAB)
+    #        l, a, b = cv2.split(output)
+    #        clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
+    #        l = clahe.apply(l)
+    #        output = cv2.merge((l, a, b))
+    #        output = cv2.cvtColor(output, cv2.COLOR_LAB2BGR)
+    #        return output
+
+    def draw_circles(self, image, circles):
+        output = image.copy()
+        if circles is not None:
+            circles = np.round(circles[0, :]).astype("int")
+            for (x, y, r) in circles:
+                cv2.circle(output, (x, y), r, (0, 255, 0), 2)
+            for (x, y, r) in circles:
+                cv2.rectangle(output, (x - 2, y - 2), (x + 2, y + 2), (0, 128, 255), -1)
+        return output
+
+    #def flatten_color_regions(self, image):
+    #        flattened = image.copy()
+    #        for x, y in tuple((x, y) for x in range(image.shape[0]) for y in range(image.shape[1])):
+    #            flattened[x][y] = [int(v/32)*32 for v in image[x][y]]
+    #        return flattened
+
+cv_helpers = CV_Helpers()
+
+########################
+## OBJECT DETECTION
+########################
+
+class Object_Detection(object):
+    def __init__(self):
+        pass
+
+    def bottle_and_can_detection(self, image):
+        #visualisation = image.copy()
+        bottle_circles = self.bottle_detection( image )[1]
+        can_circles = self.can_detection( image )[1]
+        return bottle_circles, can_circles
+        #visualisation = draw_circles( visualisation, bottle_circles )
+        #visualisation = draw_circles( visualisation, can_circles )
+        #circles = np.concatenate([bottle_circles[0], can_circles[0]])
+        #return (circles, visualisation)
+
+    def can_detection(self, image, max_circle_radius=100, draw_circles_on_processed=False):
+        print "debug, can_detection,", 0
+        processed = image.copy()
+        print "debug, can_detection,", 1
+        vis = image.copy()
+        print "debug, can_detection,", 2
+        edges = cv2.Canny(processed, 150, 250, L2gradient=True, apertureSize=3)
+        print "debug, can_detection,", 3
+        extendedWidth = edges.shape[0] + 2*max_circle_radius
+        print "debug, can_detection,", 4
+        extendedHeight = edges.shape[1] + 2*max_circle_radius
+        print "debug, can_detection,", 5
+        processed = np.zeros((extendedWidth, extendedHeight), np.uint8)
+        print "debug, can_detection,", 6
+        processed[max_circle_radius:max_circle_radius + edges.shape[0], max_circle_radius:max_circle_radius + edges.shape[1]] = edges
+        print "debug, can_detection,", 7
+        kernel = np.ones((3, 3), dtype="uint8")
+        print "debug, can_detection,", 8
+        processed = cv2.morphologyEx(processed, cv2.MORPH_CLOSE, kernel)
+        print "debug, can_detection,", 9
+        circles = cv2.HoughCircles(
+            processed, 
+            method=cv2.HOUGH_GRADIENT, 
+            dp=3, 
+            minDist=45,
+            param1=250, 
+            param2=200, 
+            minRadius=45, 
+            maxRadius=max_circle_radius
+        )
+        print "debug, can_detection,", 10
+        processed = cv_helpers.gray_to_RGB(processed)
+        print "debug, can_detection,", 11
+        if (draw_circles_on_processed):
+            processed = cv_helpers.draw_circles(processed, circles)
+        print "debug, can_detection,", 12
+        circles = self.remove_border_from_circles(processed, circles, border=max_circle_radius)
+        print "debug, can_detection,", 13
+        return processed, circles
+
+    def remove_border_from_circles(self, image, circles, border, min_ratio=0.2):
+        filtered_circles = []
+        circled = image.copy()
+        if circles is not None:
+            circles = np.round(circles[0, :]).astype("int")
+            for (x, y, r) in circles:
+                filtered_circles += [[x-border, y-border, r]]
+        return np.array([filtered_circles])
+
+    def bottle_detection(self,  image, number_of_octaves=4 ):
+        print "debug, bottle_detection,", 0
+        processed = image.copy()
+        print "debug, bottle_detection,", 1
+        octaves = [ cv2.resize( processed, dsize=(0, 0), fx=1/float(x), fy=1/float(x), interpolation=cv2.INTER_LINEAR ) for x in range(1, number_of_octaves+1) ]
+        print "debug, bottle_detection,", 2, octaves
+        octaves = map( lambda img: cv2.GaussianBlur(img, (5, 5), 0, 0), octaves )
+        print "debug, bottle_detection,", 3, octaves
+        octaves = map( lambda img: cv2.Canny(img, 150, 250, L2gradient=True, apertureSize=3), octaves )
+        print "debug, bottle_detection,", 4, octaves
+        octave_circles = map( 
+                lambda i: cv2.HoughCircles(
+                        octaves[i], 
+                        method=cv2.HOUGH_GRADIENT, 
+                        dp=2.8, 
+                        minDist=45/(i+1), param1=250, param2=180/(i+1), 
+                        minRadius=30/(i+1), 
+                        maxRadius=60/(i+1)
+                ),
+                range(number_of_octaves) 
+            )
+        print "debug, bottle_detection,", 5
+        octaves = map( lambda img: cv_helpers.gray_to_RGB(img), octaves)
+        print "debug, bottle_detection,", 6
+        circles = self.merge_octave_circles( octave_circles )
+        print "debug, bottle_detection,", 7
+        circles = self.filter_octave_circles( circles )
+        print "debug, bottle_detection,", 8
+        return processed, circles
+
+    def merge_octave_circles(self, octave_circles):
+        merged_circles = []
+        for i in range(len(octave_circles)):
+            if octave_circles[i] is not None:
+                for (x, y, r) in octave_circles[i][0]:
+                    merged_circles += [[x*(i+1), y*(i+1), r*(i+1)]]
+        return np.array([merged_circles])
+
+    def filter_octave_circles(self,  circles, identical_radius=0.3 ):
+        filtered_circles = None
+        if circles is not None:
+            filtered_circles = []
+            circles = np.round(circles[0, :]).astype("int")
+            identical_candidates = self.find_identical_candidates(circles, identical_radius)
+
+            identical_candidates_by_length = map( lambda (k, v): (k, len(v)), identical_candidates.iteritems())
+            identical_candidates_by_length = sorted( identical_candidates_by_length, key=lambda circle: circle[1], reverse=True )
+
+            circles_not_yet_clustered = map( lambda (k, v): k, identical_candidates.iteritems())
+            for circle in identical_candidates_by_length:
+                if (circle[0] in circles_not_yet_clustered):
+                    filtered_circles += [(circle[0])]
+                    for identical in identical_candidates[circle[0]]:
+                        circles_not_yet_clustered = [icircle for icircle in circles_not_yet_clustered if icircle != identical]
+                        
+        return np.array([filtered_circles])
+
+    def find_identical_candidates(self,  circles, identical_radius ):
+        identical_candidates = {}
+        for (x, y, r) in circles:
+            identical_candidates[(x, y, r)] = []
+            for (nx, ny, nr) in circles:
+                distance_of_centers = math.sqrt((x-nx)**2 + (y-ny)**2)
+                if ( 0 < distance_of_centers < r*identical_radius ):
+                    identical_candidates[(x, y, r)] += [(nx, ny, nr)]
+
+        return identical_candidates
+
+########################
+## LENS CORRECTION
+########################
+
+class Lens_Correction(object):
+    def __init__(self, distortion_map):
+        self.distortion_map = distortion_map
+
+    def correct(self, distorted_image, scale=15):
+        print "debug, correct,", 0
+        image_width, image_height, _ = distorted_image.shape
+        print "debug, correct,", 1
+        map_width, map_height, _ = self.distortion_map.shape
+        print "debug, correct,", 2
+
+        assert (image_height == map_height and image_width ==map_width), "image and map must have equal dimensions"
+        print "debug, correct,", 3
+        distortion_points = []
+        distortion_points_dict = {}
+        distortion_point_locations = self.get_distortion_points()
+        print "debug, correct,", 4
+        for point in distortion_point_locations:
+            distortion_points += [self.Distortion_Point(point[1], point[0], self.distortion_map)]
+        print "debug, correct,", 5
+        for point in distortion_points:
+            distortion_points_dict[(point.real_coords_x, point.real_coords_y)] = point
+        print "debug, correct,", 6
+        min_real_x = min(map(lambda x: x[0], distortion_points_dict.keys()))
+        max_real_x = max(map(lambda x: x[0], distortion_points_dict.keys()))
+        min_real_y = min(map(lambda x: x[1], distortion_points_dict.keys()))
+        max_real_y = max(map(lambda x: x[1], distortion_points_dict.keys()))
+        print "debug, correct,", 7
+        undistorted_image = np.zeros(((max_real_y-min_real_y)*scale, (max_real_x-min_real_x)*scale, 3), np.uint8)
+        print "debug, correct,", 8
+        for x in range(min_real_x, max_real_x, 10):
+            for y in range(min_real_y, max_real_y, 10):
+                min_x = x
+                min_y = y
+                max_x = x+10
+                max_y = y+10
+                if min_y == 80:
+                    max_y = 85
+                undistorted_minimal_square = self.undistort_minimal_square(distorted_image, distortion_points_dict, min_x, min_y, max_x, max_y, scale=scale)
+                undistorted_image[(min_y-min_real_y)*scale:(max_y-min_real_y)*scale, (min_x-min_real_x)*scale:(max_x-min_real_x)*scale] = undistorted_minimal_square
+        print "debug, correct,", 10
+        return undistorted_image
+
+    # This function takes in the manually created distortion map, finds the
+    # center points of all the circles and returns those in a list
+
+    def get_distortion_points(self):
+        distortion_points = []
+        width, height, channels = self.distortion_map.shape
+        assert channels == 4, "Your so-called distortion map doesn't have transparency. There's a fair chance you did something wrong, mate"
+        flattened_image = np.ones((width, height, 3), np.uint8)
+        flattened_image = flattened_image * 255
+        flattened_image = cv_helpers.paste_transparent(flattened_image, self.distortion_map)
+        detector = cv2.SimpleBlobDetector_create()
+        keypoints = detector.detect(flattened_image)
+        distortion_points = map(lambda x: (int(x.pt[0]), int(x.pt[1])), keypoints)
+        return distortion_points
+
+    # Perspective warps a minimal square - Nothing to it, really.
+    # There's some heavy optimizing potential here, if desired: During a 'compilation' step, save all the transformMatrices.
+    # Then you could skip everything in between opening the image and the
+    # warpPerspective call.
+
+    def undistort_minimal_square(self, distorted_image, distortion_points, min_x, min_y, max_x, max_y, scale=15):
+        lowerLeft = distortion_points[(min_x, min_y)].getLocation()
+        upperLeft = distortion_points[(max_x, min_y)].getLocation()
+        lowerRight = distortion_points[(min_x, max_y)].getLocation()
+        upperRight = distortion_points[(max_x, max_y)].getLocation()
+        originPoints = np.float32([upperLeft, upperRight, lowerLeft, lowerRight])
+        targetPoints = np.float32([[(max_x-min_x)*scale, 0], [(max_x-min_x)*scale, (max_y-min_y)*scale], [0, 0], [0, (max_y-min_y)*scale]])
+        transformMatrix = cv2.getPerspectiveTransform(originPoints, targetPoints)
+        undistorted_image = cv2.warpPerspective(
+            src=distorted_image, M=transformMatrix, dsize=((max_x-min_x)*scale, (max_y-min_y)*scale))
+        return undistorted_image
+
+    class Distortion_Point(object):
+        def __init__(self, x, y, image):
+            self.x = x
+            self.y = y
+            self.real_coords_x = image[x][y][2]
+            self.real_coords_y = image[x][y][1]
+
+        def output(self):
+            print self.x, self.y, self.real_coords_x, self.real_coords_y
+
+        def getLocation(self):
+            return [self.y, self.x]
+
+
+
+
+########################
+## CAMERA TO SHELF SPATIAL MAPPING
+########################
+
+class Camera_To_Shelf_Spatial_Mapping(object):
+    def __init__(self, shelf, camera):
+        self.shelf = shelf
+        self.camera = camera
+        self.upper_shelf_image_points = None
+        self.lower_shelf_image_points = None
+        self.world_points = None
+        self.map_folder = "Location Maps/"
+        self.upper_shelf_height = 20.5
+        self.lower_shelf_height = 12.5
+        self.init_maps()
+
+    def init_maps(self):
+        upper_shelf_path = self.map_folder + self.shelf + "_" + str(self.upper_shelf_height) + "_" + str(self.camera) + ".png"
+        lower_shelf_path = self.map_folder + self.shelf + "_" + str(self.lower_shelf_height) + "_" + str(self.camera) + ".png"
+        upper_shelf_image = cv_helpers.read_image( upper_shelf_path )
+        lower_shelf_image = cv_helpers.read_image( lower_shelf_path )
+        self.upper_shelf_image_points = self.init_map_points( upper_shelf_image )
+        self.lower_shelf_image_points = self.init_map_points( lower_shelf_image )
+        self.init_world_points( upper_shelf_image )
+
+    def init_map_points(self, location_map):
+      width, height, channels = location_map.shape
+      assert channels == 4, "Your location map doesn't have transparency. That sounds wrong"
+      flattened_image = np.ones((width, height, 3), np.uint8)
+      flattened_image = flattened_image * 255
+      flattened_image = cv_helpers.paste_transparent(flattened_image, location_map)
+      detector = cv2.SimpleBlobDetector_create()
+      keypoints = detector.detect(flattened_image)
+      if ( len(keypoints) is not 2):
+        raise Value_Error("When initializing location maps, an incorrect number of keypoints has been found. There should be only two.")
+      top_left_pixel = keypoints[0].pt if keypoints[0].pt[0] < keypoints[1].pt[0] else keypoints[1].pt
+      bottom_right_pixel = keypoints[1].pt if keypoints[0].pt[0] < keypoints[1].pt[0] else keypoints[0].pt
+      top_left_pixel = (int(top_left_pixel[0]) , int(top_left_pixel[1]))
+      bottom_right_pixel = (int(bottom_right_pixel[0]), int(bottom_right_pixel[1]))
+      return (top_left_pixel, bottom_right_pixel)
+
+    def init_world_points(self, location_map):
+      if ( self.upper_shelf_image_points is None or self.lower_shelf_image_points is None ):
+        raise Error("Image map points are initialized incorrectly")
+      upx = self.upper_shelf_image_points[0][1]
+      upy = self.upper_shelf_image_points[0][0]
+      downx = self.upper_shelf_image_points[1][1]
+      downy = self.upper_shelf_image_points[1][0]
+      up_color = location_map[upx][upy]
+      down_color = location_map[downx][downy]
+      self.world_points = ((up_color[1], up_color[2]), (down_color[1], down_color[2]))
+
+    def location_on_upper_plane(self, x, y):
+      distance_between_reference_points_x = self.upper_shelf_image_points[1][0] - self.upper_shelf_image_points[0][0]
+      distance_between_reference_points_y = self.upper_shelf_image_points[1][1] - self.upper_shelf_image_points[0][1]
+      distance_between_world_points_x = self.world_points[1][1] - self.world_points[0][1]
+      distance_between_world_points_y = self.world_points[1][0] - self.world_points[0][0]
+      x_offset_to_top_left_point = x - self.upper_shelf_image_points[0][0]
+      y_offset_to_top_left_point = y - self.upper_shelf_image_points[0][1]
+      x_offset_relative = x_offset_to_top_left_point / float(distance_between_reference_points_x)
+      y_offset_relative = y_offset_to_top_left_point / float(distance_between_reference_points_y)
+      x = int( self.world_points[0][1] + x_offset_relative * distance_between_world_points_x)
+      y = int( self.world_points[0][0] + y_offset_relative * distance_between_world_points_y)
+      return (x, y)
+
+    def location_on_lower_plane(self, x, y):
+      distance_between_reference_points_x = self.lower_shelf_image_points[1][0] - self.lower_shelf_image_points[0][0]
+      distance_between_reference_points_y = self.lower_shelf_image_points[1][1] - self.lower_shelf_image_points[0][1]
+      distance_between_world_points_x = self.world_points[1][1] - self.world_points[0][1]
+      distance_between_world_points_y = self.world_points[1][0] - self.world_points[0][0]
+      x_offset_to_top_left_point = x - self.lower_shelf_image_points[0][0]
+      y_offset_to_top_left_point = y - self.lower_shelf_image_points[0][1]
+      x_offset_relative = x_offset_to_top_left_point / float(distance_between_reference_points_x)
+      y_offset_relative = y_offset_to_top_left_point / float(distance_between_reference_points_y)
+      x = int( self.world_points[0][1] + x_offset_relative * distance_between_world_points_x)
+      y = int( self.world_points[0][0] + y_offset_relative * distance_between_world_points_y)
+      return (x, y)
+
+    def get_real_world_location( self, image_x, image_y, height ):
+      location_upper = self.location_on_upper_plane( image_x, image_y )
+      location_lower = self.location_on_lower_plane( image_x, image_y )
+      distance_between_reference_real_x = location_upper[0] - location_lower[0]
+      distance_between_reference_real_y = location_upper[1] - location_lower[1]
+      distance_between_reference_real_z = self.upper_shelf_height - self.lower_shelf_height
+      z_offset_to_bottom = height - self.lower_shelf_height
+      z_offset_relative = z_offset_to_bottom / float( distance_between_reference_real_z )
+      x = int( location_lower[0] + distance_between_reference_real_x * z_offset_relative )
+      y = int( location_lower[1] + distance_between_reference_real_y * z_offset_relative )
+      z = height
+      return (x, y, z)
+
+########################
+## UTILS
+########################
+
+class Utils(object):
+    def __init__(self, hostname):
+        self.hostname = hostname
+    def reboot(self):
+        os.system("sudo reboot now")
+
+    def get_shelf_id(self):
+        return self.hostname[11:][:1]
+
+    def get_camera_id(self):
+        return self.hostname[12:]
+
+    def create_image_file_name(self, timestamp, light_level, process_type):
+        return "{}_{}_{}_{}_{}.png".format(timestamp, self.get_shelf_id() ,  self.get_camera_id(), light_level, process_type) 
+
+    def remote_update_git(self, supercooler, thirtybirds, update, upgrade):
+        if supercooler:
+            subprocess.call(['sudo', 'git', 'pull'], cwd='/home/pi/supercooler')
+        if thirtybirds:
+            subprocess.call(['sudo', 'git', 'pull'], cwd='/home/pi/thirtybirds_2_0')
+        return 
+
+    def remote_update_scripts(self):
+        updates_init("/home/pi/supercooler", False, True)
+        return
+
+    def get_update_script_version(self):
         (updates, ghStatus, bsStatus) = updates_init("/home/pi/supercooler", False, False)
         return updates.read_version_pickle()
 
     def get_git_timestamp(self):
         return commands.getstatusoutput("cd /home/pi/supercooler/; git log -1 --format=%cd")[1]   
 
-    def send_client_status(self):
-        pickle_version = self.get_pickle_version()
-        git_timestamp = self.get_git_timestamp()
-        self.network.send("client_monitor_response", (self.hostname,pickle_version, git_timestamp))
+    def get_client_status(self):
+        return (self.hostname, self.get_update_script_version(), self.get_git_timestamp())
 
+########################
+## IMAGES
+########################
 
-
-
-class Main(threading.Thread):
-    def __init__(self, hostname, network):
-        threading.Thread.__init__(self)
-        self.hostname = hostname
-        self.network = network
-        self.capture_path = "/home/pi/supercooler/Captures/"
-        self.parsed_capture_path = "/home/pi/supercooler/ParsedCaptures/"
+class Images(object):
+    def __init__(self, capture_path):
+        self.capture_path = capture_path
         self.camera = camera_init(self.capture_path)
-        self.queue = Queue.Queue()
-        self.max_capture_age_to_use = 120  # seconds
-        self.thirtybirds_client_monitor_client = Thirtybirds_Client_Monitor_Client(hostname, network)
 
-    def add_to_queue(self, topic, msg):
-        print "Main.add_to_queue",topic, msg
-        self.queue.put((topic, msg))
-        print "Main.add_to_queue done"
-
-
-    # ---> CAMERA
-    def capture_image_and_save(self, filename):
-        print "Main.capture_image_and_save", filename
+    def capture_image(self, filename):
         self.camera.take_capture(filename)
-        time.sleep(0.5)
-        self.copy_to_gdrive(filename)
 
-    # ---->  NETWORK
-    def copy_to_gdrive(self,filename):
-        print "copy_to_gdrive:", commands.getstatusoutput("gdrive upload {}".format(os.path.join(self.capture_path, filename)))[1]
-        
-    # ---> UTILS
-    def return_env_data(self, filename):
+    def get_capture_filenames(self):
+        return [ filename for filename in os.listdir(self.capture_path) if filename.endswith(".png") ]
+
+    def delete_captures(self):
+        previous_filenames = self.get_capture_filenames()
+        for previous_filename in previous_filenames:
+            os.remove("{}{}".format(self.capture_path,  previous_filename))
+
+    def get_values_from_filename(self, filename):
         shelf_id = filename[:-4][:1]
         camera_id = filename[1:-6]
         light_level = filename[:-8][-1:]
         return shelf_id, camera_id, light_level
 
-    def send_images_to_conductor(self, raw_images, processed_image, processed_image_with_overlay ):
-        # convert image to jpeg and base64-encode
-        image_undistorted  = base64.b64encode(cv2.imencode('.jpg', processed_image)[1].tostring())
-        image_with_overlay = base64.b64encode(cv2.imencode('.png', processed_image_with_overlay)[1].tostring())
-        network.send("receive_image_data", to_send)
-        network.send("receive_image_overlay", ("overlay_%s%s.png" % (shelf_id, camera_id),image_with_overlay))
-        for i, ocv_img in enumerate(ocv_imgs):
-            image_raw = base64.b64encode(cv2.imencode('.png', ocv_img)[1].tostring())
-            network.send("receive_image_overlay", ("raw_%s%s_%d.png" % (shelf_id, camera_id, i),image_raw))
+    def get_capture_filepaths(self):
+        filenames = self.get_capture_filenames()
+        return list(map((lambda filename:  os.path.join(self.capture_path, filename)), filenames))
+        #return [ os.path.join(self.capture_path, current_filename) for current_filename in os.listdir(self.capture_path) if current_filename.endswith(".png") ]
 
+########################
+## NETWORK
+########################
 
-    # ---> OBJECT DETECTION
-    def parse_and_crop_images(self):
-        previous_filenames = [ previous_filename for previous_filename in os.listdir("/home/pi/supercooler/ParsedCaptures/") if previous_filename.endswith(".jpg") ]
-        print "delete previous cropped images", previous_filenames
-        for previous_filename in previous_filenames:
-            os.remove(   "{}{}".format("/home/pi/supercooler/ParsedCaptures/",  previous_filename) )
-        # PARSE IMAGES
-        # create instance of image parser and gather captures
-        print "getting ready to parse images..."
-        parser = Image_Parser()
-        filenames = [ filename for filename in os.listdir(self.capture_path) if filename.endswith(".png") ]
-        # store references to images (will be nparrays for opencv)
-        ocv_imgs = [None, None, None]
-        # convert images in capture directory to nparrays, extract metadata from filename
-        for filename in filenames:
-            shelf_id, camera_id, light_level = self.return_env_data(filename)
-            print 'loading %s' % (filename)
-            ocv_imgs[int(light_level)] = cv2.imread(os.path.join(self.capture_path, filename))
-        if ocv_imgs[0] is None: 
-                print 'error: no image found'
-                return False, None, None, None
-        print 'starting parser'
-        # run parser, get image bounds and undistorted image
-        bounds_list, ocv_img_with_overlay, ocv_img_out = parser.parse(ocv_imgs[0], ocv_imgs[1], ocv_imgs[2])
-        # CROP IMAGES
-        # iterate through list of image bounds, store cropped capture info
-        cropped_image_metadata = {}
-        for bounds in bounds_list:
-            try:
-                # crop image and encode as jpeg
-                print "cropping..."
-                x, y, w, h = bounds
-                print "bounds >>>>>", x, y, w, h
-                img_crop = ocv_img_out[y:y+h, x:x+w]
-                print "img_crop >>>>>", repr(img_crop)
-                #img_jpg = cv2.imencode('.jpg', img_crop)[1].tobytes()
-                print "cropped image, w,h = ", w, h
-                # create filename from img data
-                filename = shelf_id + camera_id + "_" + str(x) + "_" + str(y) + ".jpg"
-                filepath = "/home/pi/supercooler/ParsedCaptures/" + filename
-                print "filepath=", filepath
-                cropped_image_metadata[filename] = {
-                    'x' :  x,
-                    'y' :  y,
-                    'w' :  w,
-                    'h' :  h,
-                }
-                print "cropped_image_metadata=", cropped_image_metadata
-                # write to file
-                #with open(filepath, 'wb') as f:
-                #    f.write(img_jpg)
-                cv2.imwrite(filepath, img_crop)
-            except Exception as e:
-                print "exception in parse_and_crop_images", e
-
-        return True, cropped_image_metadata, ocv_img_with_overlay, ocv_img_out
-
-
-    def send_cropped_images_to_watson(self):
-        # TODO: delete this API key from Bluemix after the demo
-        visual_recognition = VisualRecognitionV3('2016-05-20', api_key='4fd7cd5854ae7a1c63f1835ddd63a2a7779a73d0')
-        filepath = "/home/pi/supercooler/captures_cropped.zip"
-        time.sleep(random.randrange(0,15))
-        # send to watson
-        with open(filepath, 'rb') as image_file:
-            res = visual_recognition.classify(images_file=image_file, classifier_ids=['supercooler3_1124392282'])
-        return res
-        # with open( filepath, 'rb') as image_file:
-        #     return visual_recognition.classify(images_file=image_file,  classifier_ids=['beercaps_697951100'], threshold=0.99)
-
-    def collate_classifcation_metadata(self, classification_results, cropped_image_metadata):
-        print "collate_classifcation_metadata"
-        classified_image_metadata = {}
-        for image in classification_results[u'images']:
-            if image.has_key(u'classifiers'):
-                if len(image[u'classifiers']) > 0:
-                    # stella won't be in the fridge for the demo, so remove that as a possibility
-                    # 'candidates' is a list of dicts in the form {'class':str, 'score':float} 
-                    candidates = [d for d in image[u'classifiers'][0][u'classes'] if not (d[u'class'] == 'bottlestella')]
-                    if len(candidates) == 0: continue
-                    candidates = [d for d in candidates if not (d[u'class'] == 'bottleplatinum')]
-                    if len(candidates) == 0: continue
-                    candidates = [d for d in candidates if not (d[u'class'] == 'bottlebecks')]
-                    if len(candidates) == 0: continue
-                    candidates = [d for d in candidates if not (d[u'class'] == 'bottleultra')]  
-                    if len(candidates) == 0: continue
-                    candidates = [d for d in candidates if not (d[u'class'] == 'bottlehoegaarden')]
-                    if len(candidates) == 0: continue
-                    candidates = [d for d in candidates if not (d[u'class'] == 'bottleshocktoppretzel')]
-                    if len(candidates) == 0: continue
-                    candidates = [d for d in candidates if not (d[u'class'] == 'bottleshcoktopraspberry')]
-                    if len(candidates) == 0: continue
-                    candidates = [d for d in candidates if not (d[u'class'] == 'bottlecorona')]
-                    if len(candidates) == 0: continue
-                    candidates = [d for d in candidates if not (d[u'class'] == 'cannaturallight')]
-                    if len(candidates) == 0: continue
-                    candidates = [d for d in candidates if not (d[u'class'] == 'canbudlight')]
-                    if len(candidates) == 0: continue
-                    # skip to next image if there's no remaining candidates
-                    if len(candidates) == 0: continue
-                    # highest_confidence_classification = sorted(image[u'classifiers'][0][u'classes'], key=itemgetter('score'))[-1]
-                    highest_confidence_classification = sorted(candidates, key=itemgetter('score'))[-1]                    
-                    #if highest_confidence_classification[u'score'] >0.95:
-                    # print "collate_classifcation_metadata 1", image
-                    classified_image_metadata[ os.path.basename(image[u'image']) ] = {
-                        "score":highest_confidence_classification[u'score'],
-                        "class":highest_confidence_classification[u'class'],
-                    }
-        print classified_image_metadata
-        print ""
-        print cropped_image_metadata
-        for key,val in classified_image_metadata.items():
-            classified_image_metadata[key]['x'] = cropped_image_metadata[str(key)]['x']
-            classified_image_metadata[key]['y'] = cropped_image_metadata[str(key)]['y']
-            classified_image_metadata[key]['w'] = cropped_image_metadata[str(key)]['w']
-            classified_image_metadata[key]['h'] = cropped_image_metadata[str(key)]['h']
-        return classified_image_metadata
-
-    def process_images_and_report(self):
-        # parse and crop Captures 
-        status, cropped_image_metadata, processed_image_with_overlay, processed_image = self.parse_and_crop_images()
-        if not status:
-            print "Exception in parse_and_crop_images.  Probably camera trouble"
-            return
-        # send_images_to_conductor(None, processed_image, processed_image_with_overlay)
-        print cropped_image_metadata, processed_image_with_overlay, processed_image
-        shelf = self.hostname[11:][:1]
-        camera = self.hostname[12:]
-        #catch case of empty directory
-        if len(cropped_image_metadata.keys()):
-            time.sleep(5)
-            # prepare images to send to Watson
-            filename_zipped = "/home/pi/supercooler/captures_cropped.zip"
-            commands.getstatusoutput("rm /home/pi/supercooler/captures_cropped.zip")
-            time.sleep(2)
-            commands.getstatusoutput("cd /home/pi/supercooler/; zip -j captures_cropped.zip ParsedCaptures/*.jpg")
-            #subprocess.call(['zip', '-j', filename_zipped, '/home/pi/supercooler/ParsedCaptures/*' ])
-            # send to Watson for classification
-            classification_results = self.send_cropped_images_to_watson()
-            print "++++++++++++++++++"
-            print "classification_results", classification_results
-            print "++++++++++++++++++"
-            collated_metadata = self.collate_classifcation_metadata(classification_results, cropped_image_metadata)
-        else:
-            collated_metadata = {}
-        print collated_metadata
-        self.network.send("classification_data_to_conductor", (shelf, camera, collated_metadata))
-
-    def return_raw_images(self):
-        filenames = [ filename for filename in os.listdir(self.capture_path) if filename.endswith(".png") ]
-        ocv_imgs  = [None, None, None]
-        for filename in filenames:
-            shelf_id, camera_id, light_level = self.return_env_data(filename)
-            print 'loading %s' % (filename)
-            ocv_imgs[int(light_level)] = cv2.imread(os.path.join(self.capture_path, filename))
-        print "sending raw images"
-        for i, ocv_img in enumerate(ocv_imgs):
-            image_raw = base64.b64encode(cv2.imencode('.png', ocv_img)[1].tostring())
-            network.send("receive_image_overlay", ("raw_%s%s_%d.png" % (shelf_id, camera_id, i),image_raw))
-        print "sent raw images okay"
-
-    def  create_file_name(self, timestamp, light_level, raw_or_processed):
-        shelf = self.hostname[11:][:1]
-        camera = self.hostname[12:]
-        return "{}_{}_{}_{}_{}.png".format(timestamp, shelf,  camera, light_level, raw_or_processed) 
-
-    def run(self):
-        while True:
-            # print "Main.run 1"
-            topic, msg = self.queue.get(True)
-            # print "Main.run 2"
-            if topic == "capture_image":
-                print ">>>>>>>>>>>>>>", repr(msg)
-                light_level, timestamp = eval(msg)
-                if light_level in [0, "0"]: # on request 0, empty directory
-                    previous_filenames = [ previous_filename for previous_filename in os.listdir(self.capture_path) if previous_filename.endswith(".png") ]
-                    for previous_filename in previous_filenames:
-                        os.remove(   "{}{}".format(self.capture_path,  previous_filename) )
-                self.capture_image_and_save( self.create_file_name(timestamp, light_level, "raw") )
-            if topic == "process_images_and_report":
-                self.process_images_and_report()
-            if topic == "return_raw_images":
-                self.return_raw_images()
-
-
-# TODO: this function is used for generating training data and contains some
-# duplicate functionality -- maybe get rid of later?
-def capture_and_upload_image(timestamp, light, gdir, clear_dir):
-    print "capture and upload image"
-
-    if clear_dir:
-        # first, remove all existing files from the captures directory
-        old_filenames = os.listdir('/home/pi/supercooler/Captures')
-        for filename in old_filenames:
-            os.remove('/home/pi/supercooler/Captures/' + filename)
-
-    # create filename from time, light, and location
-    id_str = main.hostname[11] + main.hostname[12:].zfill(2)
-    filename = id_str + "_" + str(light) + "_" + timestamp + ".png"
-
-    # take picture and save image to file
-    main.camera.take_capture(filename)
-    time.sleep(0.5)
-
-    # upload image to specified directory in google drive
-    filepath = '/home/pi/supercooler/Captures/' + filename
-    subprocess.call(['gdrive', 'upload', '-p', gdir, filepath])
-
-# TODO: this function is used for generating training data and contains some
-# duplicate functionality -- maybe get rid of later?
-def parse_and_annotate_images(timestamp, gdir_annotated, gdir_parsed):
-    print "parse and annotate images"
-
-    # ------- PARSE IMAGES ----------------------------------------------------
-
-    # set up image parser and get list of recent captures
-    parser = Image_Parser()
-    capture_path = '/home/pi/supercooler/Captures'
-    filenames = [ filename for filename in os.listdir(capture_path) \
-        if filename.endswith(".png") ]
-    
-    # store references to images (will be nparrays for opencv)
-    ocv_imgs = [None, None, None]
-    
-    # convert images in capture directory to nparrays
-    for filename in filenames:
-        ocv_imgs[int(filename[4])] = \
-            cv2.imread(os.path.join(capture_path, filename))
-
-    # run parser, get image bounds and undistorted image
-    bounds_list, ocv_img_with_overlay, ocv_img_out = \
-        parser.parse(ocv_imgs[0], ocv_imgs[1], ocv_imgs[2])
-
-    # empty ParsedCaptures directory
-    for filename in os.listdir('/home/pi/supercooler/ParsedCaptures'):
-        if filename.endswith(".jpg"):
-            os.remove('/home/pi/supercooler/ParsedCaptures/' + filename)
-
-
-    # ------- SAVE ANNOTATION -------------------------------------------------
-
-    # prep for writing to file (construct filename + filepath)
-    id_str = main.hostname[11] + main.hostname[12:].zfill(2)
-    filename = id_str + "_annotated_" + timestamp + ".jpg"
-    filepath = "/home/pi/supercooler/ParsedCaptures/" + filename
-    
-    # encode as jpeg and write to file
-    overlay_jpg = cv2.imencode('.jpg', ocv_img_with_overlay)[1].tostring()
-    with open(filepath, 'wb') as f:
-        f.write(overlay_jpg)
-    
-    # upload to google drive
-    subprocess.call(['gdrive', 'upload', '-p', gdir_annotated, filepath])
-
-    
-    # -------- CROP & UPLOAD IMAGES -------------------------------------------
-
-    # make a new directory for parsed images
-    mkdir_stdout = \
-        subprocess.check_output(['gdrive', 'mkdir', '-p', gdir_parsed, id_str])
-    gdir_cam = mkdir_stdout.split(" ")[1]
-
-    for bounds in bounds_list:
-        # crop image and encode as jpeg
-        x, y, w, h = bounds
-        img_crop = ocv_img_out[y:y+h, x:x+w]
-        img_jpg = cv2.imencode('.jpg', img_crop)[1].tostring()
-            
-        # create filename from img data
-        filename = id_str + "_" + timestamp + "_" + str(x) + "_" + str(y) + ".jpg"
-        filepath = "/home/pi/supercooler/ParsedCaptures/" + filename
-            
-        # write cropped image to file and upload to drive
-        with open(filepath, 'wb') as f:
-            f.write(img_jpg)
-        subprocess.call(['gdrive', 'upload', '-p', gdir_cam, filepath])
-
-
-def network_status_handler(msg):
-    print "network_status_handler", msg
-
-def network_message_handler(msg):
-    print "network_message_handler", msg
-    topic = msg[0]
-    data = msg[1]
-    #host, sensor, data = yaml.safe_load(msg[1])
-    if topic == "__heartbeat__":
-        print "heartbeat received", msg
-    elif topic == "reboot":
-        os.system("sudo reboot now")
-    elif topic == "remote_update":
-        print "starting remote_update"
-        [cool, birds, update, upgrade] = eval(msg[1])
-        print repr([cool, birds, update, upgrade])
-        if cool:
-            print "cool"
-            subprocess.call(['sudo', 'git', 'pull'], cwd='/home/pi/supercooler')
-        if birds:
-            print "birds"
-            subprocess.call(['sudo', 'git', 'pull'], cwd='/home/pi/thirtybirds_2_0')
-        network.send("update_complete", network_info.getHostName())
-
-    # take a picture and upload the image to google drive
-    elif topic == "capture_and_upload":
-        capture_and_upload_image(*eval(data))
-
-    elif topic == "parse_and_annotate":
-        print 'parse_and_annotate'
-        parse_and_annotate_images(*eval(data))
-
-    elif topic == "remote_update_scripts":
-        updates_init("/home/pi/supercooler", False, True)
-        network.send("update_complete", network_info.getHostName())
-    elif topic == "client_monitor_request":
-        network.send("client_monitor_response", main.thirtybirds_client_monitor_client.send_client_status())
-    else: # [ "capture_image" ]
-        main.add_to_queue(topic, data)
-        
-    """    
-    elif topic == hostname:
-        print "testing png file sending"
-
-        filename = "capture" + hostname[11:] + ".png"
-        main.camera.take_capture(filename)
-
-        with open("/home/pi/supercooler/Captures/" + filename, "rb") as f:
-            data = f.read()
-            network.send("found_beer", base64.b64encode(data))
-    """
-main = None
-
-
-def init(HOSTNAME):
-    global network
-    network = network_init(
-        hostname=HOSTNAME,
+class Network(object):
+    def __init__(self, hostname, network_message_handler, network_status_handler):
+        self.hostname = hostname
+        self.thirtybirds = thirtybirds_network(
+        hostname=hostname,
         role="client",
         discovery_multicastGroup=settings.discovery_multicastGroup,
         discovery_multicastPort=settings.discovery_multicastPort,
@@ -445,24 +507,139 @@ def init(HOSTNAME):
         message_callback=network_message_handler,
         status_callback=network_status_handler
     )
-    #global hostname
-    #hostname = HOSTNAME
-    global main 
-    main = Main(HOSTNAME, network)
+    def copy_to_gdrive(self, google_drive_directory_id, filepath):
+        try:
+            subprocess.call(['gdrive', 'upload', '-p', google_drive_directory_id, filepath])
+        except Exception as e:
+            print "exception in Network.copy_to_gdrive", e
+                
+
+########################
+## DATA 
+########################
+
+class Data(threading.Thread):
+    def __init__(self, hostname, network):
+        threading.Thread.__init__(self)
+
+#collate_classifcation_metadata
+
+#create_object_metadata
+
+#parse_and_annotate_images
+
+########################
+## MAIN
+########################
+
+class Main(threading.Thread):
+    def __init__(self, hostname):
+        threading.Thread.__init__(self)
+        self.hostname = hostname
+        self.capture_path = "/home/pi/supercooler/Captures/"
+        self.parsed_capture_path = "/home/pi/supercooler/ParsedCaptures/"
+        self.queue = Queue.Queue()
+        self.network = Network(hostname, self.network_message_handler, self.network_status_handler)
+        self.utils = Utils(hostname)
+        self.images = Images(self.capture_path)
+        self.distortion_map_dir = os.path.join(DISTORTION_MAP_PATH, self.utils.get_shelf_id(), self.utils.get_camera_id())
+        self.distortion_map_names = ["125.png", "205.png", "220.png", "230.png", "240.png"]
+        self.object_detection = Object_Detection()
+
+        self.network.thirtybirds.subscribe_to_topic("reboot")
+        self.network.thirtybirds.subscribe_to_topic("remote_update")
+        self.network.thirtybirds.subscribe_to_topic("remote_update_scripts")
+        self.network.thirtybirds.subscribe_to_topic("capture_image")
+        self.network.thirtybirds.subscribe_to_topic("client_monitor_request")
+        self.network.thirtybirds.subscribe_to_topic("capture_and_upload")
+        self.network.thirtybirds.subscribe_to_topic("perform_object_detection")
+        self.network.thirtybirds.subscribe_to_topic("process_images_and_report")
+        #self.network.thirtybirds.subscribe_to_topic(HOSTNAME)
+        #self.network.thirtybirds.subscribe_to_topic("return_raw_images")
+        #self.network.thirtybirds.subscribe_to_topic("parse_and_annotate")
+        #self.camera = camera_init(self.capture_path)
+
+    def network_message_handler(self, topic_msg):
+        # this method runs in the thread of the caller, not the tread of Main
+        print "Main.network_message_handler", topic_msg
+        topic, msg =  topic_msg # separating just to eval msg.  best to do it early.  it should be done in TB.
+        if len(msg) > 0: 
+            msg = eval(msg)
+        self.add_to_queue(topic, msg)
+
+    def network_status_handler(self, topic_msg):
+        # this method runs in the thread of the caller, not the tread of Main
+        print "Main.network_status_handler", topic_msg
+
+    def add_to_queue(self, topic, msg):
+        self.queue.put((topic, msg))
+
+    def run(self):
+        while True:
+            try:
+                topic, msg = self.queue.get(True)
+                print "main.run topic=",repr(topic)
+                print "main.run msg=",repr(msg)
+                if topic == "reboot":
+                    self.utils.reboot()
+
+                if topic == "remote_update":
+                    supercooler, thirtybirds, update, upgrade = msg
+                    self.utils.remote_update_git(supercooler, thirtybirds, update, upgrade)
+                    self.network.thirtybirds.send("update_complete", self.hostname)
+
+                if topic == "remote_update_scripts":
+                    self.utils.remote_update_scripts()
+                    self.network.thirtybirds.send("update_complete", self.hostname)
+
+                if topic == "capture_image":
+                    light_level, timestamp = msg
+                    if light_level in [0, "0"]: # on request 0, empty directory
+                        self.images.delete_captures()
+                    filename = self.utils.create_image_file_name(timestamp, light_level, "raw")
+                    self.images.capture_image(filename)
+
+                if topic == "client_monitor_request":
+                    self.network.thirtybirds.send("client_monitor_response", self.utils.get_client_status())
+
+                if topic == "capture_and_upload":
+                    print msg
+                    print repr(msg)
+                    timestamp, light_level, google_drive_directory_id, clear_dir = msg
+                    if clear_dir: self.images.delete_captures()
+                    self.images.capture_image(self.utils.create_image_file_name(timestamp, light_level, "raw"))
+                    self.network.copy_to_gdrive(google_drive_directory_id, os.path.join(self.capture_path, filename))
+
+                if topic in ["perform_object_detection", "process_images_and_report"]:
+                    for filepath in self.images.get_capture_filepaths():
+                        capture_raw_ocv = cv_helpers.read_image(filepath)
+                        print "distortion map path = ", os.path.join(self.distortion_map_dir, self.distortion_map_names[4])
+                        distortion_map_ocv = cv_helpers.read_image(os.path.join(self.distortion_map_dir, self.distortion_map_names[4])) 
+                        print "debug", 0
+                        lens_correction = Lens_Correction(distortion_map_ocv)
+                        print "debug", 1
+                        capture_corrected_ocv = lens_correction.correct(capture_raw_ocv)
+                        print "debug", 2
+                        capture_with_bottles_ocv, bottle_circles = self.object_detection.bottle_detection( capture_corrected_ocv )
+                        print "debug", 3
+                        capture_with_cans_ocv, can_circles = self.object_detection.can_detection( capture_corrected_ocv )
+                        print "debug", 4
+
+                #if topic == "process_images_and_report":
+                #if topic == self.hostname:
+                #if topic == "return_raw_images":
+                #if topic == "capture_and_upload":
+                #if topic == "parse_and_annotate":
+            except Exception as e:
+                exc_type, exc_value, exc_traceback = sys.exc_info()
+                print e, repr(traceback.format_exception(exc_type, exc_value,exc_traceback))
+
+########################
+## INIT
+########################
+
+def init(HOSTNAME):
+    main = Main(HOSTNAME)
     main.daemon = True
     main.start()
-
-    network.subscribe_to_topic("system")  # subscribe to all system messages
-    network.subscribe_to_topic("reboot")
-    network.subscribe_to_topic("process_images_and_report")
-    network.subscribe_to_topic("capture_image")
-    network.subscribe_to_topic("remote_update")
-    network.subscribe_to_topic(HOSTNAME)
-    network.subscribe_to_topic("client_monitor_request")
-    network.subscribe_to_topic("return_raw_images")
-    network.subscribe_to_topic("capture_and_upload")
-    network.subscribe_to_topic("parse_and_annotate")
-
     return main
-
-    
