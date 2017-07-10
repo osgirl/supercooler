@@ -165,6 +165,13 @@ def network_message_handler(msg):
             subprocess.call(['sudo', 'git', 'pull'], cwd='/home/pi/thirtybirds_2_0')
         network.send("update_complete", network_info.getHostName())
 
+    elif topic == "remote_checkout":
+        out = subprocess.check_output(
+            ['sudo', 'git', 'checkout', eval(msg[1])],
+            cwd='/home/pi/supercooler')
+
+        network.send("update_complete", out)
+
     # take a picture and upload the image to google drive
     elif topic == "capture_and_upload":
         capture_and_upload_image(*eval(data))

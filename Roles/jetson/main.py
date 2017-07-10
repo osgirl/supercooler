@@ -90,6 +90,12 @@ class Main(): # rules them all
     def client_monitor_add_to_queue(self,hostname, git_pull_date, pickle_version):
         self.client_monitor_server.add_to_queue(hostname, git_pull_date, pickle_version)
 
+    def send_update_command(self, cool=False, birds=False, update=False, upgrade=False):
+        self.network.send("remote_update", [cool, birds, update, upgrade])
+
+    def send_checkout_command(self, branch):
+        self.network.send("remote_update", str(branch))
+
     def get_training_images(self):
         if time.time() - self.last_closure < 360:
             print "no action taken, waiting for parse/upload to finish..."
@@ -98,7 +104,7 @@ class Main(): # rules them all
         self.last_closure = time.time()
 
         # create directories on google drive for storing captures
-        timestamp = time.strftime("%Y-%m-%d-%H-%m-%S")
+        timestamp = time.strftime("%Y-%m-%d-%H-%M-%S")
         dir_captures_now = mkdir_gdrive(self.gdir_captures, 'captures_' + timestamp)
         dir_unprocessed = mkdir_gdrive(dir_captures_now, 'unprocessed')
         dir_annotated = mkdir_gdrive(dir_captures_now, 'annotated')
