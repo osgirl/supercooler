@@ -205,7 +205,7 @@ def get_distortion_points(distortion_map):
     flattened_image = flattened_image * 255
     flattened_image = paste_transparent(flattened_image, distortion_map)
 
-    detector = cv2.SimpleBlobDetector()
+    detector = cv2.SimpleBlobDetector_create()
     keypoints = detector.detect(flattened_image)
 
     distortion_points = map(lambda x: (int(x.pt[0]), int(x.pt[1])), keypoints)
@@ -405,7 +405,7 @@ def can_detection(image, max_circle_radius=100, draw_circles_on_processed=False)
     processed = cv2.morphologyEx(processed, cv2.MORPH_CLOSE, kernel)
 
     circles = cv2.HoughCircles(
-        processed, method=cv2.cv.CV_HOUGH_GRADIENT, dp=3, minDist=45,
+        processed, method=cv2.HOUGH_GRADIENT, dp=3, minDist=45,
         param1=250, param2=200, minRadius=45, maxRadius=max_circle_radius)
 
     processed = gray_to_RGB(processed)
@@ -439,7 +439,7 @@ def bottle_detection( image, number_of_octaves=4 ):
     octaves = map( lambda img: cv2.Canny(img, 150, 250, L2gradient=True, apertureSize=3), octaves )
     
     octave_circles = map( lambda i: cv2.HoughCircles(
-        octaves[i], method=cv2.cv.CV_HOUGH_GRADIENT, dp=2.8, minDist=45/(i+1), param1=250, param2=180/(i+1), minRadius=30/(i+1), maxRadius=60/(i+1)),
+        octaves[i], method=cv2.HOUGH_GRADIENT, dp=2.8, minDist=45/(i+1), param1=250, param2=180/(i+1), minRadius=30/(i+1), maxRadius=60/(i+1)),
         range(number_of_octaves) )
 
     octaves = map( lambda img: gray_to_RGB(img), octaves)
@@ -541,7 +541,7 @@ class Real_World_Locator(object):
       flattened_image = flattened_image * 255
       flattened_image = paste_transparent(flattened_image, location_map)
 
-      detector = cv2.SimpleBlobDetector()
+      detector = cv2.SimpleBlobDetector_create()
       keypoints = detector.detect(flattened_image)
 
       if ( len(keypoints) is not 2):
