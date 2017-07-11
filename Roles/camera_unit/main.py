@@ -607,7 +607,8 @@ class Main(threading.Thread):
                     print repr(msg)
                     timestamp, light_level, google_drive_directory_id, clear_dir = msg
                     if clear_dir: self.images.delete_captures()
-                    self.images.capture_image(self.utils.create_image_file_name(timestamp, light_level, "raw"))
+                    filename = self.utils.create_image_file_name(timestamp, light_level, "raw")
+                    self.images.capture_image(filename)
                     self.network.copy_to_gdrive(google_drive_directory_id, os.path.join(self.capture_path, filename))
 
                 if topic in ["perform_object_detection", "process_images_and_report"]:
