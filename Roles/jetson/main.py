@@ -57,7 +57,7 @@ class Images():
         print ""
         print "receive_image_data", repr(payload)
         print ""
-        return
+        return_raw_images
         # decode and store image as numpy array
         img_arr = np.fromstring(base64.decodestring(payload["image"]), np.uint8)
         img = cv2.imdecode(img_arr, cv2.IMREAD_COLOR)
@@ -581,8 +581,11 @@ def network_status_handler(msg):
 def network_message_handler(msg):
     try:
         global main
-        print "network_message_handler", msg
+
         topic = msg[0]
+
+        if topic != "client_monitor_response":
+            print "network_message_handler", msg
 
         if len(msg[1]) > 0:
             payload = eval(msg[1])

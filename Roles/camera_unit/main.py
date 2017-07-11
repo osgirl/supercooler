@@ -600,12 +600,19 @@ class Main(threading.Thread):
                 if topic in ["perform_object_detection", "process_images_and_report"]:
                     potential_objects = []
                     for filepath in self.images.get_capture_filepaths():
+                        print "main.run opening capture"
                         capture_raw_ocv = cv_helpers.read_image(filepath)
+                        print "main.run opening distortion map"
                         distortion_map_ocv = cv_helpers.read_image(os.path.join(self.distortion_map_dir, self.distortion_map_names[4])) 
+                        print "main.run initializing lens correction"
                         lens_correction = Lens_Correction(distortion_map_ocv)
+                        print "main.run performing lens correction"
                         capture_corrected_ocv = lens_correction.correct(capture_raw_ocv)
+                        print "main.run bottle detection"
                         capture_with_bottles_ocv, bottle_circles = self.object_detection.bottle_detection( capture_corrected_ocv )
+                        print "main.run can detection"
                         capture_with_cans_ocv, can_circles = self.object_detection.can_detection( capture_corrected_ocv )
+                        print "main.run collecting object  data"
                         for bottle_circle in bottle_circles:
                             potential_objects.append( data.create_blank_potential_object("bottle", bottle_circle))
                         for can_circle in can_circles:
