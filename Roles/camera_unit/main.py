@@ -614,9 +614,9 @@ class Main(threading.Thread):
                         capture_with_cans_ocv, can_circles = self.object_detection.can_detection( capture_corrected_ocv )
                         print "main.run collecting object  data"
                         for bottle_circle in bottle_circles:
-                            potential_objects.append( data.create_blank_potential_object("bottle", bottle_circle))
+                            potential_objects.append( self.data.create_blank_potential_object("bottle", bottle_circle))
                         for can_circle in can_circles:
-                            potential_objects.append( data.create_blank_potential_object("can", can_circle))
+                            potential_objects.append( self.data.create_blank_potential_object("can", can_circle))
                     self.network.thirtybirds.send(
                         "receive_image_data", 
                         {
