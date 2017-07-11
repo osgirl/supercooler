@@ -406,7 +406,7 @@ class Main(): # rules them all
         # tell camera units to captures images at each light level
         print "start light sequence"
         network.send("set_light_level", self.light_level_sequence[0])
-        self.camera_units.capture_image(light_level_sequence_position, timestamp)
+        self.camera_units.capture_image(0, timestamp)
         time.sleep(self.camera_capture_delay)
         #for light_level_sequence_position in range(3):
         #    network.send("set_light_level", self.light_level_sequence[light_level_sequence_position])
@@ -421,7 +421,7 @@ class Main(): # rules them all
 
         # pause while conductor waits for captures, then start classification
         print "waiting for captures... "
-        time.sleep(240)
+        #time.sleep(240)
 
         # --------------------------------------------------------------------------
         # TODO: After the demo, put this back in. For now, we'll have watson clients
@@ -438,7 +438,7 @@ class Main(): # rules them all
         #
 
         print "update web interface"
-        self.web_interface.send_report(self.inventory)
+        #self.web_interface.send_report(self.inventory)
 
         #for item in self.inventory:
         #    self.web_interface.send_report(item)
@@ -542,13 +542,20 @@ class Main(): # rules them all
         dir_unprocessed = mkdir_gdrive(dir_captures_now, 'unprocessed')
         dir_annotated = mkdir_gdrive(dir_captures_now, 'annotated')
         dir_parsed = mkdir_gdrive(dir_captures_now, 'parsed')
+
+
+
+        network.send("set_light_level", self.light_level_sequence[0])
+        time.sleep(1)
+        network.send("capture_and_upload", str([timestamp, 0, dir_unprocessed, light_level == 0]))
+
         
         # tell camera units to captures images at each light level
-        for light_level in range(3):
-            network.send("set_light_level", self.light_level_sequence[light_level])
-            time.sleep(1)
-            network.send("capture_and_upload",
-                str([timestamp, light_level, dir_unprocessed, light_level == 0]))
+        #for light_level in range(3):
+        #    network.send("set_light_level", self.light_level_sequence[light_level])
+        #    time.sleep(1)
+        #    network.send("capture_and_upload",
+        #        str([timestamp, light_level, dir_unprocessed, light_level == 0]))
 
             time.sleep(self.camera_capture_delay)
 
@@ -612,8 +619,8 @@ def network_message_handler(msg):
             images.receive_image_data(payload)
 
         if topic == "door_closed":
-            main.get_raw_images()
-            #main.door_close_event_handler()
+            #main.get_raw_images()
+            main.door_close_event_handler()
 
         if topic == "door_opened":
             main.door_open_event_handler()
