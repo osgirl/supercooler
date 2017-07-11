@@ -117,25 +117,15 @@ class Object_Detection(object):
         #return (circles, visualisation)
 
     def can_detection(self, image, max_circle_radius=100, draw_circles_on_processed=False):
-        print "debug, can_detection,", 0
         processed = image.copy()
-        print "debug, can_detection,", 1
         vis = image.copy()
-        print "debug, can_detection,", 2
         edges = cv2.Canny(processed, 150, 250, L2gradient=True, apertureSize=3)
-        print "debug, can_detection,", 3
         extendedWidth = edges.shape[0] + 2*max_circle_radius
-        print "debug, can_detection,", 4
         extendedHeight = edges.shape[1] + 2*max_circle_radius
-        print "debug, can_detection,", 5
         processed = np.zeros((extendedWidth, extendedHeight), np.uint8)
-        print "debug, can_detection,", 6
         processed[max_circle_radius:max_circle_radius + edges.shape[0], max_circle_radius:max_circle_radius + edges.shape[1]] = edges
-        print "debug, can_detection,", 7
         kernel = np.ones((3, 3), dtype="uint8")
-        print "debug, can_detection,", 8
         processed = cv2.morphologyEx(processed, cv2.MORPH_CLOSE, kernel)
-        print "debug, can_detection,", 9
         circles = cv2.HoughCircles(
             processed, 
             method=cv2.HOUGH_GRADIENT, 
@@ -146,14 +136,10 @@ class Object_Detection(object):
             minRadius=45, 
             maxRadius=max_circle_radius
         )
-        print "debug, can_detection,", 10
         processed = cv_helpers.gray_to_RGB(processed)
-        print "debug, can_detection,", 11
         if (draw_circles_on_processed):
             processed = cv_helpers.draw_circles(processed, circles)
-        print "debug, can_detection,", 12
         circles = self.remove_border_from_circles(processed, circles, border=max_circle_radius)
-        print "debug, can_detection,", 13
         return processed, circles
 
     def remove_border_from_circles(self, image, circles, border, min_ratio=0.2):
@@ -166,15 +152,10 @@ class Object_Detection(object):
         return np.array([filtered_circles])
 
     def bottle_detection(self,  image, number_of_octaves=4 ):
-        print "debug, bottle_detection,", 0
         processed = image.copy()
-        print "debug, bottle_detection,", 1
         octaves = [ cv2.resize( processed, dsize=(0, 0), fx=1/float(x), fy=1/float(x), interpolation=cv2.INTER_LINEAR ) for x in range(1, number_of_octaves+1) ]
-        print "debug, bottle_detection,", 2, octaves
         octaves = map( lambda img: cv2.GaussianBlur(img, (5, 5), 0, 0), octaves )
-        print "debug, bottle_detection,", 3, octaves
         octaves = map( lambda img: cv2.Canny(img, 150, 250, L2gradient=True, apertureSize=3), octaves )
-        print "debug, bottle_detection,", 4, octaves
         octave_circles = map( 
                 lambda i: cv2.HoughCircles(
                         octaves[i], 
@@ -186,13 +167,9 @@ class Object_Detection(object):
                 ),
                 range(number_of_octaves) 
             )
-        print "debug, bottle_detection,", 5
         octaves = map( lambda img: cv_helpers.gray_to_RGB(img), octaves)
-        print "debug, bottle_detection,", 6
         circles = self.merge_octave_circles( octave_circles )
-        print "debug, bottle_detection,", 7
         circles = self.filter_octave_circles( circles )
-        print "debug, bottle_detection,", 8
         return processed, circles
 
     def merge_octave_circles(self, octave_circles):
@@ -509,7 +486,7 @@ class Network(object):
     )
     def copy_to_gdrive(self, google_drive_directory_id, filepath):
         try:
-            subprocess.call(['gdrive', 'upload', '-p', google_drive_directory_id, filepath])
+            subprocess.Popen(['gdrive', 'upload', '-p', google_drive_directory_id, filepath])
         except Exception as e:
             print "exception in Network.copy_to_gdrive", e
                 
@@ -518,9 +495,17 @@ class Network(object):
 ## DATA 
 ########################
 
-class Data(threading.Thread):
-    def __init__(self, hostname, network):
-        threading.Thread.__init__(self)
+class Data(object):
+    def __init__(self, shelf_id, camera_id):
+        self. shelf_id = shelf_id
+        self.camera_id = camera_id
+    def create_blank_potential_object(self, object_type, coords, undistorted_filename):
+            return {
+                "shelf_id":self.shelf_id,
+                "camera_id":self.camera_id,
+                "object_type": object_type, 
+                "coords":coords
+            }
 
 #collate_classifcation_metadata
 
@@ -545,6 +530,7 @@ class Main(threading.Thread):
         self.distortion_map_dir = os.path.join(DISTORTION_MAP_PATH, self.utils.get_shelf_id(), self.utils.get_camera_id())
         self.distortion_map_names = ["125.png", "205.png", "220.png", "230.png", "240.png"]
         self.object_detection = Object_Detection()
+        self.data = Data(self.utils.get_shelf_id(), self.utils.get_camera_id())
 
         self.network.thirtybirds.subscribe_to_topic("reboot")
         self.network.thirtybirds.subscribe_to_topic("remote_update")
@@ -612,19 +598,28 @@ class Main(threading.Thread):
                     self.network.copy_to_gdrive(google_drive_directory_id, os.path.join(self.capture_path, filename))
 
                 if topic in ["perform_object_detection", "process_images_and_report"]:
+                    potential_objects = []
                     for filepath in self.images.get_capture_filepaths():
                         capture_raw_ocv = cv_helpers.read_image(filepath)
-                        print "distortion map path = ", os.path.join(self.distortion_map_dir, self.distortion_map_names[4])
                         distortion_map_ocv = cv_helpers.read_image(os.path.join(self.distortion_map_dir, self.distortion_map_names[4])) 
-                        print "debug", 0
                         lens_correction = Lens_Correction(distortion_map_ocv)
-                        print "debug", 1
                         capture_corrected_ocv = lens_correction.correct(capture_raw_ocv)
-                        print "debug", 2
                         capture_with_bottles_ocv, bottle_circles = self.object_detection.bottle_detection( capture_corrected_ocv )
-                        print "debug", 3
                         capture_with_cans_ocv, can_circles = self.object_detection.can_detection( capture_corrected_ocv )
-                        print "debug", 4
+                        for bottle_circle in bottle_circles:
+                            potential_objects.append( data.create_blank_potential_object("bottle", bottle_circle))
+                        for can_circle in can_circles:
+                            potential_objects.append( data.create_blank_potential_object("can", can_circle))
+                    self.network.thirtybirds.send(
+                        "receive_image_data", 
+                        {
+                            "shelf_id":self.utils.get_shelf_id(),
+                            "camera_id":self.utils.get_camera_id(),
+                            "potential_objects":potential_objects,
+                            "undistorted_capture_ocv":capture_corrected_ocv
+                        }
+                    )
+
 
                 #if topic == "process_images_and_report":
                 #if topic == self.hostname:

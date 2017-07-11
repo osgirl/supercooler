@@ -54,7 +54,10 @@ class Images():
             os.remove("{}{}".format(self.capture_path,  previous_filename) )
 
     def receive_image_data(self, payload):
-
+        print ""
+        print "receive_image_data", repr(payload)
+        print ""
+        return
         # decode and store image as numpy array
         img_arr = np.fromstring(base64.decodestring(payload["image"]), np.uint8)
         img = cv2.imdecode(img_arr, cv2.IMREAD_COLOR)
@@ -402,10 +405,13 @@ class Main(): # rules them all
         timestamp = time.strftime("%Y-%m-%d-%H-%m-%S")
         # tell camera units to captures images at each light level
         print "start light sequence"
-        for light_level_sequence_position in range(3):
-            network.send("set_light_level", self.light_level_sequence[light_level_sequence_position])
-            self.camera_units.capture_image(light_level_sequence_position, timestamp)
-            time.sleep(self.camera_capture_delay)
+        network.send("set_light_level", self.light_level_sequence[0])
+        self.camera_units.capture_image(light_level_sequence_position, timestamp)
+        time.sleep(self.camera_capture_delay)
+        #for light_level_sequence_position in range(3):
+        #    network.send("set_light_level", self.light_level_sequence[light_level_sequence_position])
+        #    self.camera_units.capture_image(light_level_sequence_position, timestamp)
+        #    time.sleep(self.camera_capture_delay)
 
         # turn off the lights
         network.send("set_light_level", 0)
