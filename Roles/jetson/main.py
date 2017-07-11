@@ -557,7 +557,7 @@ class Main(): # rules them all
         #    network.send("capture_and_upload",
         #        str([timestamp, light_level, dir_unprocessed, light_level == 0]))
 
-            time.sleep(self.camera_capture_delay)
+        time.sleep(self.camera_capture_delay)
 
         # turn off the lights
         network.send("set_light_level", 0)
