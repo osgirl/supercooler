@@ -499,7 +499,7 @@ class Data(object):
     def __init__(self, shelf_id, camera_id):
         self. shelf_id = shelf_id
         self.camera_id = camera_id
-    def create_blank_potential_object(self, object_type, coords, undistorted_filename):
+    def create_blank_potential_object(self, object_type, coords):
             return {
                 "shelf_id":self.shelf_id,
                 "camera_id":self.camera_id,
@@ -547,8 +547,10 @@ class Main(threading.Thread):
 
     def network_message_handler(self, topic_msg):
         # this method runs in the thread of the caller, not the tread of Main
-        print "Main.network_message_handler", topic_msg
+
         topic, msg =  topic_msg # separating just to eval msg.  best to do it early.  it should be done in TB.
+        if topic not in  ["client_monitor_request"]:
+            print "Main.network_message_handler", topic_msg
         if len(msg) > 0: 
             msg = eval(msg)
         self.add_to_queue(topic, msg)
