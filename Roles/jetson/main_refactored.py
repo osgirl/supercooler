@@ -68,7 +68,7 @@ class Network(object):
 
 
 class Thirtybirds_Client_Monitor_Server(threading.Thread):
-    def __init__(self, network, hostnames, update_period=30):
+    def __init__(self, network, hostnames, update_period=60):
         threading.Thread.__init__(self)
         self.update_period = update_period
         self.current_clients = {}
@@ -110,9 +110,10 @@ class Thirtybirds_Client_Monitor_Server(threading.Thread):
                 self.hosts[hostname]["timestamp"] = timestamp
                 self.hosts[hostname]["pickle_version"] = pickle_version
                 self.hosts[hostname]["git_pull_date"] = git_pull_date
-            if not cmp(previous_hosts,self.hosts):
-                self.print_current_clients()
-            previous_hosts = self.hosts
+            #if not cmp(previous_hosts,self.hosts):
+            #    self.print_current_clients()
+            #previous_hosts = self.hosts
+            self.print_current_clients()
 
 
 class Camera_Units(object):
@@ -136,7 +137,7 @@ class Images(object):
         self.capture_path = capture_path
 
     def store(self, filename, binary_image_data):
-        filepath = os.path.join(self.capture_path, filename)
+        filepath = os.path.join(self.capture_path, filename) 
         cv2.imwrite(filepath, binary_image_data)
 
     def clear(self):
@@ -249,8 +250,8 @@ class Main(threading.Thread):
         self.gdrive_captures_directory = "0BzpNPyJoi6uoSGlhTnN5RWhXRFU"
         self.light_level = 10
         self.camera_capture_delay = 10
-        self.object_detection_wait_period = 300
-        self.whole_process_wait_period = 330
+        self.object_detection_wait_period = 240
+        self.whole_process_wait_period = 300
         self.soonest_run_time = time.time()
         self.camera_units = Camera_Units(self.network)
         self.response_accumulator = Response_Accumulator()
@@ -329,10 +330,18 @@ class Main(threading.Thread):
                     shelf_id =  msg["shelf_id"]
                     camera_id =  int(msg["camera_id"])
                     potential_objects =  msg["potential_objects"]
+                    undistorted_capture_png = msg["undistorted_capture_ocv"]
+                    
 
                     self.response_accumulator.add_potential_objects(shelf_id, camera_id, potential_objects, True)
                     filename = "{}_{}.png".format(shelf_id, camera_id)
-                    self.images_undistorted.store(filename, msg["undistorted_capture_ocv"])
+
+                    file_bytes = numpy.asarray(bytearray(img_stream.read()), dtype=numpy.uint8)
+
+                    undistorted_capture_ndarray = cv2.imdecode(file_bytes, cv2.IMREAD_UNCHANGED)
+                    #img_data_cvmat = cv.fromarray(img_data_ndarray) #  convert to old cvmat if needed
+
+                    self.images_undistorted.store(filename, undistorted_capture_ndarray)
 
                 if topic == "object_detection_complete":
                     print "OBJECT DETECTION TIMEOUT ( how's my timing? )"
