@@ -98,7 +98,7 @@ class Thirtybirds_Client_Monitor_Server(threading.Thread):
             print "%s: %s : %s: %s: %s" % (hostname, self.hosts[hostname]["present"], self.hosts[hostname]["timestamp"], self.hosts[hostname]["pickle_version"], self.hosts[hostname]["git_pull_date"])
 
     def run(self):
-        previous_hostnames = {}
+        previous_hosts = {}
         while True:
             self.empty_host_list()
             self.network.thirtybirds.send("client_monitor_request", "")
@@ -110,9 +110,9 @@ class Thirtybirds_Client_Monitor_Server(threading.Thread):
                 self.hosts[hostname]["timestamp"] = timestamp
                 self.hosts[hostname]["pickle_version"] = pickle_version
                 self.hosts[hostname]["git_pull_date"] = git_pull_date
-            if previous_hostnames != self.hostnames:
+            if previous_hosts != self.hosts:
                 self.print_current_clients()
-            previous_hostnames = self.hostnames
+            previous_hosts = self.hosts
 
 
 class Camera_Units(object):
