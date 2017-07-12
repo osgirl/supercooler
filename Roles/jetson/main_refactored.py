@@ -295,7 +295,8 @@ class Main(threading.Thread):
         while True:
             try:
                 topic, msg = self.queue.get(True)
-                print "Main.run", topic
+                if topic not in ["previous_hostnames"]:
+                    print "Main.run", topic
                 if topic == "client_monitor_response":
                     self.client_monitor_server.add_to_queue(msg[0],msg[2],msg[1])
                 if topic == "door_closed":
