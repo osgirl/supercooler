@@ -1,102 +1,70 @@
+"""
+jetson is the puppetmaster.
+
+    it :
+0) Manages Thirtybirds networking and the client monitor
+1) listens for door events
+2) publishes messages to supercooler-hardware to set  light levels 
+3) publishes messages to camera units to take captures
+4) publishes messages to camera units to  process captures and report object detection
+5) waits for camera units to return images 
+6) performs image classification
+7) identifies and removes duplicates
+8) collates inventory
+9) sends the inventory to EC2 interface.
+
+
+"""
 import base64
+import cv2
 import json
+import numpy as np
 import os
 import Queue
 import subprocess
+import tensorflow as tf
 import time
 import threading
+import traceback
 import settings
+import signal
+import sys
 import yaml
-import cv2
-
-import tensorflow as tf
-import numpy as np
 
 from thirtybirds_2_0.Network.manager import init as network_init
 from web_interface import WebInterface
 from classifier import Classifier
 
-class Camera_Units():
-    def __init__(self, network):
-            self.network = network
-    def capture_image(self, light_level_sequence_position, timestamp):
-        self.network.send("capture_image", (light_level_sequence_position, timestamp))
-    def process_images_and_report(self):
-        self.network.send("process_images_and_report", "")
-    def send_update_command(self, cool=False, birds=False, update=False, upgrade=False):
-        self.network.send("remote_update", [cool, birds, update, upgrade])
-    def send_update_scripts_command(self):
-        self.network.send("remote_update_scripts", "")
-    def send_reboot(self):
-        self.network.send("reboot")
-    def return_raw_images(self):
-        self.network.send("return_raw_images", "")
+CAPTURES_PATH = "/home/nvidia/supercooler/Captures/"
 
 
-class Images():
-    def __init__(self):
-        self.capture_path = "/home/nvidia/supercooler/Captures/"
-        # self.dir_classify = "/home/pi/supercooler/Captures/"
-        # self.dir_stitch = "/home/pi/supercooler/Captures_Stitching/"
-        self.captures = []
-        self.cropped_captures = []
-        self.undistorted_captures = None
-        self.clear_undistorted_captures()
-        self.potential_objects = []
+class Network(object):
+    def __init__(self, hostname, network_message_handler, network_status_handler):
+        self.hostname = hostname
+        self.thirtybirds = network_init(
+            hostname=hostname,
+            role="server",
+            discovery_multicastGroup=settings.discovery_multicastGroup,
+            discovery_multicastPort=settings.discovery_multicastPort,
+            discovery_responsePort=settings.discovery_responsePort,
+            pubsub_pubPort=settings.pubsub_pubPort,
+            message_callback=network_message_handler,
+            status_callback=network_status_handler
+        )
+    def copy_to_gdrive(self, google_drive_directory_id, filepath):
+        try:
+            subprocess.Popen(['gdrive', 'upload', '-p', google_drive_directory_id, filepath])
+        except Exception as e:
+            print "exception in Network.copy_to_gdrive", e
 
-    def clear_undistorted_captures(self):
-        self.undistorted_captures = {
-            'A':[{},{},{},{},{},{},{},{},{},{},{},{}],
-            'B':[{},{},{},{},{},{},{},{},{},{},{},{}],
-            'C':[{},{},{},{},{},{},{},{},{},{},{},{}],
-            'D':[{},{},{},{},{},{},{},{},{},{},{},{}]
-        }
-
-    def clear_potential_objects(self):
-        self.potential_objects = []
-
-    def receive_and_save(self, filename, raw_data):
-        file_path = "{}{}".format(self.capture_path,filename)
-        print "receive_and_save", file_path
-        image_64_decode = base64.decodestring(raw_data) 
-        image_result = open(file_path, 'wb') # create a writable image and write the decoding result
-        image_result.write(image_64_decode)
-
-    def clear_captures(self):
-        previous_filenames = [ previous_filename for previous_filename in os.listdir(self.capture_path) if previous_filename.endswith(".png") ]
-        for previous_filename in previous_filenames:
-            os.remove("{}{}".format(self.capture_path,  previous_filename) )
-
-    def receive_image_data(self, payload):
-        print ""
-        #print "receive_image_data", repr(payload["potential_objects"])
-        print ""
-        self.potential_objects.extend(payload["potential_objects"])
-
-        nparr = np.fromstring(payload["undistorted_capture_ocv"], np.uint8)
-        undistorted_capture_ocv = cv2.imdecode(nparr, cv2.CV_LOAD_IMAGE_COLOR)
-        return
-        # decode and store image as numpy array
-        img_arr = np.fromstring(base64.decodestring(payload["image"]), np.uint8)
-        img = cv2.imdecode(img_arr, cv2.IMREAD_COLOR)
-        self.captures.append(img)
-        index = len(self.captures) - 1    # store reference to index for crops
-
-        # iterate through list of image bounds, store cropped capture info
-        for i, bounds in enumerate(payload["bounds"]):
-            cropped_capture = {
-              "camera_id"   : payload["camera_id"],
-              "shelf_id"    : payload["shelf_id"],
-              "light_level" : payload["light_level"],
-              "img_index"   : index,
-              "bounds"      : bounds
-            }
-
-            # for now, only add images from shelf D (for sake of time)
-            if payload["shelf_id"] == "D":
-                self.cropped_captures.append(cropped_capture)
-
-images = Images()
+    def make_directory_on_gdrive(self, parent_dir, new_dir):
+        if parent_dir == None:
+            mkdir_stdout = \
+                subprocess.check_output(['gdrive', 'mkdir', new_dir])
+        else:
+            mkdir_stdout = \
+                subprocess.check_output(['gdrive', 'mkdir', '-p', parent_dir, new_dir])
+        return mkdir_stdout.split(" ")[1]
 
 
 class Thirtybirds_Client_Monitor_Server(threading.Thread):
@@ -130,9 +98,10 @@ class Thirtybirds_Client_Monitor_Server(threading.Thread):
             print "%s: %s : %s: %s: %s" % (hostname, self.hosts[hostname]["present"], self.hosts[hostname]["timestamp"], self.hosts[hostname]["pickle_version"], self.hosts[hostname]["git_pull_date"])
 
     def run(self):
+        previous_hosts = {}
         while True:
             self.empty_host_list()
-            self.network.send("client_monitor_request", "")
+            self.network.thirtybirds.send("client_monitor_request", "")
             time.sleep(self.update_period)
             while not self.queue.empty():
                 [hostname, git_pull_date, pickle_version, timestamp] = self.queue.get(True)
@@ -141,73 +110,54 @@ class Thirtybirds_Client_Monitor_Server(threading.Thread):
                 self.hosts[hostname]["timestamp"] = timestamp
                 self.hosts[hostname]["pickle_version"] = pickle_version
                 self.hosts[hostname]["git_pull_date"] = git_pull_date
+            #if not cmp(previous_hosts,self.hosts):
+            #    self.print_current_clients()
+            #previous_hosts = self.hosts
             self.print_current_clients()
 
 
-class Classification_Accumulator(threading.Thread):
-    def __init__(self, all_records_received_callback ):
-        threading.Thread.__init__(self)
-        self.all_records_received_callback = all_records_received_callback
-        self.duration_to_wait_for_records = 240
-        self.end_time = time.time()
-        self.queue = Queue.Queue()
-        self.clear_records()
-    def clear_records(self):
-        self.records_received = 0
-        self.shelves = {
-            'A':[{},{},{},{},{},{},{},{},{},{},{},{}],
-            'B':[{},{},{},{},{},{},{},{},{},{},{},{}],
-            'C':[{},{},{},{},{},{},{},{},{},{},{},{}],
-            'D':[{},{},{},{},{},{},{},{},{},{},{},{}]
-        }
-    def add_records(self, shelf, camera, records):
-
-        self.records_received += 1
-        self.shelves[shelf][camera] = records
-        #self.queue.put(self.records_received)
-
-    def start_timer(self):
-        #self.end_time = time.time() + self.duration_to_wait_for_records
-        print "Classification_Accumulator.start_timer"
-        self.queue.put(True)
-
-    def run(self):
-        while True:
-            _ = self.queue.get(True)
-            time.sleep(self.duration_to_wait_for_records)
-            self.all_records_received_callback(dict(self.shelves))
-            self.clear_records()
-
-class Main(): # rules them all
+class Camera_Units(object):
     def __init__(self, network):
-        self.network = network
-        self.capture_path = "/home/nvidia/supercooler/Captures/"
-        self.parsed_capture_path = "/home/nvidia/supercooler/ParsedCaptures/"
-        self.gdir_captures = "0BzpNPyJoi6uoSGlhTnN5RWhXRFU"
+            self.network = network
+    def capture_image(self, light_level_sequence_position, timestamp):
+        self.network.thirtybirds.send("capture_image", (light_level_sequence_position, timestamp))
+    def process_images_and_report(self):
+        self.network.thirtybirds.send("process_images_and_report", "")
+    def send_update_command(self, cool=False, birds=False, update=False, upgrade=False):
+        self.network.thirtybirds.send("remote_update", [cool, birds, update, upgrade])
+    def send_update_scripts_command(self):
+        self.network.thirtybirds.send("remote_update_scripts", "")
+    def send_reboot(self):
+        self.network.thirtybirds.send("reboot")
+    def return_raw_images(self):
+        self.network.thirtybirds.send("return_raw_images", "")
 
-        self.web_interface = WebInterface()
-        #self.lights = Lights()
-        self.light_level_sequence = [10, 5, 0]
-        self.camera_units = Camera_Units(self.network)
-        self.camera_capture_delay = 25
-        self.classifier = Classifier()
-        self.last_closure = time.time()
+class Images(object): 
+    def __init__(self, capture_path):
+        self.capture_path = capture_path
 
-        hostnames = [
-            "supercoolerA0","supercoolerA1","supercoolerA2","supercoolerA3","supercoolerA4","supercoolerA5","supercoolerA6","supercoolerA7","supercoolerA8","supercoolerA9","supercoolerA10","supercoolerA11",
-            "supercoolerB0","supercoolerB1","supercoolerB2","supercoolerB3","supercoolerB4","supercoolerB5","supercoolerB6","supercoolerB7","supercoolerB8","supercoolerB9","supercoolerB10","supercoolerB11",
-            "supercoolerC0","supercoolerC1","supercoolerC2","supercoolerC3","supercoolerC4","supercoolerC5","supercoolerC6","supercoolerC7","supercoolerC8","supercoolerC9","supercoolerC10","supercoolerC11",
-            "supercoolerD0","supercoolerD1","supercoolerD2","supercoolerD3","supercoolerD4","supercoolerD5","supercoolerD6","supercoolerD7","supercoolerD8","supercoolerD9","supercoolerD10","supercoolerD11",
-            "supercooler-hardware"
-        ]
-        self.client_monitor_server = Thirtybirds_Client_Monitor_Server(network, hostnames)
-        self.client_monitor_server.daemon = True
-        self.client_monitor_server.start()
+    def store(self, filename, binary_image_data):
+        with open(os.path.join(self.capture_path, filename),'wb') as f:
+            f.write(binary_image_data)
 
-        # initialize inventory -- this will be recalculated on door close events
-        self.inventory = []
+    def clear(self):
+        previous_filenames = self.get_filenames()
+        for previous_filename in previous_filenames:
+            os.remove("{}{}".format(self.capture_path,  previous_filename))
 
-        # map watson labels to corresponding ints for web interface
+    def get(self, filename):
+        pass
+
+    def get_filepaths(self):
+        filenames = self.get_filenames()
+        return list(map((lambda filename:  os.path.join(self.capture_path, filename)), filenames))
+
+    def get_filenames(self):
+        return [ filename for filename in os.listdir(self.capture_path) if filename.endswith(".png") ]
+
+
+class Beers(object):
+    def __init__(self):
         self.label_lookup = {
             "bottlebecks"               : 1,
             "bottlebudamerica"          : 2,
@@ -218,7 +168,7 @@ class Main(): # rules them all
             "bottleultra"               : 7,
             "bottleshocktopraspberry"   : 8,
             "bottleshocktoppretzel"     : 9,
-            "bottlestella"              : 10,
+            "bottlestella"              : 107,
             "canbudamerica"             : 11,
             "canbudlight"               : 12,
             "canbusch"                  : 13,
@@ -228,70 +178,6 @@ class Main(): # rules them all
             "canbudice"                 : 17,
             "canbudlight"               : 18
         }
-        self.classification_accumulator = Classification_Accumulator(self.all_records_received)
-        self.classification_accumulator.daemon = True
-        self.classification_accumulator.start()
-
-        self.camera_specific_offsets = {
-            'A' : {
-                0   : (0, 0),
-                1   : (0, 0),
-                2   : (0, 0),
-                3   : (0, 0),
-                4   : (0, 0),
-                5   : (0, 0),
-                6   : (0, 0),
-                7   : (0, 0),
-                8   : (0, 0),
-                9   : (0, 0),
-                10  : (0, 0),
-                11  : (0, 0)
-            },
-            'B' : {
-                0   : (0, 0),
-                1   : (0, 0),
-                2   : (0, 0),
-                3   : (0, 0),
-                4   : (0, 0),
-                5   : (0, 0),
-                6   : (0, 0),
-                7   : (0, 0),
-                8   : (0, 0),
-                9   : (0, 0),
-                10  : (0, 0),
-                11  : (0, 0)
-            },
-            'C' : {
-                0   : (0, 0),
-                1   : (0, 0),
-                2   : (0, 0),
-                3   : (0, 0),
-                4   : (0, 0),
-                5   : (0, 0),
-                6   : (0, 0),
-                7   : (0, 0),
-                8   : (0, 0),
-                9   : (0, 0),
-                10  : (0, 0),
-                11  : (0, 0)
-            },
-            'D' : {
-                0   : (0, 0),
-                1   : (0, 0),
-                2   : (0, 0),
-                3   : (0, 0),
-                4   : (0, 0),
-                5   : (0, 0),
-                6   : (0, 0),
-                7   : (0, 0),
-                8   : (0, 0),
-                9   : (0, 0),
-                10  : (0, 0),
-                11  : (0, 0)
-            }
-        }
-
-        self.camera_resolution = [1280, 720]
         self.product_specific_confidence_thresholds = {
             "bottlebecks"               : 0.99,
             "bottlebudamerica"     : 0.99,
@@ -312,373 +198,161 @@ class Main(): # rules them all
             "canbudlight"               : 0.99
         }
 
-    def map_camera_coords_to_shelf_coords(self, shelf_id, camera_id, x, y):
-
-        # standard x and y distances between camera origins. adjust as necessary
-        delta_x = 1200
-        delta_y = 600
-
-        # start by doing a rough transformation with standard offsets
-        x_prime = x + delta_x * (camera_id // 4)
-        y_prime = y + delta_y * (3 - camera_id % 4)
-
-        # now apply specific offsets as defined in self.camera_specific_offsets
-        x_prime = float(x_prime + self.camera_specific_offsets[shelf_id][camera_id][0])
-        y_prime = float(y_prime + self.camera_specific_offsets[shelf_id][camera_id][1])
-
-        # full-scale x and y in terms of camera coordinates, for scaling (adjust as necessary)
-        x_full_scale = float(delta_x * 2 + 1280)
-        y_full_scale = float(delta_y * 3 + 720)
-
-        # scale to web coordinates
-        x_full_scale_web = 492.0
-        y_full_scale_web = 565.0
-        x_offset_web = 120
-        y_offset_web = -80
-         
-        # scale and swap x and y coordinates
-        x_web = x_full_scale_web - (y_prime / y_full_scale * y_full_scale_web) + x_offset_web
-        y_web = x_prime / x_full_scale * x_full_scale_web + y_offset_web
-
-        return (x_web, y_web)
-
-    def all_records_received(self, records):
-        print "all records received"
-        print images.potential_objects
-        return
-        records_with_shelf_coords = self.map_camera_coords_to_shelf_coords(records)
-        print records_with_shelf_coords
-        print "all records received"
-        for shelf in ['A','B','C','D']:
-            for camera_id, camera_data in enumerate(records[shelf]):
-                print shelf, camera_id, camera_data
-                self.add_to_inventory(shelf, camera_id, camera_data)
-
-        self.filter_duplicates()
-        #print records
-
-    def add_to_inventory(self, shelf_id, camera_id, camera_data):
-
-        for (i, data) in camera_data.iteritems():
-            productname = data['class']
-            product_confidence_threshold = self.product_specific_confidence_thresholds[productname]
-
-            if data['score'] < product_confidence_threshold: continue;
-            print "adding data..."
-            try:
-                x_local = float(data['x']) + data['w']/2
-                y_local = float(data['y']) + data['h']/2
-
-                print "map from camera coords to shelf coords"
-                x_global, y_global = self.map_camera_coords_to_shelf_coords(shelf_id, camera_id, x_local, y_local)
-
-                self.inventory.append({
-                    "type"  : self.label_lookup[data['class']],
-                    "shelf" : shelf_id,
-                    "x"     : x_global,
-                    "y"     : y_global,
-                    "camera" : camera_id,
-                    "duplicate" : False, 
-                    "score" :  data['score']
-                })
-            except Exception as e:
-                print "exception in Main.add_to_inventory", e
-
-    def filter_duplicates(self):
-        return # until mapping of camera coords to shelf coords is complete
-        # tag duplicates
-        overlap_threshold = 100
-        for product_outer in self.inventory:
-            for product_inner in self.inventory:
-                if product_outer['camera'] == product_inner['camera']: # there will be no duplicates from the same camera
-                    continue
-                distance = math.sqrt(math.pow((product_outer['x']-product_inner['x']) ,2) + math.pow((product_outer['x']-product_inner['x']) ,2))
-                if distance < overlap_threshold:
-                    if product_inner['score'] < product_outer['score']:
-                        product_inner['duplicate'] = True 
-                    else:
-                        product_outer['duplicate'] = True 
-        # filter out duplicates
-        new_inventory = []
-        for product in self.inventory:
-            if not product ['duplicate']:
-                new_inventory.append(product)
-        self.inventory = new_inventory
-
-    def client_monitor_add_to_queue(self,hostname, git_pull_date, pickle_version):
-        self.client_monitor_server.add_to_queue(hostname, git_pull_date, pickle_version)
-
-
-    def door_open_event_handler(self):
-        print "Main.door_open_event_handler"
-        self.web_interface.send_door_open()
-
-    def door_close_event_handler(self):
-        print "Main.door_close_event_handler"
-        self.web_interface.send_door_close()
-        self.classification_accumulator.start_timer()
-        images.clear_captures()
-
-        # clear inventory (will be populated after classification)
-        self.inventory = []
-
-        timestamp = time.strftime("%Y-%m-%d-%H-%m-%S")
-        # tell camera units to captures images at each light level
-        print "start light sequence"
-        network.send("set_light_level", self.light_level_sequence[0])
-        self.camera_units.capture_image(0, timestamp)
-        time.sleep(self.camera_capture_delay)
-        #for light_level_sequence_position in range(3):
-        #    network.send("set_light_level", self.light_level_sequence[light_level_sequence_position])
-        #    self.camera_units.capture_image(light_level_sequence_position, timestamp)
-        #    time.sleep(self.camera_capture_delay)
-
-        # turn off the lights
-        network.send("set_light_level", 0)
-
-        # tell camera units to parse images and send back the data
-        self.camera_units.process_images_and_report()
-
-        # pause while conductor waits for captures, then start classification
-        print "waiting for captures... "
-        #time.sleep(240)
-
-        # --------------------------------------------------------------------------
-        # TODO: After the demo, put this back in. For now, we'll have watson clients
-        # on each of the pi zeros
-        
-        #print "begin classification process"
-        #self.classify_images()
-        # --------------------------------------------------------------------------
-
-
-        #if len(self.inventory) == 0:
-        #    print "empty... add dummy beer"
-        #    self.inventory.append({"type":1,"shelf":"A","x":10,"y":10})
-        #
-
-        print "update web interface"
-        #self.web_interface.send_report(self.inventory)
-
-        #for item in self.inventory:
-        #    self.web_interface.send_report(item)
-
-        print "done updating"
-
-        print "took inventory:"
-        print self.inventory
-
-
-    def classify_images(self, threshold=0.6):
-        # for convenience
-        classifier = self.classifier
-        #images = self.images
-        inventory = self.inventory
-
-        # if the best guess falls below this threshold, assume no match
-        confidence_threshold = threshold
-
-        print "Main.classify_images images.cropped_captures", images.cropped_captures
-        # start tensorflow session, necessary to run classifier
-        with tf.Session() as sess:
-            for i, cropped_capture in enumerate(images.cropped_captures):
-
-                # report progress every ten images
-                if (i%10) == 0:
-                    print 'processing %dth image' % i
-                    time.sleep(1)
-
-                # crop image and encode as jpeg (classifier expects jpeg)
-                print "cropping..."
-                x, y, w, h = cropped_capture["bounds"]
-                img_crop = images.captures[cropped_capture["img_index"]][y:y+h, x:x+w]
-                img_jpg = cv2.imencode('.jpg', img_crop)[1].tobytes()
-                print "cropped image, w,h = ", w, h
-
-                # ---------------------------------------------------------------------
-                # # TODO: remove this later -- this is just so we can see what's going on
-
-                # # create filename from img data
-                # filename = cropped_capture["shelf_id"]+cropped_capture["camera_id"]+\
-                #     "_" + str(x) + "_" + str(y) + ".jpg"
-                # filepath = "/home/pi/supercooler/ParsedCaptures/" + filename
-
-                # # write to file
-                # with open(filepath, 'wb') as f:
-                #     f.write(img_jpg)
-                # ---------------------------------------------------------------------
-
-                # get a list of guesses w/ confidence in this format:
-                # guesses = [(best guess, confidence), (next guess, confidence), ...]
-                print "running classifier..."
-                guesses = classifier.guess_image(sess, img_jpg)
-                best_guess, confidence = guesses[0]
-
-                # print result from classifier
-                print guesses
-
-                # if we beat the threshold, then update the inventory accordingly
-                if confidence > confidence_threshold:
-                    inventory.append({
-                        "type"  : self.label_lookup[best_guess],
-                        "shelf" : cropped_capture["shelf_id"],
-                        "x"     : x + w/2,
-                        "y"     : y + h/2,
-                    })
-
-                # TODO: move the temp sensing out of guess_image and into here
-
-
-    def test_classification(self):
-
-        # read in a test image for parsing/classification
-        with open("/home/nvidia/supercooler/Roles/conductor/test_img.png", "rb") as f:
-            img = base64.b64encode(f.read())
-
-        # clear inventory (will be populated after classification)
-        self.inventory = []
-
-        # an example payload -- this is what the camera units send over
-        payload = {
-            "camera_id"     : "A02",
-            "light_level"   : 2,
-            "image"         : img,
-            "bounds"        : [
-                (0, 0, 100, 200),
-                (250, 250, 200, 100),
-                (0, 200, 150, 150)
-            ]
-        }
-
-        images.receive_image_data(payload)  # store image data from payload
-        
-        self.classify_images(threshold=0.1)      # classify images
-
-    def get_raw_images(self):
-
-        # create directories on google drive for storing captures
-        timestamp = time.strftime("%Y-%m-%d-%H-%m-%S")
-        dir_captures_now = mkdir_gdrive(self.gdir_captures, 'captures_' + timestamp)
-        dir_unprocessed = mkdir_gdrive(dir_captures_now, 'unprocessed')
-        dir_annotated = mkdir_gdrive(dir_captures_now, 'annotated')
-        dir_parsed = mkdir_gdrive(dir_captures_now, 'parsed')
-
-
-
-        network.send("set_light_level", self.light_level_sequence[0])
-        time.sleep(1)
-        network.send("capture_and_upload", str([timestamp, 0, dir_unprocessed, light_level == 0]))
-
-        
-        # tell camera units to captures images at each light level
-        #for light_level in range(3):
-        #    network.send("set_light_level", self.light_level_sequence[light_level])
-        #    time.sleep(1)
-        #    network.send("capture_and_upload",
-        #        str([timestamp, light_level, dir_unprocessed, light_level == 0]))
-
-        time.sleep(self.camera_capture_delay)
-
-        # turn off the lights
-        network.send("set_light_level", 0)
-
-        # tell camera units to parse images and send back the data
-        network.send("parse_and_annotate", str([timestamp, dir_annotated, dir_parsed]))
-
-        print "wait for cameras and sleep for three minutes..."
-        time.sleep(180)
-
-main = None
-
-
-def mkdir_gdrive(parent_dir, new_dir):
-    if parent_dir == None:
-        mkdir_stdout = \
-            subprocess.check_output(['gdrive', 'mkdir', new_dir])
-    else:
-        mkdir_stdout = \
-            subprocess.check_output(['gdrive', 'mkdir', '-p', parent_dir, new_dir])
-
-    return mkdir_stdout.split(" ")[1]
-
-
-def network_status_handler(msg):
-    print "network_status_handler", msg
-
-def network_message_handler(msg):
-    try:
-        global main
-
-        topic = msg[0]
-
-        #if topic != "client_monitor_response":
-        #    print "network_message_handler", msg
-
-        if len(msg[1]) > 0:
-            payload = eval(msg[1])
-        else:
-            payload = None
-
-        if topic == "__heartbeat__":
-            print "heartbeat received", msg
-
-        if topic == "receive_image_overlay":
+class Duplicate_Filter(object):
+    def __init__(self,):
             pass
-            # images.receive_and_save(payload[0],payload[1])
 
-        if topic == "update_complete":
-            print 'update complete for host: ', msg[1]
+class Inventory(object):
+    def __init__(self,):
+            pass
 
-        if topic == "client_monitor_response":
-            if payload == None:
-                return
-            if main:
-                main.client_monitor_add_to_queue(payload[0],payload[2],payload[1])
-
-        if topic == "receive_image_data":
-            images.receive_image_data(payload)
-
-        if topic == "door_closed":
-            #main.get_raw_images()
-            main.door_close_event_handler()
-
-        if topic == "door_opened":
-            main.door_open_event_handler()
-
-        if topic == "classification_data_to_conductor":
-            print "classification_data_to_conductor", payload[0], payload[1], payload[2]
-            main.classification_accumulator.add_records(payload[0], int(payload[1]), payload[2])
-
-    except Exception as e:
-        print "exception in network_message_handler", e
-
-
-def init(HOSTNAME):
-    global main
-    global network
-
-    network = network_init(
-        hostname=HOSTNAME,
-        role="server",
-        discovery_multicastGroup=settings.discovery_multicastGroup,
-        discovery_multicastPort=settings.discovery_multicastPort,
-        discovery_responsePort=settings.discovery_responsePort,
-        pubsub_pubPort=settings.pubsub_pubPort,
-        message_callback=network_message_handler,
-        status_callback=network_status_handler
-    )
-    network.subscribe_to_topic("system")  # subscribe to all system messages
-    network.subscribe_to_topic("found_beer")
-    network.subscribe_to_topic("update_complete")
-    network.subscribe_to_topic("image_capture_from_camera_unit")
-    network.subscribe_to_topic("client_monitor_response")
-    network.subscribe_to_topic("receive_image_overlay")
-    network.subscribe_to_topic("receive_image_data")
-    network.subscribe_to_topic("classification_data_to_conductor")
-
-    network.subscribe_to_topic("door_closed")
-    network.subscribe_to_topic("door_opened")
+class Response_Accumulator(object):
+    def __init__(self):
+        self.potential_objects = []
+        self.response_status = {
+            "A":[False]*12,
+            "B":[False]*12,
+            "C":[False]*12,
+            "D":[False]*12
+        }
+    def clear_potential_objects(self):
+        self.potential_objects = []
+        self.response_status = {
+            "A":[False]*12,
+            "B":[False]*12,
+            "C":[False]*12,
+            "D":[False]*12
+        }
+    def add_potential_objects(self, shelf_id, camera_id, potential_objects, print_status = False):
+        self.response_status[shelf_id][camera_id] = True
+        self.potential_objects.extend(potential_objects)
+        if print_status:
+            self.print_response_status()
+    def print_response_status(self):
+        print "Response_Accumulator"
+        print "D", map(lambda status: "X" if status else " ", self.response_status["D"])
+        print "C", map(lambda status: "X" if status else " ", self.response_status["C"])
+        print "B", map(lambda status: "X" if status else " ", self.response_status["B"])
+        print "A", map(lambda status: "X" if status else " ", self.response_status["A"])
+        print "received", len(self.potential_objects), "potential objects"
+    def add_classification_scores(self):
+        print "@@@@@@@@@@@@@@@"
 
 
-    main = Main(network)
+# Main handles network send/recv and can see all other classes directly
+class Main(threading.Thread):
+    def __init__(self, hostname):
+        threading.Thread.__init__(self)
+        self.queue = Queue.Queue()
+        self.images_undistorted = Images(CAPTURES_PATH)
+        self.beers = Beers()
+        self.duplicate_filter = Duplicate_Filter()
+        self.web_interface = WebInterface()
+        self.inventory = Inventory()
+        self.network = Network(hostname, self.network_message_handler, self.network_status_handler)
+        self.gdrive_captures_directory = "0BzpNPyJoi6uoSGlhTnN5RWhXRFU"
+        self.light_level = 10
+        self.camera_capture_delay = 10
+        self.object_detection_wait_period = 240
+        self.whole_process_wait_period = 300
+        self.soonest_run_time = time.time()
+        self.camera_units = Camera_Units(self.network)
+        self.response_accumulator = Response_Accumulator()
+
+        self.hostnames = [
+            "supercoolerA0","supercoolerA1","supercoolerA2","supercoolerA3","supercoolerA4","supercoolerA5","supercoolerA6","supercoolerA7","supercoolerA8","supercoolerA9","supercoolerA10","supercoolerA11",
+            "supercoolerB0","supercoolerB1","supercoolerB2","supercoolerB3","supercoolerB4","supercoolerB5","supercoolerB6","supercoolerB7","supercoolerB8","supercoolerB9","supercoolerB10","supercoolerB11",
+            "supercoolerC0","supercoolerC1","supercoolerC2","supercoolerC3","supercoolerC4","supercoolerC5","supercoolerC6","supercoolerC7","supercoolerC8","supercoolerC9","supercoolerC10","supercoolerC11",
+            "supercoolerD0","supercoolerD1","supercoolerD2","supercoolerD3","supercoolerD4","supercoolerD5","supercoolerD6","supercoolerD7","supercoolerD8","supercoolerD9","supercoolerD10","supercoolerD11",
+            "supercooler-hardware"
+        ]
+        self.client_monitor_server = Thirtybirds_Client_Monitor_Server(self.network, self.hostnames)
+        self.client_monitor_server.daemon = True
+        self.client_monitor_server.start()
+
+        self.network.thirtybirds.subscribe_to_topic("door_closed")
+        self.network.thirtybirds.subscribe_to_topic("door_opened")
+        self.network.thirtybirds.subscribe_to_topic("client_monitor_response")
+        self.network.thirtybirds.subscribe_to_topic("receive_image_data")
+        #self.network.subscribe_to_topic("system")  # subscribe to all system messages
+        #self.network.subscribe_to_topic("update_complete")
+        #self.network.subscribe_to_topic("image_capture_from_camera_unit")
+        #self.network.subscribe_to_topic("receive_image_overlay")
+        #self.network.subscribe_to_topic("classification_data_to_conductor")
+
+
+    def network_message_handler(self, topic_msg):
+        # this method runs in the thread of the caller, not the tread of Main
+        topic, msg =  topic_msg # separating just to eval msg.  best to do it early.  it should be done in TB.
+        if topic not in  ["client_monitor_response"]:
+            print "Main.network_message_handler", topic
+        if len(msg) > 0: 
+            msg = eval(msg)
+        self.add_to_queue(topic, msg)
+
+    def network_status_handler(self, topic_msg):
+        # this method runs in the thread of the caller, not the tread of Main
+        print "Main.network_status_handler", topic_msg
+
+    def add_to_queue(self, topic, msg):
+        self.queue.put((topic, msg))
+
+    def run(self):
+        while True:
+            try:
+                topic, msg = self.queue.get(True)
+                if topic not in ["client_monitor_response"]:
+                    print "Main.run", topic
+                if topic == "client_monitor_response":
+                    self.client_monitor_server.add_to_queue(msg[0],msg[2],msg[1])
+                if topic == "door_closed":
+                    self.web_interface.send_door_close()
+
+                    if time.time() >= self.soonest_run_time:
+                        self.soonest_run_time = time.time() + self.whole_process_wait_period
+                        timestamp = time.strftime("%Y-%m-%d-%H-%M-%S")
+                        #dir_captures_now = self.network.make_directory_on_gdrive(self.gdrive_captures_directory, 'captures_' + timestamp)
+                        #dir_unprocessed = self.network.make_directory_on_gdrive(dir_captures_now, 'unprocessed')
+                        #dir_annotated = self.network.make_directory_on_gdrive(dir_captures_now, 'annotated')
+                        #dir_parsed = self.network.make_directory_on_gdrive(dir_captures_now, 'parsed')
+                        self.network.thirtybirds.send("set_light_level", self.light_level)
+                        time.sleep(1)
+                        self.camera_units.capture_image(self.light_level, timestamp)
+                        time.sleep(self.camera_capture_delay)
+                        self.network.thirtybirds.send("set_light_level", 0)
+                        self.response_accumulator.clear_potential_objects()
+                        self.images_undistorted.clear()
+                        time.sleep(self.camera_capture_delay)
+                        object_detection_timer = threading.Timer(self.object_detection_wait_period, self.add_to_queue, ("object_detection_complete",""))
+                        object_detection_timer.start()
+                        self.camera_units.process_images_and_report()
+                    else:
+                        print "too soon.  next available run time:", self.soonest_run_time
+                if topic == "door_opened":
+                    self.web_interface.send_door_open()
+                if topic == "receive_image_data":
+                    shelf_id =  msg["shelf_id"]
+                    camera_id =  int(msg["camera_id"])
+                    potential_objects =  msg["potential_objects"]
+                    undistorted_capture_png = msg["undistorted_capture_ocv"]
+                    self.response_accumulator.add_potential_objects(shelf_id, camera_id, potential_objects, True)
+                    filename = "{}_{}.png".format(shelf_id, camera_id)
+                    self.images_undistorted.store(filename, undistorted_capture_png)
+                if topic == "object_detection_complete":
+                    print "OBJECT DETECTION COMPLETE ( how's my timing? )"
+                    print self.response_accumulator.print_response_status()
+                    print self.images.get_filenames()
+                    self.response_accumulator.add_classification_scores()
+
+            except Exception as e:
+                exc_type, exc_value, exc_traceback = sys.exc_info()
+                print e, repr(traceback.format_exception(exc_type, exc_value,exc_traceback))
+
+
+def init(hostname):
+    main = Main(hostname)
+    main.daemon = True
+    main.start()
     return main
+
+

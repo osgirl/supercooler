@@ -343,7 +343,7 @@ class Main(threading.Thread):
                     self.images_undistorted.store(filename, undistorted_capture_png)
 
                 if topic == "object_detection_complete":
-                    print "OBJECT DETECTION TIMEOUT ( how's my timing? )"
+                    print "OBJECT DETECTION COMPLETE ( how's my timing? )"
                     print self.response_accumulator.print_response_status()
                     print self.images.get_filenames()
             except Exception as e:
