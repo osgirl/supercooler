@@ -247,7 +247,7 @@ class Main(threading.Thread):
         self.light_level = 10
         self.camera_capture_delay = 10
         self.object_detection_wait_period = 300
-        self.camera_units = Camera_Units()
+        self.camera_units = Camera_Units(self.network)
         self.response_accumulator = Response_Accumulator()
 
         hostnames = [
