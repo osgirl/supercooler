@@ -73,9 +73,9 @@ class Images():
         print ""
         self.potential_objects.extend(payload["potential_objects"])
 
-        return
         nparr = np.fromstring(payload["undistorted_capture_ocv"], np.uint8)
         undistorted_capture_ocv = cv2.imdecode(nparr, cv2.CV_LOAD_IMAGE_COLOR)
+        return
         # decode and store image as numpy array
         img_arr = np.fromstring(base64.decodestring(payload["image"]), np.uint8)
         img = cv2.imdecode(img_arr, cv2.IMREAD_COLOR)
