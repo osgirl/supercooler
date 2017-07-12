@@ -336,7 +336,7 @@ class Main(threading.Thread):
                     self.response_accumulator.add_potential_objects(shelf_id, camera_id, potential_objects, True)
                     filename = "{}_{}.png".format(shelf_id, camera_id)
 
-                    file_bytes = numpy.asarray(bytearray(img_stream.read()), dtype=numpy.uint8)
+                    file_bytes = np.asarray(bytearray(img_stream.read()), dtype=np.uint8)
 
                     undistorted_capture_ndarray = cv2.imdecode(file_bytes, cv2.IMREAD_UNCHANGED)
                     #img_data_cvmat = cv.fromarray(img_data_ndarray) #  convert to old cvmat if needed
