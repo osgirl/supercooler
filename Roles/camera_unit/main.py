@@ -615,10 +615,10 @@ class Main(threading.Thread):
                         print "main.run can detection"
                         capture_with_cans_ocv, can_circles = self.object_detection.can_detection( capture_corrected_ocv )
                         print "main.run collecting object  data"
-                        print can_circles
+                        print can_circles[0][0]
                         print ""
 
-                        print repr(can_circles)
+                        print repr(can_circles[0][0])
                         for bottle_circle in bottle_circles:
                             potential_objects.append( self.data.create_blank_potential_object("bottle", bottle_circle))
                         for can_circle in can_circles:
