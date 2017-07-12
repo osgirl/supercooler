@@ -326,7 +326,11 @@ class Main(threading.Thread):
                 if topic == "door_opened":
                     self.web_interface.send_door_open()
                 if topic == "receive_image_data":
-                    print msg 
+                    print msg["shelf_id"]
+                    print msg["camera_id"]
+                    print msg["potential_objects"]
+                    print ""
+
                     #self.response_accumulator.add_potential_objects(msg["shelf_id"], msg["camera_id"], msg["potential_objects"], True)
                     #filename = "{}_{}.png".format(msg["shelf_id"], msg["camera_id"])
                     #self.images_undistorted.store(filename, msg["undistorted_capture_ocv"])
