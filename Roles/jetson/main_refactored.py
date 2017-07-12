@@ -68,7 +68,7 @@ class Network(object):
 
 
 class Thirtybirds_Client_Monitor_Server(threading.Thread):
-    def __init__(self, network, hostnames, update_period=30):
+    def __init__(self, network, hostnames, update_period=60):
         threading.Thread.__init__(self)
         self.update_period = update_period
         self.current_clients = {}
@@ -110,9 +110,10 @@ class Thirtybirds_Client_Monitor_Server(threading.Thread):
                 self.hosts[hostname]["timestamp"] = timestamp
                 self.hosts[hostname]["pickle_version"] = pickle_version
                 self.hosts[hostname]["git_pull_date"] = git_pull_date
-            if not cmp(previous_hosts,self.hosts):
-                self.print_current_clients()
-            previous_hosts = self.hosts
+            #if not cmp(previous_hosts,self.hosts):
+            #    self.print_current_clients()
+            #previous_hosts = self.hosts
+            self.print_current_clients()
 
 
 class Camera_Units(object):
@@ -136,7 +137,7 @@ class Images(object):
         self.capture_path = capture_path
 
     def store(self, filename, binary_image_data):
-        filepath = os.path.join(self.capture_path, filename)
+        filepath = os.path.join(self.capture_path, filename) 
         cv2.imwrite(filepath, binary_image_data)
 
     def clear(self):
@@ -229,10 +230,10 @@ class Response_Accumulator(object):
             self.print_response_status()
     def print_response_status(self):
         print "Response_Accumulator"
-        print "D", map(lambda status: "X" if status else " ", response_status["D"])
-        print "C", map(lambda status: "X" if status else " ", response_status["C"])
-        print "B", map(lambda status: "X" if status else " ", response_status["B"])
-        print "A", map(lambda status: "X" if status else " ", response_status["A"])
+        print "D", map(lambda status: "X" if status else " ", self.response_status["D"])
+        print "C", map(lambda status: "X" if status else " ", self.response_status["C"])
+        print "B", map(lambda status: "X" if status else " ", self.response_status["B"])
+        print "A", map(lambda status: "X" if status else " ", self.response_status["A"])
         print "received", len(self.potential_objects), "potential objects"
 
 # Main handles network send/recv and can see all other classes directly
@@ -249,7 +250,9 @@ class Main(threading.Thread):
         self.gdrive_captures_directory = "0BzpNPyJoi6uoSGlhTnN5RWhXRFU"
         self.light_level = 10
         self.camera_capture_delay = 10
-        self.object_detection_wait_period = 300
+        self.object_detection_wait_period = 240
+        self.whole_process_wait_period = 300
+        self.soonest_run_time = time.time()
         self.camera_units = Camera_Units(self.network)
         self.response_accumulator = Response_Accumulator()
 
@@ -301,28 +304,46 @@ class Main(threading.Thread):
                     self.client_monitor_server.add_to_queue(msg[0],msg[2],msg[1])
                 if topic == "door_closed":
                     self.web_interface.send_door_close()
-                    timestamp = time.strftime("%Y-%m-%d-%H-%M-%S")
-                    #dir_captures_now = self.network.make_directory_on_gdrive(self.gdrive_captures_directory, 'captures_' + timestamp)
-                    #dir_unprocessed = self.network.make_directory_on_gdrive(dir_captures_now, 'unprocessed')
-                    #dir_annotated = self.network.make_directory_on_gdrive(dir_captures_now, 'annotated')
-                    #dir_parsed = self.network.make_directory_on_gdrive(dir_captures_now, 'parsed')
-                    self.network.thirtybirds.send("set_light_level", self.light_level)
-                    time.sleep(1)
-                    self.camera_units.capture_image(self.light_level, timestamp)
-                    time.sleep(self.camera_capture_delay)
-                    self.network.thirtybirds.send("set_light_level", 0)
-                    self.response_accumulator.clear_potential_objects()
-                    self.images_undistorted.clear()
-                    threading.Timer(self.object_detection_wait_period, self.add_to_queue, (("object_detection_complete","")))
-                    time.sleep(self.camera_capture_delay)
-                    self.camera_units.process_images_and_report()
+
+                    if time.time() >= self.soonest_run_time:
+                        self.soonest_run_time = time.time() + self.whole_process_wait_period
+                        timestamp = time.strftime("%Y-%m-%d-%H-%M-%S")
+                        #dir_captures_now = self.network.make_directory_on_gdrive(self.gdrive_captures_directory, 'captures_' + timestamp)
+                        #dir_unprocessed = self.network.make_directory_on_gdrive(dir_captures_now, 'unprocessed')
+                        #dir_annotated = self.network.make_directory_on_gdrive(dir_captures_now, 'annotated')
+                        #dir_parsed = self.network.make_directory_on_gdrive(dir_captures_now, 'parsed')
+                        self.network.thirtybirds.send("set_light_level", self.light_level)
+                        time.sleep(1)
+                        self.camera_units.capture_image(self.light_level, timestamp)
+                        time.sleep(self.camera_capture_delay)
+                        self.network.thirtybirds.send("set_light_level", 0)
+                        self.response_accumulator.clear_potential_objects()
+                        self.images_undistorted.clear()
+                        threading.Timer(self.object_detection_wait_period, self.add_to_queue, (("object_detection_complete","")))
+                        time.sleep(self.camera_capture_delay)
+                        self.camera_units.process_images_and_report()
+                    else:
+                        print "too soon.  next available run time:", self.soonest_run_time
                 if topic == "door_opened":
                     self.web_interface.send_door_open()
                 if topic == "receive_image_data":
-                    print msg 
-                    #self.response_accumulator.add_potential_objects(msg["shelf_id"], msg["camera_id"], msg["potential_objects"], True)
-                    #filename = "{}_{}.png".format(msg["shelf_id"], msg["camera_id"])
-                    #self.images_undistorted.store(filename, msg["undistorted_capture_ocv"])
+                    shelf_id =  msg["shelf_id"]
+                    camera_id =  int(msg["camera_id"])
+                    potential_objects =  msg["potential_objects"]
+                    undistorted_capture_png = msg["undistorted_capture_ocv"]
+                    
+
+                    self.response_accumulator.add_potential_objects(shelf_id, camera_id, potential_objects, True)
+                    filename = "{}_{}.png".format(shelf_id, camera_id)
+
+                    with open(filename,'wb') as f:
+                        f.write(undistorted_capture_png)
+
+                    #file_bytes = np.asarray(bytearray(img_stream.read()), dtype=np.uint8)
+                    #undistorted_capture_ndarray = cv2.imdecode(file_bytes, cv2.IMREAD_UNCHANGED)
+                    #img_data_cvmat = cv.fromarray(img_data_ndarray) #  convert to old cvmat if needed
+
+                    self.images_undistorted.store(filename, undistorted_capture_ndarray)
 
                 if topic == "object_detection_complete":
                     print "OBJECT DETECTION TIMEOUT ( how's my timing? )"
