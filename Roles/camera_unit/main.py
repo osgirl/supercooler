@@ -629,7 +629,7 @@ class Main(threading.Thread):
                             "shelf_id":self.utils.get_shelf_id(),
                             "camera_id":self.utils.get_camera_id(),
                             "potential_objects":potential_objects,
-                            "undistorted_capture_ocv":capture_corrected_ocv
+                            "undistorted_capture_ocv":cv2.imencode('.png', capture_corrected_ocv)[1].tostring()
                         }
                     )
 
