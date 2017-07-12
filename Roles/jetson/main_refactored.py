@@ -140,7 +140,7 @@ class Images(object):
         cv2.imwrite(filepath, binary_image_data)
 
     def clear(self):
-        previous_filenames = self.get_capture_filenames()
+        previous_filenames = self.get_filenames()
         for previous_filename in previous_filenames:
             os.remove("{}{}".format(self.capture_path,  previous_filename))
 
@@ -302,10 +302,10 @@ class Main(threading.Thread):
                 if topic == "door_closed":
                     self.web_interface.send_door_close()
                     timestamp = time.strftime("%Y-%m-%d-%H-%M-%S")
-                    dir_captures_now = self.network.make_directory_on_gdrive(self.gdrive_captures_directory, 'captures_' + timestamp)
-                    dir_unprocessed = self.network.make_directory_on_gdrive(dir_captures_now, 'unprocessed')
-                    dir_annotated = self.network.make_directory_on_gdrive(dir_captures_now, 'annotated')
-                    dir_parsed = self.network.make_directory_on_gdrive(dir_captures_now, 'parsed')
+                    #dir_captures_now = self.network.make_directory_on_gdrive(self.gdrive_captures_directory, 'captures_' + timestamp)
+                    #dir_unprocessed = self.network.make_directory_on_gdrive(dir_captures_now, 'unprocessed')
+                    #dir_annotated = self.network.make_directory_on_gdrive(dir_captures_now, 'annotated')
+                    #dir_parsed = self.network.make_directory_on_gdrive(dir_captures_now, 'parsed')
                     self.network.thirtybirds.send("set_light_level", self.light_level)
                     time.sleep(1)
                     self.camera_units.capture_image(self.light_level, timestamp)
