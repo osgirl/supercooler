@@ -40,6 +40,20 @@ class Images():
         # self.dir_stitch = "/home/pi/supercooler/Captures_Stitching/"
         self.captures = []
         self.cropped_captures = []
+        self.undistorted_captures = None
+        self.clear_undistorted_captures()
+        self.potential_objects = []
+
+    def clear_undistorted_captures(self):
+        self.undistorted_captures = {
+            'A':[{},{},{},{},{},{},{},{},{},{},{},{}],
+            'B':[{},{},{},{},{},{},{},{},{},{},{},{}],
+            'C':[{},{},{},{},{},{},{},{},{},{},{},{}],
+            'D':[{},{},{},{},{},{},{},{},{},{},{},{}]
+        }
+
+    def clear_potential_objects(self):
+        self.potential_objects = []
 
     def receive_and_save(self, filename, raw_data):
         file_path = "{}{}".format(self.capture_path,filename)
@@ -55,9 +69,13 @@ class Images():
 
     def receive_image_data(self, payload):
         print ""
-        print "receive_image_data", repr(payload["potential_objects"])
+        #print "receive_image_data", repr(payload["potential_objects"])
         print ""
+        self.potential_objects.extend(payload["potential_objects"])
+
         return
+        nparr = np.fromstring(payload["undistorted_capture_ocv"], np.uint8)
+        undistorted_capture_ocv = cv2.imdecode(nparr, cv2.CV_LOAD_IMAGE_COLOR)
         # decode and store image as numpy array
         img_arr = np.fromstring(base64.decodestring(payload["image"]), np.uint8)
         img = cv2.imdecode(img_arr, cv2.IMREAD_COLOR)
@@ -79,7 +97,7 @@ class Images():
                 self.cropped_captures.append(cropped_capture)
 
 images = Images()
-    
+
 
 class Thirtybirds_Client_Monitor_Server(threading.Thread):
     def __init__(self, network, hostnames, update_period=60):
@@ -326,6 +344,7 @@ class Main(): # rules them all
 
     def all_records_received(self, records):
         print "all records received"
+        print images.potential_objects
         return
         records_with_shelf_coords = self.map_camera_coords_to_shelf_coords(records)
         print records_with_shelf_coords
