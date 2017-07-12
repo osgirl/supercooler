@@ -499,12 +499,14 @@ class Data(object):
     def __init__(self, shelf_id, camera_id):
         self. shelf_id = shelf_id
         self.camera_id = camera_id
-    def create_blank_potential_object(self, object_type, coords):
+    def create_blank_potential_object(self, object_type, shelf_x, shelf_y, radius):
             return {
                 "shelf_id":self.shelf_id,
                 "camera_id":self.camera_id,
                 "object_type": object_type, 
-                "coords":coords
+                "shelf_x":shelf_x,
+                "shelf_y":shelf_y,
+                "radius":radius
             }
 
 #collate_classifcation_metadata
@@ -623,10 +625,10 @@ class Main(threading.Thread):
                         print repr(can_circles[0][0])
                         for bottle_circle in bottle_circles[0]:
                             print " bottle circle", bottle_circle
-                            potential_objects.append( self.data.create_blank_potential_object("bottle", bottle_circle))
+                            potential_objects.append( self.data.create_blank_potential_object("bottle", bottle_circle[0], bottle_circle[1], bottle_circle[2] )
                         for can_circle in can_circles[0]:
                             print " can_circle", can_circle
-                            potential_objects.append( self.data.create_blank_potential_object("can", can_circle))
+                            potential_objects.append( self.data.create_blank_potential_object("can", bottle_circle[0], bottle_circle[1], bottle_circle[2] )
                     self.network.thirtybirds.send(
                         "receive_image_data", 
                         {

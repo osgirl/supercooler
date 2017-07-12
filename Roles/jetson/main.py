@@ -57,6 +57,7 @@ class Images():
         print ""
         print "receive_image_data", repr(payload)
         print ""
+        return
         return_raw_images
         # decode and store image as numpy array
         img_arr = np.fromstring(base64.decodestring(payload["image"]), np.uint8)
