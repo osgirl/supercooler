@@ -68,7 +68,7 @@ class Network(object):
 
 
 class Thirtybirds_Client_Monitor_Server(threading.Thread):
-    def __init__(self, network, hostnames, update_period=60):
+    def __init__(self, network, hostnames, update_period=30):
         threading.Thread.__init__(self)
         self.update_period = update_period
         self.current_clients = {}
@@ -306,11 +306,11 @@ class Main(threading.Thread):
                     dir_unprocessed = self.network.make_directory_on_gdrive(dir_captures_now, 'unprocessed')
                     dir_annotated = self.network.make_directory_on_gdrive(dir_captures_now, 'annotated')
                     dir_parsed = self.network.make_directory_on_gdrive(dir_captures_now, 'parsed')
-                    network.send("set_light_level", self.light_level)
+                    self.network.thirtybirds.send("set_light_level", self.light_level)
                     time.sleep(1)
                     self.camera_units.capture_image(self.light_level, timestamp)
                     time.sleep(self.camera_capture_delay)
-                    network.send("set_light_level", 0)
+                    self.network.thirtybirds.send("set_light_level", 0)
                     self.response_accumulator.clear_potential_objects()
                     self.images_undistorted.clear_captures()
                     threading.Timer(self.object_detection_wait_period, self.add_to_queue, (("object_detection_complete","")))
