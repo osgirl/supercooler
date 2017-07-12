@@ -475,15 +475,15 @@ class Network(object):
     def __init__(self, hostname, network_message_handler, network_status_handler):
         self.hostname = hostname
         self.thirtybirds = thirtybirds_network(
-        hostname=hostname,
-        role="client",
-        discovery_multicastGroup=settings.discovery_multicastGroup,
-        discovery_multicastPort=settings.discovery_multicastPort,
-        discovery_responsePort=settings.discovery_responsePort,
-        pubsub_pubPort=settings.pubsub_pubPort,
-        message_callback=network_message_handler,
-        status_callback=network_status_handler
-    )
+            hostname=hostname,
+            role="client",
+            discovery_multicastGroup=settings.discovery_multicastGroup,
+            discovery_multicastPort=settings.discovery_multicastPort,
+            discovery_responsePort=settings.discovery_responsePort,
+            pubsub_pubPort=settings.pubsub_pubPort,
+            message_callback=network_message_handler,
+            status_callback=network_status_handler
+        )
     def copy_to_gdrive(self, google_drive_directory_id, filepath):
         try:
             subprocess.Popen(['gdrive', 'upload', '-p', google_drive_directory_id, filepath])
@@ -603,7 +603,7 @@ class Main(threading.Thread):
                     if clear_dir: self.images.delete_captures()
                     filename = self.utils.create_image_file_name(timestamp, light_level, "raw")
                     self.images.capture_image(filename)
-                    self.network.copy_to_gdrive(google_drive_directory_id, os.path.join(self.capture_path, filename))
+                    #self.network.copy_to_gdrive(google_drive_directory_id, os.path.join(self.capture_path, filename))
 
                 if topic in ["perform_object_detection", "process_images_and_report"]:
                     potential_objects = []

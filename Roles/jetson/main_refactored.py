@@ -98,6 +98,7 @@ class Thirtybirds_Client_Monitor_Server(threading.Thread):
             print "%s: %s : %s: %s: %s" % (hostname, self.hosts[hostname]["present"], self.hosts[hostname]["timestamp"], self.hosts[hostname]["pickle_version"], self.hosts[hostname]["git_pull_date"])
 
     def run(self):
+        previous_hostnames = {}
         while True:
             self.empty_host_list()
             self.network.thirtybirds.send("client_monitor_request", "")
@@ -109,7 +110,9 @@ class Thirtybirds_Client_Monitor_Server(threading.Thread):
                 self.hosts[hostname]["timestamp"] = timestamp
                 self.hosts[hostname]["pickle_version"] = pickle_version
                 self.hosts[hostname]["git_pull_date"] = git_pull_date
-            self.print_current_clients()
+            if previous_filenames != self.hostnames:
+                self.print_current_clients()
+            previous_filenames = self.hostnames
 
 
 class Camera_Units(object):
@@ -275,7 +278,7 @@ class Main(threading.Thread):
     def network_message_handler(self, topic_msg):
         # this method runs in the thread of the caller, not the tread of Main
         topic, msg =  topic_msg # separating just to eval msg.  best to do it early.  it should be done in TB.
-        if topic not in  ["client_monitor_request"]:
+        if topic not in  ["client_monitor_response"]:
             print "Main.network_message_handler", topic_msg
         if len(msg) > 0: 
             msg = eval(msg)
