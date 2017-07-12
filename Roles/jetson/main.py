@@ -1,4 +1,3 @@
-import array
 import base64
 import json
 import os
@@ -327,6 +326,7 @@ class Main(): # rules them all
 
     def all_records_received(self, records):
         print "all records received"
+        return
         records_with_shelf_coords = self.map_camera_coords_to_shelf_coords(records)
         print records_with_shelf_coords
         print "all records received"
