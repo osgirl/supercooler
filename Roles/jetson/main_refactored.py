@@ -250,6 +250,8 @@ class Main(threading.Thread):
         self.light_level = 10
         self.camera_capture_delay = 10
         self.object_detection_wait_period = 300
+        self.whole_process_wait_period = 600
+        self.soonest_run_time = time.time()
         self.camera_units = Camera_Units(self.network)
         self.response_accumulator = Response_Accumulator()
 
@@ -301,21 +303,26 @@ class Main(threading.Thread):
                     self.client_monitor_server.add_to_queue(msg[0],msg[2],msg[1])
                 if topic == "door_closed":
                     self.web_interface.send_door_close()
-                    timestamp = time.strftime("%Y-%m-%d-%H-%M-%S")
-                    #dir_captures_now = self.network.make_directory_on_gdrive(self.gdrive_captures_directory, 'captures_' + timestamp)
-                    #dir_unprocessed = self.network.make_directory_on_gdrive(dir_captures_now, 'unprocessed')
-                    #dir_annotated = self.network.make_directory_on_gdrive(dir_captures_now, 'annotated')
-                    #dir_parsed = self.network.make_directory_on_gdrive(dir_captures_now, 'parsed')
-                    self.network.thirtybirds.send("set_light_level", self.light_level)
-                    time.sleep(1)
-                    self.camera_units.capture_image(self.light_level, timestamp)
-                    time.sleep(self.camera_capture_delay)
-                    self.network.thirtybirds.send("set_light_level", 0)
-                    self.response_accumulator.clear_potential_objects()
-                    self.images_undistorted.clear()
-                    threading.Timer(self.object_detection_wait_period, self.add_to_queue, (("object_detection_complete","")))
-                    time.sleep(self.camera_capture_delay)
-                    self.camera_units.process_images_and_report()
+
+                    if time.time() >= self.soonest_run_time:
+                        self.soonest_run_time = time.time() + self.whole_process_wait_period
+                        timestamp = time.strftime("%Y-%m-%d-%H-%M-%S")
+                        #dir_captures_now = self.network.make_directory_on_gdrive(self.gdrive_captures_directory, 'captures_' + timestamp)
+                        #dir_unprocessed = self.network.make_directory_on_gdrive(dir_captures_now, 'unprocessed')
+                        #dir_annotated = self.network.make_directory_on_gdrive(dir_captures_now, 'annotated')
+                        #dir_parsed = self.network.make_directory_on_gdrive(dir_captures_now, 'parsed')
+                        self.network.thirtybirds.send("set_light_level", self.light_level)
+                        time.sleep(1)
+                        self.camera_units.capture_image(self.light_level, timestamp)
+                        time.sleep(self.camera_capture_delay)
+                        self.network.thirtybirds.send("set_light_level", 0)
+                        self.response_accumulator.clear_potential_objects()
+                        self.images_undistorted.clear()
+                        threading.Timer(self.object_detection_wait_period, self.add_to_queue, (("object_detection_complete","")))
+                        time.sleep(self.camera_capture_delay)
+                        self.camera_units.process_images_and_report()
+                    else:
+                        print "too soon.  next available run time:", self.soonest_run_time
                 if topic == "door_opened":
                     self.web_interface.send_door_open()
                 if topic == "receive_image_data":
