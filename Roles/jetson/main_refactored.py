@@ -40,7 +40,7 @@ CAPTURES_PATH = "/home/nvidia/supercooler/Captures/"
 
 class Network(object):
     def __init__(self, hostname, network_message_handler, network_status_handler):
-        self.hostname = hostname
+        self.hostname = hostnamex`
         self.thirtybirds = network_init(
             hostname=hostname,
             role="server",
@@ -336,9 +336,11 @@ class Main(threading.Thread):
                     self.response_accumulator.add_potential_objects(shelf_id, camera_id, potential_objects, True)
                     filename = "{}_{}.png".format(shelf_id, camera_id)
 
-                    file_bytes = np.asarray(bytearray(img_stream.read()), dtype=np.uint8)
+                    with open(filename,'wb') as f:
+                        f.write(undistorted_capture_png)
 
-                    undistorted_capture_ndarray = cv2.imdecode(file_bytes, cv2.IMREAD_UNCHANGED)
+                    #file_bytes = np.asarray(bytearray(img_stream.read()), dtype=np.uint8)
+                    #undistorted_capture_ndarray = cv2.imdecode(file_bytes, cv2.IMREAD_UNCHANGED)
                     #img_data_cvmat = cv.fromarray(img_data_ndarray) #  convert to old cvmat if needed
 
                     self.images_undistorted.store(filename, undistorted_capture_ndarray)
