@@ -295,7 +295,7 @@ class Main(threading.Thread):
         while True:
             try:
                 topic, msg = self.queue.get(True)
-                if topic not in ["previous_hostnames"]:
+                if topic not in ["client_monitor_response"]:
                     print "Main.run", topic
                 if topic == "client_monitor_response":
                     self.client_monitor_server.add_to_queue(msg[0],msg[2],msg[1])
