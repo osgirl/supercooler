@@ -312,7 +312,7 @@ class Main(threading.Thread):
                     time.sleep(self.camera_capture_delay)
                     self.network.thirtybirds.send("set_light_level", 0)
                     self.response_accumulator.clear_potential_objects()
-                    self.images_undistorted.clear_captures()
+                    self.images_undistorted.clear()
                     threading.Timer(self.object_detection_wait_period, self.add_to_queue, (("object_detection_complete","")))
                     time.sleep(self.camera_capture_delay)
                     self.camera_units.process_images_and_report()
