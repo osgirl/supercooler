@@ -55,10 +55,9 @@ class Images():
 
     def receive_image_data(self, payload):
         print ""
-        print "receive_image_data", repr(payload)
+        print "receive_image_data", repr(payload["potential_objects"])
         print ""
         return
-        return_raw_images
         # decode and store image as numpy array
         img_arr = np.fromstring(base64.decodestring(payload["image"]), np.uint8)
         img = cv2.imdecode(img_arr, cv2.IMREAD_COLOR)
