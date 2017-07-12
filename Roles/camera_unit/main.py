@@ -572,8 +572,8 @@ class Main(threading.Thread):
         while True:
             try:
                 topic, msg = self.queue.get(True)
-                print "main.run topic=",repr(topic)
-                print "main.run msg=",repr(msg)
+                #print "main.run topic=",repr(topic)
+                #print "main.run msg=",repr(msg)
                 if topic == "reboot":
                     self.utils.reboot()
 
@@ -610,10 +610,6 @@ class Main(threading.Thread):
                     for filepath in self.images.get_capture_filepaths():
                         print "main.run opening capture"
                         capture_raw_ocv = cv_helpers.read_image(filepath)
-                        #print "main.run opening distortion map"
-                        #distortion_map_ocv = cv_helpers.read_image(os.path.join(self.distortion_map_dir, self.distortion_map_names[4])) 
-                        #print "main.run initializing lens correction"
-                        #lens_correction = Lens_Correction(distortion_map_ocv)
                         print "main.run performing lens correction"
                         capture_corrected_ocv = self.lens_correction.correct(capture_raw_ocv)
                         print "main.run bottle detection"
@@ -624,10 +620,8 @@ class Main(threading.Thread):
                         print can_circles[0]
                         print repr(can_circles[0][0])
                         for bottle_circle in bottle_circles[0]:
-                            print " bottle circle", bottle_circle
                             potential_objects.append( self.data.create_blank_potential_object("bottle", bottle_circle[0], bottle_circle[1], bottle_circle[2] ))
                         for can_circle in can_circles[0]:
-                            print " can_circle", can_circle
                             potential_objects.append( self.data.create_blank_potential_object("can", bottle_circle[0], bottle_circle[1], bottle_circle[2] )) 
                     self.network.thirtybirds.send(
                         "receive_image_data", 
@@ -635,7 +629,7 @@ class Main(threading.Thread):
                             "shelf_id":self.utils.get_shelf_id(),
                             "camera_id":self.utils.get_camera_id(),
                             "potential_objects":potential_objects,
-                            "undistorted_capture_ocv":""
+                            "undistorted_capture_ocv":capture_corrected_ocv
                         }
                     )
 
