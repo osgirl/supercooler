@@ -137,8 +137,8 @@ class Images(object):
         self.capture_path = capture_path
 
     def store(self, filename, binary_image_data):
-        filepath = os.path.join(self.capture_path, filename) 
-        cv2.imwrite(filepath, binary_image_data)
+        with open(os.path.join(self.capture_path, filename),'wb') as f:
+            f.write(binary_image_data)
 
     def clear(self):
         previous_filenames = self.get_filenames()
@@ -336,14 +336,11 @@ class Main(threading.Thread):
                     self.response_accumulator.add_potential_objects(shelf_id, camera_id, potential_objects, True)
                     filename = "{}_{}.png".format(shelf_id, camera_id)
 
-                    with open(filename,'wb') as f:
-                        f.write(undistorted_capture_png)
-
                     #file_bytes = np.asarray(bytearray(img_stream.read()), dtype=np.uint8)
                     #undistorted_capture_ndarray = cv2.imdecode(file_bytes, cv2.IMREAD_UNCHANGED)
                     #img_data_cvmat = cv.fromarray(img_data_ndarray) #  convert to old cvmat if needed
 
-                    self.images_undistorted.store(filename, undistorted_capture_ndarray)
+                    self.images_undistorted.store(filename, undistorted_capture_png)
 
                 if topic == "object_detection_complete":
                     print "OBJECT DETECTION TIMEOUT ( how's my timing? )"
