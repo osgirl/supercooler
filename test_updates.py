@@ -61,7 +61,6 @@ network = network_init(
     status_callback=network_status_handler
 )
 
-network.subscribe_to_topic("client_monitor_response")
 
 class Thirtybirds_Client_Monitor_Server(threading.Thread):
     def __init__(self, network, hostnames, update_period=45):
@@ -137,6 +136,7 @@ client_monitor_server = Thirtybirds_Client_Monitor_Server(network, hostnames)
 client_monitor_server.daemon = True
 client_monitor_server.start()
 
+network.subscribe_to_topic("client_monitor_response")
 
 
 camera_units.send_update_command(cool=True, birds=True, update=False, upgrade=False)

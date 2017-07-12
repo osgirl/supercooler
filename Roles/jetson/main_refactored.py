@@ -319,9 +319,10 @@ class Main(threading.Thread):
                 if topic == "door_opened":
                     self.web_interface.send_door_open()
                 if topic == "receive_image_data":
-                    self.response_accumulator.add_potential_objects(msg["shelf_id"], msg["camera_id"], msg["potential_objects"], True)
-                    filename = "{}_{}.png".format(msg["shelf_id"], msg["camera_id"])
-                    self.images_undistorted.store(filename, msg["undistorted_capture_ocv"])
+                    print msg 
+                    #self.response_accumulator.add_potential_objects(msg["shelf_id"], msg["camera_id"], msg["potential_objects"], True)
+                    #filename = "{}_{}.png".format(msg["shelf_id"], msg["camera_id"])
+                    #self.images_undistorted.store(filename, msg["undistorted_capture_ocv"])
 
                 if topic == "object_detection_complete":
                     print "OBJECT DETECTION TIMEOUT ( how's my timing? )"
