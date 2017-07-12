@@ -279,7 +279,7 @@ class Main(threading.Thread):
         # this method runs in the thread of the caller, not the tread of Main
         topic, msg =  topic_msg # separating just to eval msg.  best to do it early.  it should be done in TB.
         if topic not in  ["client_monitor_response"]:
-            print "Main.network_message_handler", topic_msg
+            print "Main.network_message_handler", topic
         if len(msg) > 0: 
             msg = eval(msg)
         self.add_to_queue(topic, msg)
@@ -319,7 +319,7 @@ class Main(threading.Thread):
                 if topic == "door_opened":
                     self.web_interface.send_door_open()
                 if topic == "receive_image_data":
-                    self.response_accumulator.add_potential_objects(self, msg["shelf_id"], msg["camera_id"], msg["potential_objects"], True)
+                    self.response_accumulator.add_potential_objects(msg["shelf_id"], msg["camera_id"], msg["potential_objects"], True)
                     filename = "{}_{}.png".format(msg["shelf_id"], msg["camera_id"])
                     self.images_undistorted.store(filename, msg["undistorted_capture_ocv"])
 
