@@ -532,6 +532,9 @@ class Main(threading.Thread):
         self.object_detection = Object_Detection()
         self.data = Data(self.utils.get_shelf_id(), self.utils.get_camera_id())
 
+        distortion_map_ocv = cv_helpers.read_image(os.path.join(self.distortion_map_dir, self.distortion_map_names[4])) 
+        self.lens_correction = Lens_Correction(distortion_map_ocv)
+
         self.network.thirtybirds.subscribe_to_topic("reboot")
         self.network.thirtybirds.subscribe_to_topic("remote_update")
         self.network.thirtybirds.subscribe_to_topic("remote_update_scripts")
@@ -544,6 +547,7 @@ class Main(threading.Thread):
         #self.network.thirtybirds.subscribe_to_topic("return_raw_images")
         #self.network.thirtybirds.subscribe_to_topic("parse_and_annotate")
         #self.camera = camera_init(self.capture_path)
+
 
     def network_message_handler(self, topic_msg):
         # this method runs in the thread of the caller, not the tread of Main
@@ -604,12 +608,12 @@ class Main(threading.Thread):
                     for filepath in self.images.get_capture_filepaths():
                         print "main.run opening capture"
                         capture_raw_ocv = cv_helpers.read_image(filepath)
-                        print "main.run opening distortion map"
-                        distortion_map_ocv = cv_helpers.read_image(os.path.join(self.distortion_map_dir, self.distortion_map_names[4])) 
-                        print "main.run initializing lens correction"
-                        lens_correction = Lens_Correction(distortion_map_ocv)
+                        #print "main.run opening distortion map"
+                        #distortion_map_ocv = cv_helpers.read_image(os.path.join(self.distortion_map_dir, self.distortion_map_names[4])) 
+                        #print "main.run initializing lens correction"
+                        #lens_correction = Lens_Correction(distortion_map_ocv)
                         print "main.run performing lens correction"
-                        capture_corrected_ocv = lens_correction.correct(capture_raw_ocv)
+                        capture_corrected_ocv = self.lens_correction.correct(capture_raw_ocv)
                         print "main.run bottle detection"
                         capture_with_bottles_ocv, bottle_circles = self.object_detection.bottle_detection( capture_corrected_ocv )
                         print "main.run can detection"
