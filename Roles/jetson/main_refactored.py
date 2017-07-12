@@ -261,10 +261,10 @@ class Main(threading.Thread):
         self.client_monitor_server.daemon = True
         self.client_monitor_server.start()
 
-        self.network.subscribe_to_topic("door_closed")
-        self.network.subscribe_to_topic("door_opened")
-        self.network.subscribe_to_topic("client_monitor_response")
-        self.network.subscribe_to_topic("receive_image_data")
+        self.network.thirtybirds.subscribe_to_topic("door_closed")
+        self.network.thirtybirds.subscribe_to_topic("door_opened")
+        self.network.thirtybirds.subscribe_to_topic("client_monitor_response")
+        self.network.thirtybirds.subscribe_to_topic("receive_image_data")
         #self.network.subscribe_to_topic("system")  # subscribe to all system messages
         #self.network.subscribe_to_topic("update_complete")
         #self.network.subscribe_to_topic("image_capture_from_camera_unit")
