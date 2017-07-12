@@ -100,7 +100,7 @@ class Thirtybirds_Client_Monitor_Server(threading.Thread):
     def run(self):
         while True:
             self.empty_host_list()
-            self.network.send("client_monitor_request", "")
+            self.network.thirtybirds.send("client_monitor_request", "")
             time.sleep(self.update_period)
             while not self.queue.empty():
                 [hostname, git_pull_date, pickle_version, timestamp] = self.queue.get(True)
@@ -116,17 +116,17 @@ class Camera_Units(object):
     def __init__(self, network):
             self.network = network
     def capture_image(self, light_level_sequence_position, timestamp):
-        self.network.send("capture_image", (light_level_sequence_position, timestamp))
+        self.network.thirtybirds.send("capture_image", (light_level_sequence_position, timestamp))
     def process_images_and_report(self):
-        self.network.send("process_images_and_report", "")
+        self.network.thirtybirds.send("process_images_and_report", "")
     def send_update_command(self, cool=False, birds=False, update=False, upgrade=False):
-        self.network.send("remote_update", [cool, birds, update, upgrade])
+        self.network.thirtybirds.send("remote_update", [cool, birds, update, upgrade])
     def send_update_scripts_command(self):
-        self.network.send("remote_update_scripts", "")
+        self.network.thirtybirds.send("remote_update_scripts", "")
     def send_reboot(self):
-        self.network.send("reboot")
+        self.network.thirtybirds.send("reboot")
     def return_raw_images(self):
-        self.network.send("return_raw_images", "")
+        self.network.thirtybirds.send("return_raw_images", "")
 
 class Images(object): 
     def __init__(self, capture_path):
@@ -250,7 +250,7 @@ class Main(threading.Thread):
         self.camera_units = Camera_Units(self.network)
         self.response_accumulator = Response_Accumulator()
 
-        self.hostnames = [
+        self.   hostnames = [
             "supercoolerA0","supercoolerA1","supercoolerA2","supercoolerA3","supercoolerA4","supercoolerA5","supercoolerA6","supercoolerA7","supercoolerA8","supercoolerA9","supercoolerA10","supercoolerA11",
             "supercoolerB0","supercoolerB1","supercoolerB2","supercoolerB3","supercoolerB4","supercoolerB5","supercoolerB6","supercoolerB7","supercoolerB8","supercoolerB9","supercoolerB10","supercoolerB11",
             "supercoolerC0","supercoolerC1","supercoolerC2","supercoolerC3","supercoolerC4","supercoolerC5","supercoolerC6","supercoolerC7","supercoolerC8","supercoolerC9","supercoolerC10","supercoolerC11",
