@@ -250,7 +250,7 @@ class Main(threading.Thread):
         self.light_level = 10
         self.camera_capture_delay = 10
         self.object_detection_wait_period = 300
-        self.whole_process_wait_period = 600
+        self.whole_process_wait_period = 330
         self.soonest_run_time = time.time()
         self.camera_units = Camera_Units(self.network)
         self.response_accumulator = Response_Accumulator()
@@ -326,14 +326,13 @@ class Main(threading.Thread):
                 if topic == "door_opened":
                     self.web_interface.send_door_open()
                 if topic == "receive_image_data":
-                    print msg["shelf_id"]
-                    print msg["camera_id"]
-                    print msg["potential_objects"]
-                    print ""
+                    shelf_id =  msg["shelf_id"]
+                    camera_id =  int(msg["camera_id"])
+                    potential_objects =  msg["potential_objects"]
 
-                    #self.response_accumulator.add_potential_objects(msg["shelf_id"], msg["camera_id"], msg["potential_objects"], True)
-                    #filename = "{}_{}.png".format(msg["shelf_id"], msg["camera_id"])
-                    #self.images_undistorted.store(filename, msg["undistorted_capture_ocv"])
+                    self.response_accumulator.add_potential_objects(shelf_id, camera_id, potential_objects, True)
+                    filename = "{}_{}.png".format(shelf_id, camera_id)
+                    self.images_undistorted.store(filename, msg["undistorted_capture_ocv"])
 
                 if topic == "object_detection_complete":
                     print "OBJECT DETECTION TIMEOUT ( how's my timing? )"
