@@ -229,10 +229,10 @@ class Response_Accumulator(object):
             self.print_response_status()
     def print_response_status(self):
         print "Response_Accumulator"
-        print "D", map(lambda status: "X" if status else " ", response_status["D"])
-        print "C", map(lambda status: "X" if status else " ", response_status["C"])
-        print "B", map(lambda status: "X" if status else " ", response_status["B"])
-        print "A", map(lambda status: "X" if status else " ", response_status["A"])
+        print "D", map(lambda status: "X" if status else " ", self.response_status["D"])
+        print "C", map(lambda status: "X" if status else " ", self.response_status["C"])
+        print "B", map(lambda status: "X" if status else " ", self.response_status["B"])
+        print "A", map(lambda status: "X" if status else " ", self.response_status["A"])
         print "received", len(self.potential_objects), "potential objects"
 
 # Main handles network send/recv and can see all other classes directly
