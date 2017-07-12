@@ -40,7 +40,7 @@ CAPTURES_PATH = "/home/nvidia/supercooler/Captures/"
 
 class Network(object):
     def __init__(self, hostname, network_message_handler, network_status_handler):
-        self.hostname = hostnamex`
+        self.hostname = hostname
         self.thirtybirds = network_init(
             hostname=hostname,
             role="server",
