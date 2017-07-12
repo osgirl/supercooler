@@ -611,8 +611,8 @@ def network_message_handler(msg):
 
         topic = msg[0]
 
-        if topic != "client_monitor_response":
-            print "network_message_handler", msg
+        #if topic != "client_monitor_response":
+        #    print "network_message_handler", msg
 
         if len(msg[1]) > 0:
             payload = eval(msg[1])
