@@ -218,6 +218,7 @@ class Duplicate_Filter(object):
                                 # if not in cluters, create new cluster
                                 # if objects are within duplicate range
                                 # how to match with existing clusters?
+                                pass
 
     def add_global_coords(self, objects):
         pass
