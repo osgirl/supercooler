@@ -211,7 +211,7 @@ class Duplicate_Filter(object):
         for shelf_id in ['A','B','C','D']:
             for i, outer_confident_object in enumerate( confident_objects ):
                 for j, inner_confident_object in  enumerate( confident_objects ):
-                        if i != j;  # avoid comparing same potential_objects
+                        if i != j:  # avoid comparing same potential_objects
                             distance  = self.calculate_distance(outer_confident_object['global_x'],outer_confident_object['global_y'],inner_confident_object['global_x'],inner_confident_object['global_y'])  # calculate proximity based on shelf-based coordinates, object diameter, elastic factor
                             if distance < self.diameter_threshold: # if objects are close
                                 # if in clusters, add to cluster
