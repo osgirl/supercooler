@@ -235,9 +235,8 @@ class Response_Accumulator(object):
         print "B", map(lambda status: "X" if status else " ", self.response_status["B"])
         print "A", map(lambda status: "X" if status else " ", self.response_status["A"])
         print "received", len(self.potential_objects), "potential objects"
-    def add_classification_scores(self):
-        print "@@@@@@@@@@@@@@@"
-
+    def get_potential_objects(self):
+        return self.potential_objects
 
 # Main handles network send/recv and can see all other classes directly
 class Main(threading.Thread):
@@ -341,8 +340,13 @@ class Main(threading.Thread):
                 if topic == "object_detection_complete":
                     print "OBJECT DETECTION COMPLETE ( how's my timing? )"
                     print self.response_accumulator.print_response_status()
-                    print self.images.get_filenames()
-                    self.response_accumulator.add_classification_scores()
+                    print self.images_undistorted.get_filenames()
+                    potential_objects = self.response_accumulator.get_potential_objects()
+                    for shelf_id in ['A','B','C','D']:
+                        for camera_id in range(12): 
+                            potential_objects_subset = (filter(lambda d: d['shelf_id'] == shelf_id and int(d['camera_id']) == camera_id,  potential_objects))
+                            print shelf_id, camera_id, potential_objects_subset
+                            print ""
 
             except Exception as e:
                 exc_type, exc_value, exc_traceback = sys.exc_info()
