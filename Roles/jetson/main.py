@@ -32,9 +32,9 @@ import signal
 import sys
 import yaml
 
+import classifier
 from thirtybirds_2_0.Network.manager import init as network_init
 from web_interface import WebInterface
-from classifier import Classifier
 
 CAPTURES_PATH = "/home/nvidia/supercooler/Captures/"
 
@@ -365,10 +365,18 @@ class Main(threading.Thread):
                     shelf_id =  msg["shelf_id"]
                     camera_id =  int(msg["camera_id"])
                     potential_objects =  msg["potential_objects"]
+
                     undistorted_capture_png = msg["undistorted_capture_ocv"]
+
+                    # decode image to test classifier                    
+                    nparr = np.fromstring(undistorted_capture_png, np.uint8)
+                    undistorted_capture_ocv = cv2.imdecode(nparr, cv2.CV_LOAD_IMAGE_COLOR)
+                    classifier.classify_images(potential_objects, undistorted_capture_ocv)
+
                     self.response_accumulator.add_potential_objects(shelf_id, camera_id, potential_objects, True)
                     filename = "{}_{}.png".format(shelf_id, camera_id)
                     self.images_undistorted.store(filename, undistorted_capture_png)
+                    
                 if topic == "object_detection_complete":
                     print "OBJECT DETECTION COMPLETE ( how's my timing? )"
                     print self.response_accumulator.print_response_status()
