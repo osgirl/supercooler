@@ -18,6 +18,7 @@ jetson is the puppetmaster.
 import base64
 import cv2
 import json
+import math
 import numpy as np
 import os
 import Queue
@@ -199,11 +200,42 @@ class Beers(object):
         }
 
 class Duplicate_Filter(object):
-    def __init__(self,):
-            pass
+    def __init__(self, beers):
+        self.beers = beers
+        self.clusters = []
+        self.diameter_threshold = 80 # mm - that's a guess. verify
+    def search_for_duplicates(self, potential_objects):
+        self.add_global_coords(potential_objects)
+        confident_objects = self.filter_confident_objects(potential_objects)
+        # start with shelf x/y coordinates.  calculate here if neccessary
+        for shelf_id in ['A','B','C','D']:
+            for i, outer_confident_object in enumerate( confident_objects ):
+                for j, inner_confident_object in  enumerate( confident_objects ):
+                        if i != j;  # avoid comparing same potential_objects
+                            distance  = self.calculate_distance(outer_confident_object['global_x'],outer_confident_object['global_y'],inner_confident_object['global_x'],inner_confident_object['global_y'])  # calculate proximity based on shelf-based coordinates, object diameter, elastic factor
+                            if distance < self.diameter_threshold: # if objects are close
+                                # if in clusters, add to cluster
+                                # if not in cluters, create new cluster
+                                # if objects are within duplicate range
+                                # how to match with existing clusters?
+
+    def add_global_coords(self, objects):
+        pass
+
+    def filter_confident_objects(self,  objects):
+        return objects
+
+    def calculate_distance(self, outer_x, outer_y, inner_x, inner_y ):
+        return math.sqrt( math.pow((outer_x-inner_x),  2) + math.pow((outer_y-inner_y),  2))
+
+    def identity_same_camera_nested_objects(self, objects):
+        # if camera is same
+        # 
+        pass
+
 
 class Inventory(object):
-    def __init__(self,):
+    def __init__(self):
             pass
 
 class Response_Accumulator(object):
@@ -245,7 +277,7 @@ class Main(threading.Thread):
         self.queue = Queue.Queue()
         self.images_undistorted = Images(CAPTURES_PATH)
         self.beers = Beers()
-        self.duplicate_filter = Duplicate_Filter()
+        self.duplicate_filter = Duplicate_Filter(self.beers)
         self.web_interface = WebInterface()
         self.inventory = Inventory()
         self.network = Network(hostname, self.network_message_handler, self.network_status_handler)
@@ -344,9 +376,10 @@ class Main(threading.Thread):
                     potential_objects = self.response_accumulator.get_potential_objects()
                     for shelf_id in ['A','B','C','D']:
                         for camera_id in range(12): 
-                            potential_objects_subset = (filter(lambda d: d['shelf_id'] == shelf_id and int(d['camera_id']) == camera_id,  potential_objects))
+                            potential_objects_subset = filter(lambda d: d['shelf_id'] == shelf_id and int(d['camera_id']) == camera_id,  potential_objects)
                             print shelf_id, camera_id, potential_objects_subset
-                            print ""
+
+
 
             except Exception as e:
                 exc_type, exc_value, exc_traceback = sys.exc_info()
