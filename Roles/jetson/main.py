@@ -30,6 +30,7 @@ import settings
 import signal
 import sys
 import yaml
+import classifier
 
 from thirtybirds_2_0.Network.manager import init as network_init
 from web_interface import WebInterface
@@ -257,6 +258,7 @@ class Main(threading.Thread):
         self.soonest_run_time = time.time()
         self.camera_units = Camera_Units(self.network)
         self.response_accumulator = Response_Accumulator()
+        self.classifier = classifier.Classifier()
 
         self.hostnames = [
             "supercoolerA0","supercoolerA1","supercoolerA2","supercoolerA3","supercoolerA4","supercoolerA5","supercoolerA6","supercoolerA7","supercoolerA8","supercoolerA9","supercoolerA10","supercoolerA11",
@@ -336,7 +338,8 @@ class Main(threading.Thread):
                     undistorted_capture_png = msg["undistorted_capture_ocv"]
                     self.response_accumulator.add_potential_objects(shelf_id, camera_id, potential_objects, True)
                     filename = "{}_{}.png".format(shelf_id, camera_id)
-                    self.images_undistorted.store(filename, undistorted_capture_png)
+                    self.images_undistorted.store(filename, undistorted_capture_png)'
+                    self.classifier.classify_images(add_potential_objects, undistorted_capture_png)
                 if topic == "object_detection_complete":
                     print "OBJECT DETECTION COMPLETE ( how's my timing? )"
                     print self.response_accumulator.print_response_status()
