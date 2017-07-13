@@ -61,57 +61,6 @@ class Classifier():
             graph_def.ParseFromString(f.read())
             _ = tf.import_graph_def(graph_def, name='')
 
-    def classify_images(self, potential_objects, image, threshold=0.6):
-
-        # if the best guess falls below this threshold, assume no match
-        confidence_threshold = threshold
-
-        print "Classifier.classify_images"
-
-        # start tensorflow session, necessary to run classifier
-        with tf.Session() as sess:
-
-            for i, candidate in enumerate(potential_objects):
-
-                # report progress every ten images
-                if (i%10) == 0:
-                    print 'processing %dth image' % i
-                    time.sleep(1)
-
-                # crop image and encode as jpeg (classifier expects jpeg)
-                print "cropping..."
-
-                r  = candidate['radius']
-                (img_height, img_width) = image.shape[:2]
-
-                x1 = max(candidate['shelf_x']-r, 0)
-                y1 = max(candidate['shelf_y']-r, 0)
-                x2 = min(x1 + r*2, img_width )
-                y2 = min(y1 + r*2, img_height)
-
-                img_crop = image[y1:y1, x1:x2]
-                img_jpg = cv2.imencode('.jpg', img_crop)[1].tobytes()
-
-                print "cropped image, w,h = ", x2-x1, y2-y1
-
-                # get a list of guesses w/ confidence in this format:
-                # guesses = [(best guess, confidence), (next guess, confidence), ...]
-                print "running classifier..."
-
-                guesses = self.guess_image(sess,img_jpg)
-                best_guess, confidence = guesses[0]
-
-                # print result from classifier
-                print guesses
-
-                '''if confidence > confidence_threshold:
-                    inventory.append({
-                        "type"  : self.label_lookup[best_guess],
-                        "shelf" : cropped_capture["shelf_id"],
-                        "x"     : x + w/2,
-                        "y"     : y + h/2,
-                    })'''
-
     # def guess_images(self, input_dir):
     #     input_images = sorted([f for f in os.listdir(input_dir) if f.endswith(".jpg")])
     #     with tf.Session() as sess:
@@ -132,14 +81,53 @@ class Classifier():
         scores = [(self.label_lines[node_id], predictions[0][node_id]) for node_id in top_k]
 
         # throttle to prevent overheating
-        while get_temp_celcius() > 55:
+        '''while get_temp_celcius() > 55:
             print "it's hot!", get_temp_celcius()
-            time.sleep(1)
+            time.sleep(1)'''
         
         return scores
 
-# get value from RPi onboard temp sensor, parse & convert to float
-def get_temp_celcius():
-    temp_cmd = '/opt/vc/bin/vcgencmd measure_temp'
-    return float(subprocess.check_output(temp_cmd, shell=True)[5:9])
+def classify_images(potential_objects, image, threshold=0.6):
+
+    # if the best guess falls below this threshold, assume no match
+    confidence_threshold = threshold
+
+    print "Classifier.classify_images"
+
+    # start tensorflow session, necessary to run classifier
+    classifier = Classifier()
+    with tf.Session() as sess:
+
+        for i, candidate in enumerate(potential_objects):
+
+            # report progress every ten images
+            if (i%10) == 0:
+                print 'processing %dth image' % i
+                time.sleep(1)
+
+            # crop image and encode as jpeg (classifier expects jpeg)
+            print "cropping..."
+
+            r  = candidate['radius']
+            (img_height, img_width) = image.shape[:2]
+
+            x1 = max(candidate['shelf_x']-r, 0)
+            y1 = max(candidate['shelf_y']-r, 0)
+            x2 = min(x1 + r*2, img_width )
+            y2 = min(y1 + r*2, img_height)
+
+            img_crop = image[y1:y2, x1:x2]
+            img_jpg = cv2.imencode('.jpg', img_crop)[1].tobytes()
+
+            print "cropped image, w,h = ", x2-x1, y2-y1
+
+            # get a list of guesses w/ confidence in this format:
+            # guesses = [(best guess, confidence), (next guess, confidence), ...]
+            print "running classifier..."
+
+            guesses = classifier.guess_image(sess, img_jpg)
+            best_guess, confidence = guesses[0]
+
+            # print result from classifier
+            print guesses
 
