@@ -95,7 +95,8 @@ def classify_images(potential_objects, image, threshold=0.6):
     print "Classifier.classify_images"
 
     # start tensorflow session, necessary to run classifier
-    with tf.Session() as sess:
+     classifier = Classifier()
+     with tf.Session() as sess:
 
         for i, candidate in enumerate(potential_objects):
 
@@ -129,6 +130,3 @@ def classify_images(potential_objects, image, threshold=0.6):
 
             # print result from classifier
             print guesses
-
-# only instantiate classifier once
-classifier = Classifier()
