@@ -164,12 +164,10 @@ def mapped_lens_correction(distorted_image, distortion_map, scale=15):
     distortion_point_locations = get_distortion_points(distortion_map)
 
     for point in distortion_point_locations:
-        distortion_points += [Distortion_Point(
-            point[1], point[0], distortion_map)]
+        distortion_points += [Distortion_Point(point[1], point[0], distortion_map)]
 
     for point in distortion_points:
-        distortion_points_dict[
-            (point.real_coords_x, point.real_coords_y)] = point
+        distortion_points_dict[(point.real_coords_x, point.real_coords_y)] = point
 
     min_real_x = min(map(lambda x: x[0], distortion_points_dict.keys()))
     max_real_x = max(map(lambda x: x[0], distortion_points_dict.keys()))
@@ -177,19 +175,25 @@ def mapped_lens_correction(distorted_image, distortion_map, scale=15):
     max_real_y = max(map(lambda x: x[1], distortion_points_dict.keys()))
 
     undistorted_image = np.zeros(
-        ((max_real_y-min_real_y)*scale, (max_real_x-min_real_x)*scale, 3), np.uint8)
+        (image_height, image_width, 3), np.uint8)
+
     for x in range(min_real_x, max_real_x, 10):
         for y in range(min_real_y, max_real_y, 10):
             min_x = x
             min_y = y
             max_x = x+10
             max_y = y+10
-            if min_y == 80:
-                max_y = 85
+            if min_y == 80: max_y = 85
+
             undistorted_minimal_square = undistort_minimal_square(
-                distorted_image, distortion_points_dict, min_x, min_y, max_x, max_y, scale=scale)
-            undistorted_image[(min_y-min_real_y)*scale:(max_y-min_real_y)*scale,
-                              (min_x-min_real_x)*scale:(max_x-min_real_x)*scale] = undistorted_minimal_square
+                distorted_image, distortion_points_dict, min_x, min_y, max_x, max_y, min_real_x, max_real_x, min_real_y, max_real_y, scale=scale)
+
+            row_start = (min_y-min_real_y)*scale
+            row_end   = (max_y-min_real_y)*scale
+            col_start = (min_x-min_real_x)*scale
+            col_end   = (max_x-min_real_x)*scale
+
+            undistorted_image[row_start:row_end, col_start:col_end] = undistorted_minimal_square
 
     return undistorted_image
 
@@ -218,11 +222,29 @@ def get_distortion_points(distortion_map):
 # warpPerspective call.
 
 
-def undistort_minimal_square(distorted_image, distortion_points, min_x, min_y, max_x, max_y, scale=15):
-    lowerLeft = distortion_points[(min_x, min_y)].getLocation()
-    upperLeft = distortion_points[(max_x, min_y)].getLocation()
+def undistort_minimal_square(distorted_image, distortion_points, min_x, min_y, max_x, max_y, min_real_x, max_real_x, min_real_y, max_real_y, scale=15):
+    lowerLeft  = distortion_points[(min_x, min_y)].getLocation()
+    upperLeft  = distortion_points[(max_x, min_y)].getLocation()
     lowerRight = distortion_points[(min_x, max_y)].getLocation()
     upperRight = distortion_points[(max_x, max_y)].getLocation()
+
+    image_width, image_height, _ = distorted_image.shape
+
+    if min_x == min_real_x:
+        lowerLeft [1] = min( lowerLeft[1]+100, image_width)
+        lowerRight[1] = min(lowerRight[1]+100, image_width)
+
+    if min_y == min_real_y:
+        lowerLeft[0] = 0
+        upperLeft[0] = 0
+
+    if max_x == max_real_x:
+        upperLeft [1] = 0
+        upperRight[1] = 0
+
+    if max_y == max_real_y:
+        lowerRight[0] = min(lowerRight[0]+100, image_height)
+        upperRight[0] = min(upperRight[0]+100, image_height)
 
     originPoints = np.float32([upperLeft, upperRight, lowerLeft, lowerRight])
     targetPoints = np.float32([[(max_x-min_x)*scale, 0], [(max_x-min_x)*scale, (max_y-min_y)*scale], [
@@ -241,6 +263,7 @@ class Distortion_Point(object):
     def __init__(self, x, y, image):
         self.x = x
         self.y = y
+
         self.real_coords_x = image[x][y][2]
         self.real_coords_y = image[x][y][1]
 

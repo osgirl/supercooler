@@ -3,6 +3,7 @@ import glob
 import os
 import re
 import cvFunctions as cvf
+import matplotlib.pyplot as plt
 
 parser = argparse.ArgumentParser()
 
@@ -27,5 +28,5 @@ for image_path in files:
 
     corrected = cvf.mapped_lens_correction(image, distortion_map)
 
-    cvf.show_image(image,     'original' )
-    cvf.show_image(corrected, 'corrected')
+    cvf.show_image(image, 'original')
+    plt.imshow(corrected), plt.show()
