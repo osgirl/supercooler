@@ -54,6 +54,13 @@ class Classifier():
         self.label_lines = [line.rstrip() for line 
                            in tf.gfile.GFile("/home/nvidia/supercooler/Roles/jetson/tf_files/retrained_labels.txt")]
 
+        #XXX moved this from guess_images.. is that ok?
+        # Unpersists graph from file
+        with tf.gfile.FastGFile("/home/nvidia/supercooler/Roles/jetson/tf_files/retrained_graph.pb", 'rb') as f:
+            graph_def = tf.GraphDef()
+            graph_def.ParseFromString(f.read())
+            _ = tf.import_graph_def(graph_def, name='')
+
     # def guess_images(self, input_dir):
     #     input_images = sorted([f for f in os.listdir(input_dir) if f.endswith(".jpg")])
     #     with tf.Session() as sess:
@@ -88,7 +95,6 @@ def classify_images(potential_objects, image, threshold=0.6):
     print "Classifier.classify_images"
 
     # start tensorflow session, necessary to run classifier
-    classifier = Classifier()
     with tf.Session() as sess:
 
         for i, candidate in enumerate(potential_objects):
@@ -124,10 +130,5 @@ def classify_images(potential_objects, image, threshold=0.6):
             # print result from classifier
             print guesses
 
-
-#XXX moved this from guess_images.. is that ok?
-# Unpersists graph from file
-with tf.gfile.FastGFile("/home/nvidia/supercooler/Roles/jetson/tf_files/retrained_graph.pb", 'rb') as f:
-    graph_def = tf.GraphDef()
-    graph_def.ParseFromString(f.read())
-    _ = tf.import_graph_def(graph_def, name='')
+# only instantiate classifier once
+classifier = Classifier()
