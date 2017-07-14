@@ -149,6 +149,9 @@ class Images(object):
     def get(self, filename):
         pass
 
+    def get_as_nparray(self, filename):
+        return cv2.imread(os.path.join(self.capture_path, filename))
+
     def get_filepaths(self):
         filenames = self.get_filenames()
         return list(map((lambda filename:  os.path.join(self.capture_path, filename)), filenames))
@@ -377,16 +380,32 @@ class Main(threading.Thread):
                     self.response_accumulator.add_potential_objects(shelf_id, camera_id, potential_objects, True)
                     filename = "{}_{}.png".format(shelf_id, camera_id)
                     self.images_undistorted.store(filename, undistorted_capture_png)
-                    
+
                 if topic == "object_detection_complete":
                     print "OBJECT DETECTION COMPLETE ( how's my timing? )"
                     print self.response_accumulator.print_response_status()
                     print self.images_undistorted.get_filenames()
                     potential_objects = self.response_accumulator.get_potential_objects()
                     for shelf_id in ['A','B','C','D']:
-                        for camera_id in range(12): 
+                        for camera_id in range(12):
                             potential_objects_subset = filter(lambda d: d['shelf_id'] == shelf_id and int(d['camera_id']) == camera_id,  potential_objects)
                             print shelf_id, camera_id, potential_objects_subset
+
+                            # if no objects were detected, skip
+                            if len(potential_objects_subset) == 0: continue
+
+                            # get undisotrted image and begin classification. use first object to grab shelf+cam
+                            first_object = potential_objects_subset[0]
+                            lens_corrected_img = self.images_undistorted.get_as_nparray(
+                                "{}_{}.png".format(first_object['shelf_id'], first_object['camera_id']))
+                            classifier.classify_images(potential_objects_subset, lens_corrected_img)
+
+                # classify images
+                #print "begin classification"
+                #for potential_object in potential_objects:
+                    # get corresponding image as numpy array, 
+                    #lens_corrected_img = self.images_undistorted.get_as_nparray(
+                     #   "{}_{}.png".format(potential_object.shelf_id, potential_object.camera_id))
 
 
 
