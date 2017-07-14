@@ -32,7 +32,6 @@ import signal
 import sys
 import yaml
 
-import classifier
 from thirtybirds_2_0.Network.manager import init as network_init
 from web_interface import WebInterface
 
@@ -294,6 +293,17 @@ class Main(threading.Thread):
         self.camera_units = Camera_Units(self.network)
         self.response_accumulator = Response_Accumulator()
 
+        self.label_lines = [line.rstrip() for line 
+            in tf.gfile.GFile("/home/nvidia/supercooler/Roles/jetson/tf_files/retrained_labels.txt")]
+
+        with tf.gfile.FastGFile("/home/nvidia/supercooler/Roles/jetson/tf_files/retrained_graph.pb", 'rb') as f:
+            graph_def = tf.GraphDef()
+            graph_def.ParseFromString(f.read())
+
+        with tf.Graph().as_default() as imported_graph:
+            tf.import_graph_def(graph_def, name='')
+            self.imported_graph = imported_graph
+
         self.hostnames = [
             "supercoolerA0","supercoolerA1","supercoolerA2","supercoolerA3","supercoolerA4","supercoolerA5","supercoolerA6","supercoolerA7","supercoolerA8","supercoolerA9","supercoolerA10","supercoolerA11",
             "supercoolerB0","supercoolerB1","supercoolerB2","supercoolerB3","supercoolerB4","supercoolerB5","supercoolerB6","supercoolerB7","supercoolerB8","supercoolerB9","supercoolerB10","supercoolerB11",
@@ -387,17 +397,7 @@ class Main(threading.Thread):
                     print self.images_undistorted.get_filenames()
                     potential_objects = self.response_accumulator.get_potential_objects()
 
-                    label_lines = [line.rstrip() for line 
-                           in tf.gfile.GFile("/home/nvidia/supercooler/Roles/jetson/tf_files/retrained_labels.txt")]
-
-                    with tf.gfile.FastGFile("/home/nvidia/supercooler/Roles/jetson/tf_files/retrained_graph.pb", 'rb') as f:
-                        graph_def = tf.GraphDef()
-                        graph_def.ParseFromString(f.read())
-
-                    with tf.Graph().as_default() as imported_graph:
-                        tf.import_graph_def(graph_def, name='')
-
-                    with tf.Session(graph=imported_graph) as sess:
+                    with tf.Session(graph=self.imported_graph) as sess:
 
                         for shelf_id in ['A','B','C','D']:
                             for camera_id in range(12):
@@ -413,20 +413,64 @@ class Main(threading.Thread):
                                     "{}_{}.png".format(first_object['shelf_id'], first_object['camera_id']))
 
                                 #with tf.Session() as sess:
-                                classifier.classify_images(potential_objects_subset, lens_corrected_img, sess, label_lines)
-
-                # classify images
-                #print "begin classification"
-                #for potential_object in potential_objects:
-                    # get corresponding image as numpy array, 
-                    #lens_corrected_img = self.images_undistorted.get_as_nparray(
-                     #   "{}_{}.png".format(potential_object.shelf_id, potential_object.camera_id))
-
-
+                                self.crop_and_classify_images(potential_objects_subset, lens_corrected_img, sess)
 
             except Exception as e:
                 exc_type, exc_value, exc_traceback = sys.exc_info()
                 print e, repr(traceback.format_exception(exc_type, exc_value,exc_traceback))
+
+    def crop_and_classify_images(self, potential_objects, image, sess, threshold=0.6):
+
+        # if the best guess falls below this threshold, assume no match
+        confidence_threshold = threshold
+
+        print "crop_and_classify_images"
+        
+        for i, candidate in enumerate(potential_objects):
+
+            # report progress every ten images
+            if (i%10) == 0:
+                print 'processing %dth image' % i
+                time.sleep(1)
+
+            # crop image and encode as jpeg (classifier expects jpeg)
+            print "cropping..."
+
+            r  = candidate['radius']
+            (img_height, img_width) = image.shape[:2]
+
+            x1 = max(candidate['shelf_x']-r, 0)
+            y1 = max(candidate['shelf_y']-r, 0)
+            x2 = min(x1 + r*2, img_width )
+            y2 = min(y1 + r*2, img_height)
+
+            img_crop = image[y1:y2, x1:x2]
+            img_jpg = cv2.imencode('.jpg', img_crop)[1].tobytes()
+
+            print "cropped image, w,h = ", x2-x1, y2-y1
+
+            # get a list of guesses w/ confidence in this format:
+            # guesses = [(best guess, confidence), (next guess, confidence), ...]
+            print "running classifier..."
+
+            guesses = self.guess_image(sess, img_jpg)
+            best_guess, confidence = guesses[0]
+
+            print guesses
+
+    def guess_image(self, tf_session, image):
+        # Feed the image_data as input to the graph and get first prediction
+        softmax_tensor = tf_session.graph.get_tensor_by_name('final_result:0')
+        
+        print "run tf session..."
+        predictions = tf_session.run(softmax_tensor, {'DecodeJpeg/contents:0': image})
+        
+        # Sort to show labels of first prediction in order of confidence
+        print "sort labels.."
+        top_k = predictions[0].argsort()[-len(predictions[0]):][::-1]
+
+        scores = [(self.label_lines[node_id], predictions[0][node_id]) for node_id in top_k]
+        return scores
 
 
 def init(hostname):
