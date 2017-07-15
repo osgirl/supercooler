@@ -560,6 +560,8 @@ class Main(threading.Thread):
             guesses = self.guess_image(sess, img_jpg)
             best_guess, confidence = guesses[0]
 
+            candidate["classification"] = guesses
+            
             print guesses
 
     def guess_image(self, tf_session, image):
