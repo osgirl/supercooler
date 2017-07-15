@@ -346,9 +346,10 @@ class Detected_Objects(object):
                 )
             source_image_filename = "{}_{}.png".format(shelf_id, camera_id)
             source_image_filepath = os.path.join(self.capture_path, source_image_filename)
-            destination_image_filename = "{}_{}_potentialObjects.png".format(shelf_id, camera_id)
-            destination_image_filepath = os.path.join(self.parsed_capture_path, destination_image_filename)
-            self.annotate_image(source_image_filepath, annotations, destination_image_filepath)
+            if  os.path.isfile(source_image_filepath): # this image should exist.  but roll with the case in which is doesn't
+                destination_image_filename = "{}_{}_potentialObjects.png".format(shelf_id, camera_id)
+                destination_image_filepath = os.path.join(self.parsed_capture_path, destination_image_filename)
+                self.annotate_image(source_image_filepath, annotations, destination_image_filepath)
             
 
 
