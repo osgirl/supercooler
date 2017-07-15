@@ -321,7 +321,7 @@ class Detected_Objects(object):
         return filter(lambda d: d['shelf_id'] == shelf_id and int(d['camera_id']) == camera_id,  object_list)
 
     def annotate_image(self, source_image_filepath, annotations, destination_image_filepath):
-        print "annotate_image", source_image_filepath, destination_image_filepath, annotations
+        #print "annotate_image", source_image_filepath, destination_image_filepath, annotations
         # this might fit better in another class
         # annotations format:
         # [ {"type":"", "data":{}}}]
@@ -336,6 +336,24 @@ class Detected_Objects(object):
         cv2.imwrite(destination_image_filepath, annotated_image)
 
     def create_potential_object_images(self, object_list):
+        shelf_camera_iterator = self. shelf_camera_ids_generator()
+        for shelf_id, camera_id in shelf_camera_iterator:
+            objects_from_one_camera =  self.filter_object_list_by_shelf_and_camera(shelf_id, camera_id, object_list)
+            annotations = []
+            for object_from_one_camera in objects_from_one_camera:
+                annotations.append(
+                    {"type":"circle", "x":object_from_one_camera["shelf_x"], "y":object_from_one_camera["shelf_y"], "radius":object_from_one_camera["radius"] }
+                )
+            source_image_filename = "{}_{}.png".format(shelf_id, camera_id)
+            source_image_filepath = os.path.join(self.capture_path, source_image_filename)
+            if  os.path.isfile(source_image_filepath): # this image should exist.  but roll with the case in which is doesn't
+                destination_image_filename = "{}_{}_potentialObjects.png".format(shelf_id, camera_id)
+                destination_image_filepath = os.path.join(self.parsed_capture_path, destination_image_filename)
+                self.annotate_image(source_image_filepath, annotations, destination_image_filepath)
+            else:
+                print "Detected_Objects.create_potential_object_images image not found at", source_image_filepath
+
+    def create_classified_object_images(self, object_list):
         shelf_camera_iterator = self. shelf_camera_ids_generator()
         for shelf_id, camera_id in shelf_camera_iterator:
             objects_from_one_camera =  self.filter_object_list_by_shelf_and_camera(shelf_id, camera_id, object_list)
@@ -481,7 +499,7 @@ class Main(threading.Thread):
 
                     self.detected_objects.create_potential_object_images(potential_objects)
                     print "OBJECT DETECTION COMPLETE"
-                    """
+                    
                     with tf.Session(graph=self.imported_graph) as sess:
 
                         for shelf_id in ['A','B','C','D']:
@@ -499,7 +517,8 @@ class Main(threading.Thread):
 
                                 #with tf.Session() as sess:
                                 self.crop_and_classify_images(potential_objects_subset, lens_corrected_img, sess)
-                    """
+                            print potential_objects_subset
+                    
             except Exception as e:
                 exc_type, exc_value, exc_traceback = sys.exc_info()
                 print e, repr(traceback.format_exception(exc_type, exc_value,exc_traceback))
