@@ -172,7 +172,7 @@ class Beers(object):
             "bottleultra"               : 7,
             "bottleshocktopraspberry"   : 8,
             "bottleshocktoppretzel"     : 9,
-            "bottlestella"              : 107,
+            "bottlestella"              : 10,
             "canbudamerica"             : 11,
             "canbudlight"               : 12,
             "canbusch"                  : 13,
@@ -207,11 +207,17 @@ class Duplicate_Filter(object):
         self.beers = beers
         self.clusters = []
         self.diameter_threshold = 80 # mm - that's a guess. verify
+        self.confidence_threshold = 0.95
+        self.shelf_ids = ['A','B','C','D']
+        #self.confident_objects = []
+
     def search_for_duplicates(self, potential_objects):
-        self.add_global_coords(potential_objects)
-        confident_objects = self.filter_confident_objects(potential_objects)
+        #self.add_global_coords(potential_objects)
+        self.confident_objects = self.filter_out_unconfident_objects(potential_objects)
+        self.non_nested_objects = self.filter_out_spatially_nested_objects(self.confident_objects)
+
         # start with shelf x/y coordinates.  calculate here if neccessary
-        for shelf_id in ['A','B','C','D']:
+        for shelf_id in self.shelf_ids:
             for i, outer_confident_object in enumerate( confident_objects ):
                 for j, inner_confident_object in  enumerate( confident_objects ):
                         if i != j:  # avoid comparing same potential_objects
@@ -223,19 +229,40 @@ class Duplicate_Filter(object):
                                 # how to match with existing clusters?
                                 pass
 
-    def add_global_coords(self, objects):
+    def filter_out_unconfident_objects(self,  superset_objects):
+        return filter(lambda ss_o: ss_o['classifier']['score'] >= self.confidence_threshold, superset_objects)
+
+    def filter_out_spatially_nested_objects(self, superset_objects):
+        #internal comparrison
+        for shelf_id in self.shelf_ids:
+            for camera_id in range(12):
+                objects_from_single_camera = filter(lambda d: d['shelf_id'] == shelf_id and int(d['camera_id']) == camera_id,  superset_objects)
+                for objects_from_single_camera_a, objects_from_single_camera_b in itertools.combinations(objects_from_single_camera, 2):
+                    # todo: prevent comparing the same pairs of objects as switched inner/outer roles.  probably a looping solution
+                    centroid_distance, radius_distance, radius_inside, centroid_inside = self.calculate_centroid_distance_and_radius_distance(
+                        (objects_from_single_camera_a["shelf_x"], objects_from_single_camera_a["shelf_y"], objects_from_single_camera_a["radius"]), 
+                        (objects_from_single_camera_b["shelf_x"], objects_from_single_camera_b["shelf_y"], objects_from_single_camera_b["radius"])
+                    )
+                    
+
+    def calculate_centroid_distance_and_radius_distance(self, circle_a, circle_b ):
+        centroid_distance = math.pow( math.pow(circle_a['x'] - circle_b['x'], 2) + math.pow(circle_a['y'] - circle_b['y'], 2), 0.5)
+        circle_outer, inner_circle = circle_a, circle_b if circle_a['r'] > circle_b['r'] else circle_b, circle_a
+        radius_distance =  circle_outer['r'] - (inner_circle['r'] + centroid_distance)
+        radius_inside = True if radius_distance > 0 else False
+        centroid_inside = True if radius_distance + inner_circle['r'] > 0 else False
+        return  centroid_distance, radius_distance, radius_inside, centroid_inside
+
+
+    def group_suspiciously_proximal_objects(self, objects):
         pass
 
-    def filter_confident_objects(self,  objects):
-        return objects
+    def add_global_coords(self, objects):
+        pass
 
     def calculate_distance(self, outer_x, outer_y, inner_x, inner_y ):
         return math.sqrt( math.pow((outer_x-inner_x),  2) + math.pow((outer_y-inner_y),  2))
 
-    def identity_same_camera_nested_objects(self, objects):
-        # if camera is same
-        # 
-        pass
 
 
 class Inventory(object):
@@ -288,8 +315,8 @@ class Main(threading.Thread):
         self.gdrive_captures_directory = "0BzpNPyJoi6uoSGlhTnN5RWhXRFU"
         self.light_level = 10
         self.camera_capture_delay = 10
-        self.object_detection_wait_period = 240
-        self.whole_process_wait_period = 300
+        self.object_detection_wait_period = 300
+        self.whole_process_wait_period = 330
         self.soonest_run_time = time.time()
         self.camera_units = Camera_Units(self.network)
         self.response_accumulator = Response_Accumulator()
@@ -400,12 +427,8 @@ class Main(threading.Thread):
                                 "{}_{}.png".format(first_object['shelf_id'], first_object['camera_id']))
                             classifier.classify_images(potential_objects_subset, lens_corrected_img)
 
-                # classify images
-                #print "begin classification"
-                #for potential_object in potential_objects:
-                    # get corresponding image as numpy array, 
-                    #lens_corrected_img = self.images_undistorted.get_as_nparray(
-                     #   "{}_{}.png".format(potential_object.shelf_id, potential_object.camera_id))
+                    print "CLASSIFICATION COMPLETE, STARTING DUPLICATE DETECTION"
+
 
 
 
