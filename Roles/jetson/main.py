@@ -32,11 +32,12 @@ import signal
 import sys
 import yaml
 
-import classifier
 from thirtybirds_2_0.Network.manager import init as network_init
 from web_interface import WebInterface
 
 CAPTURES_PATH = "/home/nvidia/supercooler/Captures/"
+
+PARSED_CAPTURES_PATH = "/home/nvidia/supercooler/ParsedCaptures/"
 
 
 class Network(object):
@@ -157,7 +158,8 @@ class Images(object):
         return list(map((lambda filename:  os.path.join(self.capture_path, filename)), filenames))
 
     def get_filenames(self):
-        return [ filename for filename in os.listdir(self.capture_path) if filename.endswith(".png") ]
+        return sorted([ filename for filename in os.listdir(self.capture_path) if filename.endswith(".png") ])
+
 
 
 class Beers(object):
@@ -301,6 +303,54 @@ class Response_Accumulator(object):
     def get_potential_objects(self):
         return self.potential_objects
 
+class Detected_Objects(object):
+    def __init__(self, capture_path, parsed_capture_path):
+        self.capture_path = capture_path
+        self.parsed_capture_path = parsed_capture_path
+        self.potential_objects = []
+        self.confident_objects = []
+        self.shelf_ids = ['A','B','C','D']
+        self.camera_range = range(12)
+
+    def shelf_camera_ids_generator(self):
+        for s in self.shelf_ids:
+            for c in range(12): 
+                yield s, c
+
+    def filter_object_list_by_shelf_and_camera(self, shelf_id, camera_id, object_list):
+        return  = filter(lambda d: d['shelf_id'] == shelf_id and int(d['camera_id']) == camera_id,  object_list)
+
+    def annotate_image(self, source_image_filepath, annotations, destination_image_filepath):
+        # this might fit better in another class
+        # annotations format:
+        # [ {"type":"", "data":{}}}]
+        # [ {"type":"circle", "data":{"x":100,"y":200, "radius":20}]
+        # [ {"type":"label" "data":{"x":100,"y":200, "text":"foo"}]
+
+        source_image = cv2.imread(source_image_filepath)
+        annotated_image = source_image.copy()
+        for annotation in annotations:
+            if annotation["type"] == "circle":
+                cv2.circle(annotated_image, (annotation["x"], annotation["y"]), annotation["radius"], (0, 255, 0), 2)
+        cv2.imwrite(annotated_image,  os.path.join(destination_image_filepath))
+
+    def create_potential_object_images(self):
+        shelf_camera_iterator = self. shelf_camera_ids_generator()
+        for shelf_id, camera_id in shelf_camera_iterator:
+            objects_from_one_camera =  self.filter_object_list_by_shelf_and_camera(shelf_id, camera_id, object_list)
+            annotations = []
+            for object_from_one_camera in objects_from_one_camera():
+                annotations.append(
+                    {"type":"circle", "x":object_from_one_camera["shelf_x"], "y":object_from_one_camera["shelf_y"], "radius":object_from_one_camera["radius"] }
+                )
+            source_image_filename = "{}_{}.png".format(shelf_id, camera_id)
+            source_image_filepath = os.path.join(self.capture_path, source_image_filename)
+            destination_image_filename = "{}_{}_potentialObjects.png".format(shelf_id, camera_id)
+            destination_image_filepath = os.path.join(self.parsed_capture_path, destination_image_filename)
+            self.annotate_image(source_image_filepath, annotations, destination_image_filepath)
+            
+detected_objects = Detected_Objects(CAPTURES_PATH, PARSED_CAPTURES_PATH)
+
 # Main handles network send/recv and can see all other classes directly
 class Main(threading.Thread):
     def __init__(self, hostname):
@@ -320,6 +370,17 @@ class Main(threading.Thread):
         self.soonest_run_time = time.time()
         self.camera_units = Camera_Units(self.network)
         self.response_accumulator = Response_Accumulator()
+
+        self.label_lines = [line.rstrip() for line 
+            in tf.gfile.GFile("/home/nvidia/supercooler/Roles/jetson/tf_files/retrained_labels.txt")]
+
+        with tf.gfile.FastGFile("/home/nvidia/supercooler/Roles/jetson/tf_files/retrained_graph.pb", 'rb') as f:
+            graph_def = tf.GraphDef()
+            graph_def.ParseFromString(f.read())
+
+        with tf.Graph().as_default() as imported_graph:
+            tf.import_graph_def(graph_def, name='')
+            self.imported_graph = imported_graph
 
         self.hostnames = [
             "supercoolerA0","supercoolerA1","supercoolerA2","supercoolerA3","supercoolerA4","supercoolerA5","supercoolerA6","supercoolerA7","supercoolerA8","supercoolerA9","supercoolerA10","supercoolerA11",
@@ -413,28 +474,81 @@ class Main(threading.Thread):
                     print self.response_accumulator.print_response_status()
                     print self.images_undistorted.get_filenames()
                     potential_objects = self.response_accumulator.get_potential_objects()
-                    for shelf_id in ['A','B','C','D']:
-                        for camera_id in range(12):
-                            potential_objects_subset = filter(lambda d: d['shelf_id'] == shelf_id and int(d['camera_id']) == camera_id,  potential_objects)
-                            print shelf_id, camera_id, potential_objects_subset
 
-                            # if no objects were detected, skip
-                            if len(potential_objects_subset) == 0: continue
+                    with tf.Session(graph=self.imported_graph) as sess:
 
-                            # get undisotrted image and begin classification. use first object to grab shelf+cam
-                            first_object = potential_objects_subset[0]
-                            lens_corrected_img = self.images_undistorted.get_as_nparray(
-                                "{}_{}.png".format(first_object['shelf_id'], first_object['camera_id']))
-                            classifier.classify_images(potential_objects_subset, lens_corrected_img)
+                        for shelf_id in ['A','B','C','D']:
+                            for camera_id in range(12):
+                                potential_objects_subset = filter(lambda d: d['shelf_id'] == shelf_id and int(d['camera_id']) == camera_id,  potential_objects)
+                                print shelf_id, camera_id, potential_objects_subset
 
-                    print "CLASSIFICATION COMPLETE, STARTING DUPLICATE DETECTION"
+                                # if no objects were detected, skip
+                                if len(potential_objects_subset) == 0: continue
 
+                                # get undisotrted image and begin classification. use first object to grab shelf+cam
+                                first_object = potential_objects_subset[0]
+                                lens_corrected_img = self.images_undistorted.get_as_nparray(
+                                    "{}_{}.png".format(first_object['shelf_id'], first_object['camera_id']))
 
-
+                                #with tf.Session() as sess:
+                                self.crop_and_classify_images(potential_objects_subset, lens_corrected_img, sess)
 
             except Exception as e:
                 exc_type, exc_value, exc_traceback = sys.exc_info()
                 print e, repr(traceback.format_exception(exc_type, exc_value,exc_traceback))
+
+    def crop_and_classify_images(self, potential_objects, image, sess, threshold=0.6):
+
+        # if the best guess falls below this threshold, assume no match
+        confidence_threshold = threshold
+
+        print "crop_and_classify_images"
+        
+        for i, candidate in enumerate(potential_objects):
+
+            # report progress every ten images
+            if (i%10) == 0:
+                print 'processing %dth image' % i
+                time.sleep(1)
+
+            # crop image and encode as jpeg (classifier expects jpeg)
+            print "cropping..."
+
+            r  = candidate['radius']
+            (img_height, img_width) = image.shape[:2]
+
+            x1 = max(candidate['shelf_x']-r, 0)
+            y1 = max(candidate['shelf_y']-r, 0)
+            x2 = min(x1 + r*2, img_width )
+            y2 = min(y1 + r*2, img_height)
+
+            img_crop = image[y1:y2, x1:x2]
+            img_jpg = cv2.imencode('.jpg', img_crop)[1].tobytes()
+
+            print "cropped image, w,h = ", x2-x1, y2-y1
+
+            # get a list of guesses w/ confidence in this format:
+            # guesses = [(best guess, confidence), (next guess, confidence), ...]
+            print "running classifier..."
+
+            guesses = self.guess_image(sess, img_jpg)
+            best_guess, confidence = guesses[0]
+
+            print guesses
+
+    def guess_image(self, tf_session, image):
+        # Feed the image_data as input to the graph and get first prediction
+        softmax_tensor = tf_session.graph.get_tensor_by_name('final_result:0')
+        
+        print "run tf session..."
+        predictions = tf_session.run(softmax_tensor, {'DecodeJpeg/contents:0': image})
+        
+        # Sort to show labels of first prediction in order of confidence
+        print "sort labels.."
+        top_k = predictions[0].argsort()[-len(predictions[0]):][::-1]
+
+        scores = [(self.label_lines[node_id], predictions[0][node_id]) for node_id in top_k]
+        return scores
 
 
 def init(hostname):
