@@ -349,7 +349,7 @@ class Detected_Objects(object):
             destination_image_filepath = os.path.join(self.parsed_capture_path, destination_image_filename)
             self.annotate_image(source_image_filepath, annotations, destination_image_filepath)
             
-detected_objects = Detected_Objects(CAPTURES_PATH, PARSED_CAPTURES_PATH)
+
 
 
 
@@ -372,6 +372,7 @@ class Main(threading.Thread):
         self.soonest_run_time = time.time()
         self.camera_units = Camera_Units(self.network)
         self.response_accumulator = Response_Accumulator()
+        self.detected_objects = Detected_Objects(CAPTURES_PATH, PARSED_CAPTURES_PATH)
 
         self.label_lines = [line.rstrip() for line 
             in tf.gfile.GFile("/home/nvidia/supercooler/Roles/jetson/tf_files/retrained_labels.txt")]
@@ -477,7 +478,7 @@ class Main(threading.Thread):
                     print self.images_undistorted.get_filenames()
                     potential_objects = self.response_accumulator.get_potential_objects()
 
-                    detected_objects.create_potential_object_images()
+                    self.detected_objects.create_potential_object_images(potential_objects)
                     print "OBJECT DETECTION COMPLETE"
                     """
                     with tf.Session(graph=self.imported_graph) as sess:
