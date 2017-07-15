@@ -333,7 +333,7 @@ class Detected_Objects(object):
         for annotation in annotations:
             if annotation["type"] == "circle":
                 cv2.circle(annotated_image, (annotation["x"], annotation["y"]), annotation["radius"], (0, 255, 0), 2)
-        cv2.imwrite(annotated_image,  destination_image_filepath)
+        cv2.imwrite(destination_image_filepath, annotated_image)
 
     def create_potential_object_images(self, object_list):
         shelf_camera_iterator = self. shelf_camera_ids_generator()
