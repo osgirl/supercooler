@@ -318,7 +318,7 @@ class Detected_Objects(object):
                 yield s, c
 
     def filter_object_list_by_shelf_and_camera(self, shelf_id, camera_id, object_list):
-        return  = filter(lambda d: d['shelf_id'] == shelf_id and int(d['camera_id']) == camera_id,  object_list)
+        return filter(lambda d: d['shelf_id'] == shelf_id and int(d['camera_id']) == camera_id,  object_list)
 
     def annotate_image(self, source_image_filepath, annotations, destination_image_filepath):
         # this might fit better in another class
