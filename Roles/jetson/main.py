@@ -339,7 +339,7 @@ class Detected_Objects(object):
         for shelf_id, camera_id in shelf_camera_iterator:
             objects_from_one_camera =  self.filter_object_list_by_shelf_and_camera(shelf_id, camera_id, object_list)
             annotations = []
-            for object_from_one_camera in objects_from_one_camera():
+            for object_from_one_camera in objects_from_one_camera:
                 annotations.append(
                     {"type":"circle", "x":object_from_one_camera["shelf_x"], "y":object_from_one_camera["shelf_y"], "radius":object_from_one_camera["radius"] }
                 )
