@@ -321,6 +321,7 @@ class Detected_Objects(object):
         return filter(lambda d: d['shelf_id'] == shelf_id and int(d['camera_id']) == camera_id,  object_list)
 
     def annotate_image(self, source_image_filepath, annotations, destination_image_filepath):
+        print "annotate_image", source_image_filepath, destination_image_filepath, annotations
         # this might fit better in another class
         # annotations format:
         # [ {"type":"", "data":{}}}]
