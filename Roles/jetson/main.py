@@ -334,7 +334,7 @@ class Detected_Objects(object):
                 cv2.circle(annotated_image, (annotation["x"], annotation["y"]), annotation["radius"], (0, 255, 0), 2)
         cv2.imwrite(annotated_image,  os.path.join(destination_image_filepath))
 
-    def create_potential_object_images(self):
+    def create_potential_object_images(self, object_list):
         shelf_camera_iterator = self. shelf_camera_ids_generator()
         for shelf_id, camera_id in shelf_camera_iterator:
             objects_from_one_camera =  self.filter_object_list_by_shelf_and_camera(shelf_id, camera_id, object_list)
@@ -350,6 +350,8 @@ class Detected_Objects(object):
             self.annotate_image(source_image_filepath, annotations, destination_image_filepath)
             
 detected_objects = Detected_Objects(CAPTURES_PATH, PARSED_CAPTURES_PATH)
+
+
 
 # Main handles network send/recv and can see all other classes directly
 class Main(threading.Thread):
@@ -475,6 +477,9 @@ class Main(threading.Thread):
                     print self.images_undistorted.get_filenames()
                     potential_objects = self.response_accumulator.get_potential_objects()
 
+                    detected_objects.create_potential_object_images()
+                    print "OBJECT DETECTION COMPLETE"
+                    """
                     with tf.Session(graph=self.imported_graph) as sess:
 
                         for shelf_id in ['A','B','C','D']:
@@ -492,7 +497,7 @@ class Main(threading.Thread):
 
                                 #with tf.Session() as sess:
                                 self.crop_and_classify_images(potential_objects_subset, lens_corrected_img, sess)
-
+                    """
             except Exception as e:
                 exc_type, exc_value, exc_traceback = sys.exc_info()
                 print e, repr(traceback.format_exception(exc_type, exc_value,exc_traceback))
