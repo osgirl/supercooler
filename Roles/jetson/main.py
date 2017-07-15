@@ -333,7 +333,7 @@ class Detected_Objects(object):
         for annotation in annotations:
             if annotation["type"] == "circle":
                 cv2.circle(annotated_image, (annotation["x"], annotation["y"]), annotation["radius"], (0, 255, 0), 2)
-        cv2.imwrite(annotated_image,  os.path.join(destination_image_filepath))
+        cv2.imwrite(annotated_image,  destination_image_filepath)
 
     def create_potential_object_images(self, object_list):
         shelf_camera_iterator = self. shelf_camera_ids_generator()
@@ -350,9 +350,8 @@ class Detected_Objects(object):
                 destination_image_filename = "{}_{}_potentialObjects.png".format(shelf_id, camera_id)
                 destination_image_filepath = os.path.join(self.parsed_capture_path, destination_image_filename)
                 self.annotate_image(source_image_filepath, annotations, destination_image_filepath)
-            
-
-
+            else:
+                print "Detected_Objects.create_potential_object_images image not found at", source_image_filepath
 
 
 # Main handles network send/recv and can see all other classes directly
