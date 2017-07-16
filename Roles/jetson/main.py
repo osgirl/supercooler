@@ -184,6 +184,7 @@ class Products(object):
         return  dict(self.products)
 
     def get_height(self, product_name):
+        print ">>>>>>", product_name
         return self.products[product_name]["height"]
 
     def get_width(self, product_name):
@@ -450,8 +451,7 @@ class Detected_Objects(object):
     def add_product_parameters(self, detected_objects):
         for detected_object in detected_objects:
             detected_object["product"] = {}
-            detected_object["product"]["name"] = self.get_best_guess(detected_object)[0]
-            detected_object["product"]["confidence"] = self.get_best_guess(detected_object)[1]
+            detected_object["product"]["name"], detected_object["product"]["confidence"] =   self.get_best_guess(detected_object)
             detected_object["product"]["height"] = self.products.get_height(detected_object)
             detected_object["product"]["width"] = self.products.get_width(detected_object)
             detected_object["product"]["report_id"] = self.products.get_report_id(detected_object)
@@ -465,6 +465,10 @@ class Detected_Objects(object):
         shelf_camera_iterator = self. shelf_camera_ids_generator()
         for shelf_id, camera_id in shelf_camera_iterator:
             objects_from_one_camera =  self.filter_object_list_by_shelf_and_camera(shelf_id, camera_id, self.confident_objects)
+            for object_from_one_camera in objects_from_one_camera:
+                object_from_one_camera["real_world_x"] = 0 # position in inches
+                object_from_one_camera["real_world_y"] = 0 # position in inches
+
 
 
 
