@@ -177,8 +177,12 @@ class Products(object):
             "canbudlight":                      {"height": 12.5,  "width":5.3,  "report_id": 12,  "confidence_threshold":0.95},
             "canbusch":                          {"height": 12.5,  "width":5.3,  "report_id": 13,  "confidence_threshold":0.95},
             "cannaturallight":                {"height": 12.5,  "width":5.3,  "report_id": 15,  "confidence_threshold":0.95},
-            "canbudice":                         {"height": 20.5,  "width":6.3,  "report_id": 17,  "confidence_threshold":0.95}
+            "canbudice":                         {"height": 20.5,  "width":6.3,  "report_id": 17,  "confidence_threshold":0.95},
+            "negative":                           {"height": 0,  "width":0,  "report_id": 0,  "confidence_threshold":0}
         }
+    def get_product_parameters(self):
+        return  dict(self.products)
+
     def get_height(self, product_name):
         return self.products[product_name]["height"]
 
@@ -444,13 +448,19 @@ class Detected_Objects(object):
             else:
                 print "Detected_Objects.create_confident_object_images image not found at", source_image_filepath
 
+    def add_product_parameters(self, detected_objects):
+        for detected_object in detected_objects:
+            detected_object["product"] = {}
+            detected_object["product"]["name"] = self.get_best_guess(detected_object)[0]
+            detected_object["product"]["confidence"] = self.get_best_guess(detected_object)[1]
+            detected_object["product"]["height"] = self.products.get_height(detected_object)
+            detected_object["product"]["width"] = self.products.get_width(detected_object)
+            detected_object["product"]["report_id"] = self.products.get_report_id(detected_object)
+            detected_object["product"]["confidence_threshold"] = self.products.get_confidence_threshold(detected_object)
 
-    def filter_out_unconfident_objects(self):
-        self.confident_objects =  filter(lambda superset_object: self.get_best_guess(superset_object)[0] != "negative"  and    self.get_best_guess(superset_object)[0][1] >= 0.95, superset_objects )
+    def filter_out_unconfident_objects(self, superset_objects):
+        self.confident_objects =  filter(lambda superset_object: self.detected_object["product"]["name"] != "negative"  and    self.detected_object["product"]["confidence"] >= detected_object["product"]["confidence_threshold"],   superset_objects )
         #self.confident_objects =  filter(lambda ss_o: ss_o['classifier']["classification"][0][0] != "negative" and ss_o['classifier']["classification"][0][1] >= 0.95, superset_objects )
-    #def add_product_parameters(self, detrected) 
-
-
 
 # Main handles network send/recv and can see all other classes directly
 class Main(threading.Thread):
@@ -599,6 +609,8 @@ class Main(threading.Thread):
                                 self.crop_and_classify_images(potential_objects_subset, lens_corrected_img, sess)
                             #print potential_objects_subset
                     self.detected_objects.create_classified_object_images(potential_objects)
+
+                    self.detected_objects.add_product_parameters(potential_objects)
 
                     self.detected_objects.filter_out_unconfident_objects(potential_objects)
 
