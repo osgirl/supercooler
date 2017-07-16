@@ -351,8 +351,7 @@ class Detected_Objects(object):
                     font, 
                     4,
                     annotation["color"],
-                    2,
-                    cv2.LINE_AA
+                    2
                 )
 
         cv2.imwrite(destination_image_filepath, annotated_image)
@@ -565,7 +564,7 @@ class Main(threading.Thread):
                                 # get undisotrted image and begin classification. use first object to grab shelf+cam
                                 first_object = potential_objects_subset[0]
                                 lens_corrected_img = self.images_undistorted.get_as_nparray(
-                                    "{}_{}.png".format(first_object['shelf_id'], first_object['camera_id']))
+                                    "{shelf_id}_{camera_id}.png".format(**first_object))
 
                                 #with tf.Session() as sess:
                                 self.crop_and_classify_images(potential_objects_subset, lens_corrected_img, sess)
