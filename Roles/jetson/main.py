@@ -60,7 +60,7 @@ class Network(object):
             print "exception in Network.copy_to_gdrive", e
 
     def make_directory_on_gdrive(self, parent_dir, new_dir):
-        if parent_dir == None:
+        if parent_dir is None:
             mkdir_stdout = \
                 subprocess.check_output(['gdrive', 'mkdir', new_dir])
         else:
@@ -349,9 +349,9 @@ class Detected_Objects(object):
                     annotation["text"],
                     (annotation["x"], annotation["y"]), 
                     font, 
-                    4,
+                    0.5,
                     annotation["color"],
-                    2
+                    1
                 )
 
         cv2.imwrite(destination_image_filepath, annotated_image)
