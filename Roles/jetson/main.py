@@ -222,8 +222,7 @@ class Duplicate_Filter(object):
                                 # how to match with existing clusters?
                                 pass
 
-    def filter_out_unconfident_objects(self,  superset_objects):
-        return filter(lambda ss_o: ss_o['classifier']['score'] >= self.confidence_threshold, superset_objects)
+
 
     def filter_out_spatially_nested_objects(self, superset_objects):
         #internal comparrison
@@ -459,8 +458,51 @@ class Detected_Objects(object):
             detected_object["product"]["confidence_threshold"] = self.products.get_confidence_threshold(detected_object)
 
     def filter_out_unconfident_objects(self, superset_objects):
-        self.confident_objects =  filter(lambda superset_object: self.detected_object["product"]["name"] != "negative"  and    self.detected_object["product"]["confidence"] >= detected_object["product"]["confidence_threshold"],   superset_objects )
+        self.confident_objects =  filter(lambda superset_object: superset_object["product"]["name"] != "negative"  and    superset_object["product"]["confidence"] >= superset_object["product"]["confidence_threshold"],   superset_objects )
         #self.confident_objects =  filter(lambda ss_o: ss_o['classifier']["classification"][0][0] != "negative" and ss_o['classifier']["classification"][0][1] >= 0.95, superset_objects )
+
+    def add_real_world_coordinates(self):
+        shelf_camera_iterator = self. shelf_camera_ids_generator()
+        for shelf_id, camera_id in shelf_camera_iterator:
+            objects_from_one_camera =  self.filter_object_list_by_shelf_and_camera(shelf_id, camera_id, self.confident_objects)
+
+
+
+    """
+    def search_for_duplicates(self, potential_objects):
+
+        # start with shelf x/y coordinates.  calculate here if neccessary
+        for shelf_id in self.shelf_ids:
+            for i, outer_confident_object in enumerate( confident_objects ):
+                for j, inner_confident_object in  enumerate( confident_objects ):
+                        if i != j:  # avoid comparing same potential_objects
+                            distance  = self.calculate_distance(outer_confident_object['global_x'],outer_confident_object['global_y'],inner_confident_object['global_x'],inner_confident_object['global_y'])  # calculate proximity based on shelf-based coordinates, object diameter, elastic factor
+                            if distance < self.diameter_threshold: # if objects are close
+                                # if in clusters, add to cluster
+                                # if not in cluters, create new cluster
+                                # if objects are within duplicate range
+                                # how to match with existing clusters?
+                                pass
+
+
+
+    def filter_out_spatially_nested_objects(self, superset_objects):
+        #internal comparrison
+        for shelf_id in self.shelf_ids:
+            for camera_id in range(12):
+                objects_from_single_camera = filter(lambda d: d['shelf_id'] == shelf_id and int(d['camera_id']) == camera_id,  superset_objects)
+                for objects_from_single_camera_a, objects_from_single_camera_b in itertools.combinations(objects_from_single_camera, 2):
+                    # todo: prevent comparing the same pairs of objects as switched inner/outer roles.  probably a looping solution
+                    centroid_distance, radius_distance, radius_inside, centroid_inside = self.calculate_centroid_distance_and_radius_distance(
+                        (objects_from_single_camera_a["shelf_x"], objects_from_single_camera_a["shelf_y"], objects_from_single_camera_a["radius"]), 
+                        (objects_from_single_camera_b["shelf_x"], objects_from_single_camera_b["shelf_y"], objects_from_single_camera_b["radius"])
+                    )
+                    
+    """
+
+
+
+
 
 # Main handles network send/recv and can see all other classes directly
 class Main(threading.Thread):
