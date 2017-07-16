@@ -191,7 +191,7 @@ class Products(object):
         return self.products[product_name]["width"]
 
     def get_report_id(self, product_name):
-        return self.products[product_name]["report_idwidth"]
+        return self.products[product_name]["report_id"]
 
     def get_confidence_threshold(self, product_name):
         return self.products[product_name]["confidence_threshold"]
