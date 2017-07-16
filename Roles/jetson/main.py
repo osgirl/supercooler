@@ -294,7 +294,7 @@ class Response_Accumulator(object):
         return self.potential_objects
 
 class Detected_Objects(object):
-    def __init__(self, capture_path, parsed_capture_path):
+    def __init__(self, capture_path, parsed_capture_path, products):
         self.capture_path = capture_path
         self.parsed_capture_path = parsed_capture_path
         self.products = products

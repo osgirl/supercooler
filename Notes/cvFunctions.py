@@ -554,9 +554,6 @@ class Real_World_Locator(object):
 
         self.init_world_points( upper_shelf_image )
 
-
-
-
     def init_map_points(self, location_map):
       width, height, channels = location_map.shape
       assert channels == 4, "Your location map doesn't have transparency. That sounds wrong"
