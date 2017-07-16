@@ -297,6 +297,7 @@ class Detected_Objects(object):
     def __init__(self, capture_path, parsed_capture_path):
         self.capture_path = capture_path
         self.parsed_capture_path = parsed_capture_path
+        self.products = products
         self.potential_objects = []
         self.confident_objects = []
         self.shelf_ids = ['A','B','C','D']
@@ -410,7 +411,6 @@ class Detected_Objects(object):
             else:
                 print "Detected_Objects.create_classified_object_images image not found at", source_image_filepath
 
-
     def create_confident_object_images(self):
         shelf_camera_iterator = self. shelf_camera_ids_generator()
         for shelf_id, camera_id in shelf_camera_iterator:
@@ -523,7 +523,7 @@ class Main(threading.Thread):
         self.soonest_run_time = time.time()
         self.camera_units = Camera_Units(self.network)
         self.response_accumulator = Response_Accumulator()
-        self.detected_objects = Detected_Objects(CAPTURES_PATH, PARSED_CAPTURES_PATH)
+        self.detected_objects = Detected_Objects(CAPTURES_PATH, PARSED_CAPTURES_PATH, self.products)
 
         self.label_lines = [line.rstrip() for line 
             in tf.gfile.GFile("/home/nvidia/supercooler/Roles/jetson/tf_files/retrained_labels.txt")]
