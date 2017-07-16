@@ -452,10 +452,10 @@ class Detected_Objects(object):
         for detected_object in detected_objects:
             detected_object["product"] = {}
             detected_object["product"]["name"], detected_object["product"]["confidence"] =   self.get_best_guess(detected_object)
-            detected_object["product"]["height"] = self.products.get_height(detected_object)
-            detected_object["product"]["width"] = self.products.get_width(detected_object)
-            detected_object["product"]["report_id"] = self.products.get_report_id(detected_object)
-            detected_object["product"]["confidence_threshold"] = self.products.get_confidence_threshold(detected_object)
+            detected_object["product"]["height"] = self.products.get_height(detected_object["product"]["name"])
+            detected_object["product"]["width"] = self.products.get_width(detected_object["product"]["name"])
+            detected_object["product"]["report_id"] = self.products.get_report_id(detected_object["product"]["name"])
+            detected_object["product"]["confidence_threshold"] = self.products.get_confidence_threshold(detected_object["product"]["name"])
 
     def filter_out_unconfident_objects(self, superset_objects):
         self.confident_objects =  filter(lambda superset_object: superset_object["product"]["name"] != "negative"  and    superset_object["product"]["confidence"] >= superset_object["product"]["confidence_threshold"],   superset_objects )
