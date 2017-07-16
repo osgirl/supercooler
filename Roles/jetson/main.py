@@ -569,6 +569,9 @@ class Main(threading.Thread):
                                 #with tf.Session() as sess:
                                 self.crop_and_classify_images(potential_objects_subset, lens_corrected_img, sess)
                             #print potential_objects_subset
+                    self.detected_objects.create_classified_object_images(potential_objects)
+
+
                     
             except Exception as e:
                 exc_type, exc_value, exc_traceback = sys.exc_info()
