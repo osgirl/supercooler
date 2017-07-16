@@ -313,7 +313,8 @@ class Detected_Objects(object):
         self.camera_range = range(12)
 
     def get_best_guess(self, detected_object):
-        return detected_object["classification"][0].items()[0] #list of items should arlready be sorted
+        print "++++++++++++++>", detected_object
+        return detected_object["classification"][0] #list of items should arlready be sorted
 
     def shelf_camera_ids_generator(self):
         for s in self.shelf_ids:
