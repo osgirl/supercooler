@@ -160,53 +160,40 @@ class Images(object):
     def get_filenames(self):
         return sorted([ filename for filename in os.listdir(self.capture_path) if filename.endswith(".png") ])
 
-
-
-class Beers(object):
+class Products(object):
     def __init__(self):
-        self.label_lookup = {
-            "bottlebecks"               : 1,
-            "bottlebudamerica"          : 2,
-            "bottlebudlight"            : 3,
-            "bottleplatinum"            : 4,
-            "bottlecorona"              : 5,
-            "bottlehoegaarden"          : 6,
-            "bottleultra"               : 7,
-            "bottleshocktopraspberry"   : 8,
-            "bottleshocktoppretzel"     : 9,
-            "bottlestella"              : 10,
-            "canbudamerica"             : 11,
-            "canbudlight"               : 12,
-            "canbusch"                  : 13,
-            "canbusch"                  : 14,
-            "cannaturallight"           : 15,
-            "canbudamerica"             : 16,
-            "canbudice"                 : 17,
-            "canbudlight"               : 18
+        self.products = {
+            "bottlebecks":                      {"height": 23,     "width":6,  "report_id": 1,  "confidence_threshold":0.95},
+            "bottlebudamerica":            {"height": 23,     "width":6,  "report_id": 2,  "confidence_threshold":0.95},
+            "bottlebudlight":                  {"height": 23,     "width":6,  "report_id": 3,  "confidence_threshold":0.95},
+            "bottleplatinum":                 {"height": 23,     "width":6,  "report_id": 4,  "confidence_threshold":0.95},
+            "bottlecorona":                     {"height": 24.5,  "width":6,  "report_id": 5,  "confidence_threshold":0.95},
+            "bottlehoegaarden":            {"height": 23,     "width":6,  "report_id": 6,  "confidence_threshold":0.95},
+            "bottleultra":                        {"height": 23,     "width":6,  "report_id": 7,  "confidence_threshold":0.95},
+            "bottleshocktopraspberry":{"height": 23,     "width":6,  "report_id": 8,  "confidence_threshold":0.95},
+            "bottleshocktoppretzel":     {"height": 23,     "width":6,  "report_id": 9,  "confidence_threshold":0.95},
+            "bottlestella":                       {"height": 23,     "width":6,  "report_id": 10,  "confidence_threshold":0.95},
+            "canbudamerica":                {"height": 12.5,  "width":5.3,  "report_id": 11,  "confidence_threshold":0.95},
+            "canbudlight":                      {"height": 12.5,  "width":5.3,  "report_id": 12,  "confidence_threshold":0.95},
+            "canbusch":                          {"height": 12.5,  "width":5.3,  "report_id": 13,  "confidence_threshold":0.95},
+            "cannaturallight":                {"height": 12.5,  "width":5.3,  "report_id": 15,  "confidence_threshold":0.95},
+            "canbudice":                         {"height": 20.5,  "width":6.3,  "report_id": 17,  "confidence_threshold":0.95}
         }
-        self.product_specific_confidence_thresholds = {
-            "bottlebecks"               : 0.99,
-            "bottlebudamerica"     : 0.99,
-            "bottlebudlight"           : 0.99,
-            "bottleplatinum"          : 0.99,
-            "bottlecorona"             : 0.95,
-            "bottlehoegaarden"     : 0.99,
-            "bottleultra"                 : 0.98,
-            "bottleshocktopraspberry"   : 0.99,
-            "bottleshocktoppretzel"        : 0.98,
-            "bottlestella"                : 0.99,
-            "canbudamerica"         : 0.95,
-            "canbudlight"               : 0.99,
-            "canbusch"                  : 0.94,
-            "cannaturallight"         : 0.95,
-            "canbudamerica"        : 0.99,
-            "canbudice"                 : 0.99,
-            "canbudlight"               : 0.99
-        }
+    def get_height(self, product_name):
+        return self.products[product_name]["height"]
+
+    def get_width(self, product_name):
+        return self.products[product_name]["width"]
+
+    def get_report_id(self, product_name):
+        return self.products[product_name]["report_idwidth"]
+
+    def get_confidence_threshold(self, product_name):
+        return self.products[product_name]["confidence_threshold"]
 
 class Duplicate_Filter(object):
-    def __init__(self, beers):
-        self.beers = beers
+    def __init__(self, products):
+        self.products = products
         self.clusters = []
         self.diameter_threshold = 80 # mm - that's a guess. verify
         self.confidence_threshold = 0.95
@@ -418,7 +405,51 @@ class Detected_Objects(object):
                 destination_image_filepath = os.path.join(self.parsed_capture_path, destination_image_filename)
                 self.annotate_image(source_image_filepath, annotations, destination_image_filepath)
             else:
-                print "Detected_Objects.create_potential_object_images image not found at", source_image_filepath
+                print "Detected_Objects.create_classified_object_images image not found at", source_image_filepath
+
+
+    def create_confident_object_images(self):
+        shelf_camera_iterator = self. shelf_camera_ids_generator()
+        for shelf_id, camera_id in shelf_camera_iterator:
+            objects_from_one_camera =  self.filter_object_list_by_shelf_and_camera(shelf_id, camera_id, self.confident_objects)
+            annotations = []
+            for object_from_one_camera in objects_from_one_camera:
+                product_name,  confidence = self.get_best_guess(object_from_one_camera)
+                label = "{}({})".format(product_name,  confidence)
+                circle_color = (0, 255, 0) # green
+                annotations.append(
+                    {
+                        "type":"circle", 
+                        "x":object_from_one_camera["shelf_x"], 
+                        "y":object_from_one_camera["shelf_y"], 
+                        "radius":object_from_one_camera["radius"],
+                        "color":circle_color
+                    }
+                )
+                annotations.append(
+                    {
+                        "type":"text", 
+                        "x":object_from_one_camera["shelf_x"], 
+                        "y":object_from_one_camera["shelf_y"], 
+                        "text": label,
+                        "color":circle_color
+                    }
+                )
+            source_image_filename = "{}_{}.png".format(shelf_id, camera_id)
+            source_image_filepath = os.path.join(self.capture_path, source_image_filename)
+            if  os.path.isfile(source_image_filepath): # this image should exist.  but roll with the case in which is doesn't
+                destination_image_filename = "confidentObjects_{}_{}.png".format(shelf_id, camera_id)
+                destination_image_filepath = os.path.join(self.parsed_capture_path, destination_image_filename)
+                self.annotate_image(source_image_filepath, annotations, destination_image_filepath)
+            else:
+                print "Detected_Objects.create_confident_object_images image not found at", source_image_filepath
+
+
+    def filter_out_unconfident_objects(self):
+        self.confident_objects =  filter(lambda superset_object: self.get_best_guess(superset_object)[0] != "negative"  and    self.get_best_guess(superset_object)[0][1] >= 0.95, superset_objects )
+        #self.confident_objects =  filter(lambda ss_o: ss_o['classifier']["classification"][0][0] != "negative" and ss_o['classifier']["classification"][0][1] >= 0.95, superset_objects )
+    #def add_product_parameters(self, detrected) 
+
 
 
 # Main handles network send/recv and can see all other classes directly
@@ -427,8 +458,8 @@ class Main(threading.Thread):
         threading.Thread.__init__(self)
         self.queue = Queue.Queue()
         self.images_undistorted = Images(CAPTURES_PATH)
-        self.beers = Beers()
-        self.duplicate_filter = Duplicate_Filter(self.beers)
+        self.products = Products()
+        self.duplicate_filter = Duplicate_Filter(self.products)
         self.web_interface = WebInterface()
         self.inventory = Inventory()
         self.network = Network(hostname, self.network_message_handler, self.network_status_handler)
@@ -569,7 +600,10 @@ class Main(threading.Thread):
                             #print potential_objects_subset
                     self.detected_objects.create_classified_object_images(potential_objects)
 
+                    self.detected_objects.filter_out_unconfident_objects(potential_objects)
 
+                    self.detected_objects.create_confident_object_images()
+                    
                     
             except Exception as e:
                 exc_type, exc_value, exc_traceback = sys.exc_info()
