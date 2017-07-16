@@ -313,7 +313,6 @@ class Detected_Objects(object):
         self.camera_range = range(12)
 
     def get_best_guess(self, detected_object):
-        print "++++++++++++++>", detected_object
         return detected_object["classification"][0] #list of items should arlready be sorted
 
     def shelf_camera_ids_generator(self):
@@ -353,7 +352,6 @@ class Detected_Objects(object):
                     annotation["color"],
                     1
                 )
-
         cv2.imwrite(destination_image_filepath, annotated_image)
 
     def create_potential_object_images(self, object_list):
@@ -389,10 +387,10 @@ class Detected_Objects(object):
                 product_name,  confidence = self.get_best_guess(object_from_one_camera)
                 label = "{}({})".format(product_name,  confidence)
                 if confidence < 0.9:
-                    circle_color = (255, 255, 0) # yellow
+                    circle_color = (0, 127, 127) # yellow
                 else:
                     if product_name == "negative":
-                        circle_color = (255, 0, 0) # red
+                        circle_color = (0, 0, 255) # red
                     else:
                         circle_color = (0, 255, 0) # green
                 annotations.append(
