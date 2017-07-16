@@ -312,6 +312,9 @@ class Detected_Objects(object):
         self.shelf_ids = ['A','B','C','D']
         self.camera_range = range(12)
 
+    def get_best_guess(self, detected_object):
+        return detected_object["classification"][0].items()[0] #list of items should arlready be sorted
+
     def shelf_camera_ids_generator(self):
         for s in self.shelf_ids:
             for c in range(12): 
@@ -327,12 +330,30 @@ class Detected_Objects(object):
         # [ {"type":"", "data":{}}}]
         # [ {"type":"circle", "data":{"x":100,"y":200, "radius":20}]
         # [ {"type":"label" "data":{"x":100,"y":200, "text":"foo"}]
-
         source_image = cv2.imread(source_image_filepath)
         annotated_image = source_image.copy()
         for annotation in annotations:
             if annotation["type"] == "circle":
-                cv2.circle(annotated_image, (annotation["x"], annotation["y"]), annotation["radius"], (0, 255, 0), 2)
+                cv2.circle(
+                    annotated_image, 
+                    (annotation["x"], annotation["y"]), 
+                    annotation["radius"], 
+                    annotation["color"], 
+                    2
+                )
+            if annotation["type"] == "text":
+                font = cv2.FONT_HERSHEY_SIMPLEX
+                cv2.putText(
+                    annotated_image,
+                    annotation["text"],
+                    (annotation["x"], annotation["y"]), 
+                    font, 
+                    4,
+                    annotation["color"],
+                    2,
+                    cv2.LINE_AA
+                )
+
         cv2.imwrite(destination_image_filepath, annotated_image)
 
     def create_potential_object_images(self, object_list):
@@ -342,12 +363,18 @@ class Detected_Objects(object):
             annotations = []
             for object_from_one_camera in objects_from_one_camera:
                 annotations.append(
-                    {"type":"circle", "x":object_from_one_camera["shelf_x"], "y":object_from_one_camera["shelf_y"], "radius":object_from_one_camera["radius"] }
+                    {
+                        "type":"circle", 
+                        "x":object_from_one_camera["shelf_x"], 
+                        "y":object_from_one_camera["shelf_y"], 
+                        "radius":object_from_one_camera["radius"],
+                        "color":(0, 255, 0)
+                    }
                 )
             source_image_filename = "{}_{}.png".format(shelf_id, camera_id)
             source_image_filepath = os.path.join(self.capture_path, source_image_filename)
             if  os.path.isfile(source_image_filepath): # this image should exist.  but roll with the case in which is doesn't
-                destination_image_filename = "{}_{}_potentialObjects.png".format(shelf_id, camera_id)
+                destination_image_filename = "potentialObjects_{}_{}.png".format(shelf_id, camera_id)
                 destination_image_filepath = os.path.join(self.parsed_capture_path, destination_image_filename)
                 self.annotate_image(source_image_filepath, annotations, destination_image_filepath)
             else:
@@ -359,13 +386,37 @@ class Detected_Objects(object):
             objects_from_one_camera =  self.filter_object_list_by_shelf_and_camera(shelf_id, camera_id, object_list)
             annotations = []
             for object_from_one_camera in objects_from_one_camera:
+                product_name,  confidence = self.get_best_guess(object_from_one_camera)
+                label = "{}({})".format(product_name,  confidence)
+                if confidence < 0.9:
+                    circle_color = (255, 255, 0) # yellow
+                else:
+                    if product_name == "negative":
+                        circle_color = (255, 0, 0) # red
+                    else:
+                        circle_color = (0, 255, 0) # green
                 annotations.append(
-                    {"type":"circle", "x":object_from_one_camera["shelf_x"], "y":object_from_one_camera["shelf_y"], "radius":object_from_one_camera["radius"] }
+                    {
+                        "type":"circle", 
+                        "x":object_from_one_camera["shelf_x"], 
+                        "y":object_from_one_camera["shelf_y"], 
+                        "radius":object_from_one_camera["radius"],
+                        "color":circle_color
+                    }
+                )
+                annotations.append(
+                    {
+                        "type":"text", 
+                        "x":object_from_one_camera["shelf_x"], 
+                        "y":object_from_one_camera["shelf_y"], 
+                        "text": label,
+                        "color":circle_color
+                    }
                 )
             source_image_filename = "{}_{}.png".format(shelf_id, camera_id)
             source_image_filepath = os.path.join(self.capture_path, source_image_filename)
             if  os.path.isfile(source_image_filepath): # this image should exist.  but roll with the case in which is doesn't
-                destination_image_filename = "{}_{}_potentialObjects.png".format(shelf_id, camera_id)
+                destination_image_filename = "classifiedObjects_{}_{}.png".format(shelf_id, camera_id)
                 destination_image_filepath = os.path.join(self.parsed_capture_path, destination_image_filename)
                 self.annotate_image(source_image_filepath, annotations, destination_image_filepath)
             else:
@@ -505,7 +556,7 @@ class Main(threading.Thread):
                         for shelf_id in ['A','B','C','D']:
                             for camera_id in range(12):
                                 potential_objects_subset = filter(lambda d: d['shelf_id'] == shelf_id and int(d['camera_id']) == camera_id,  potential_objects)
-                                print shelf_id, camera_id, potential_objects_subset
+                                #print shelf_id, camera_id, potential_objects_subset
 
                                 # if no objects were detected, skip
                                 if len(potential_objects_subset) == 0: continue
@@ -517,7 +568,7 @@ class Main(threading.Thread):
 
                                 #with tf.Session() as sess:
                                 self.crop_and_classify_images(potential_objects_subset, lens_corrected_img, sess)
-                            print potential_objects_subset
+                            #print potential_objects_subset
                     
             except Exception as e:
                 exc_type, exc_value, exc_traceback = sys.exc_info()
@@ -561,7 +612,7 @@ class Main(threading.Thread):
             best_guess, confidence = guesses[0]
 
             candidate["classification"] = guesses
-            
+
             print guesses
 
     def guess_image(self, tf_session, image):
