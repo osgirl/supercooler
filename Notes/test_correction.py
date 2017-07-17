@@ -18,7 +18,7 @@ for image_path in files:
     temp = filename[filename.index(args.shelf)+2:]
 
     camera = re.search('\d+\D', temp).group()[:-1]
-    distortion_path = 'C:\Users\smpsn\Freelance\SuperCooler\supercooler\Notes\Shelf D\Distortion Map\Distortion_' + camera + '.png'
+    distortion_path = 'C:\Users\smpsn\Freelance\SuperCooler\supercooler\Notes\distortion_new\d_20.5\Distortion_' + camera + '.png'
 
     print image_path
     print distortion_path + '\n'
@@ -29,4 +29,4 @@ for image_path in files:
     corrected = cvf.mapped_lens_correction(image, distortion_map)
 
     cvf.show_image(image, 'original')
-    plt.imshow(corrected), plt.show()
+    plt.imshow(corrected[...,::-1]), plt.show()
