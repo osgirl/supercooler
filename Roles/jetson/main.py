@@ -179,6 +179,9 @@ class Products(object):
             "canbusch12":                      {"height": 12.5,  "width":5.3,  "report_id": 13,  "confidence_threshold":0.95},
             "cannaturallight12":            {"height": 12.5,  "width":5.3,  "report_id": 15,  "confidence_threshold":0.95},
             "canbudice":                         {"height": 20.5,  "width":6.3,  "report_id": 17,  "confidence_threshold":0.95},
+            "canbudice25":                      {"height": 25,  "width":6.3,  "report_id": 17,  "confidence_threshold":0.95},
+            "canbudlight25":                    {"height": 25,  "width":6.3,  "report_id": 17,  "confidence_threshold":0.95},
+            "canbudamerica25":              {"height": 25,  "width":6.3,  "report_id": 17,  "confidence_threshold":0.95},
             "negative":                           {"height": 0,        "width":0,  "report_id": 0,  "confidence_threshold":0}
         }
     def get_product_parameters(self):
