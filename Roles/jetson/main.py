@@ -160,6 +160,7 @@ class Images(object):
     def get_filenames(self):
         return sorted([ filename for filename in os.listdir(self.capture_path) if filename.endswith(".png") ])
 
+
 class Products(object):
     def __init__(self):
         self.products = {
@@ -173,18 +174,17 @@ class Products(object):
             "bottleshocktopraspberry":{"height": 23,     "width":6,  "report_id": 8,  "confidence_threshold":0.95},
             "bottleshocktoppretzel":     {"height": 23,     "width":6,  "report_id": 9,  "confidence_threshold":0.95},
             "bottlestella":                       {"height": 23,     "width":6,  "report_id": 10,  "confidence_threshold":0.95},
-            "canbudamerica":                {"height": 12.5,  "width":5.3,  "report_id": 11,  "confidence_threshold":0.95},
-            "canbudlight":                      {"height": 12.5,  "width":5.3,  "report_id": 12,  "confidence_threshold":0.95},
-            "canbusch":                          {"height": 12.5,  "width":5.3,  "report_id": 13,  "confidence_threshold":0.95},
-            "cannaturallight":                {"height": 12.5,  "width":5.3,  "report_id": 15,  "confidence_threshold":0.95},
+            "canbudamerica12":            {"height": 12.5,  "width":5.3,  "report_id": 11,  "confidence_threshold":0.95},
+            "canbudlight12":                  {"height": 12.5,  "width":5.3,  "report_id": 12,  "confidence_threshold":0.95},
+            "canbusch12":                      {"height": 12.5,  "width":5.3,  "report_id": 13,  "confidence_threshold":0.95},
+            "cannaturallight12":            {"height": 12.5,  "width":5.3,  "report_id": 15,  "confidence_threshold":0.95},
             "canbudice":                         {"height": 20.5,  "width":6.3,  "report_id": 17,  "confidence_threshold":0.95},
-            "negative":                           {"height": 0,  "width":0,  "report_id": 0,  "confidence_threshold":0}
+            "negative":                           {"height": 0,        "width":0,  "report_id": 0,  "confidence_threshold":0}
         }
     def get_product_parameters(self):
         return  dict(self.products)
 
     def get_height(self, product_name):
-        print ">>>>>>", product_name
         return self.products[product_name]["height"]
 
     def get_width(self, product_name):
@@ -233,8 +233,8 @@ class Duplicate_Filter(object):
                 for objects_from_single_camera_a, objects_from_single_camera_b in itertools.combinations(objects_from_single_camera, 2):
                     # todo: prevent comparing the same pairs of objects as switched inner/outer roles.  probably a looping solution
                     centroid_distance, radius_distance, radius_inside, centroid_inside = self.calculate_centroid_distance_and_radius_distance(
-                        (objects_from_single_camera_a["shelf_x"], objects_from_single_camera_a["shelf_y"], objects_from_single_camera_a["radius"]), 
-                        (objects_from_single_camera_b["shelf_x"], objects_from_single_camera_b["shelf_y"], objects_from_single_camera_b["radius"])
+                        (objects_from_single_camera_a["camera_x"], objects_from_single_camera_a["camera_y"], objects_from_single_camera_a["radius"]), 
+                        (objects_from_single_camera_b["camera_x"], objects_from_single_camera_b["camera_y"], objects_from_single_camera_b["radius"])
                     )
                     
 
@@ -355,8 +355,8 @@ class Detected_Objects(object):
                 annotations.append(
                     {
                         "type":"circle", 
-                        "x":object_from_one_camera["shelf_x"], 
-                        "y":object_from_one_camera["shelf_y"], 
+                        "x":object_from_one_camera["camera_x"], 
+                        "y":object_from_one_camera["camera_y"], 
                         "radius":object_from_one_camera["radius"],
                         "color":(0, 255, 0)
                     }
@@ -388,8 +388,8 @@ class Detected_Objects(object):
                 annotations.append(
                     {
                         "type":"circle", 
-                        "x":object_from_one_camera["shelf_x"], 
-                        "y":object_from_one_camera["shelf_y"], 
+                        "x":object_from_one_camera["camera_x"], 
+                        "y":object_from_one_camera["camera_y"], 
                         "radius":object_from_one_camera["radius"],
                         "color":circle_color
                     }
@@ -397,8 +397,8 @@ class Detected_Objects(object):
                 annotations.append(
                     {
                         "type":"text", 
-                        "x":object_from_one_camera["shelf_x"], 
-                        "y":object_from_one_camera["shelf_y"], 
+                        "x":object_from_one_camera["camera_x"], 
+                        "y":object_from_one_camera["camera_y"], 
                         "text": label,
                         "color":circle_color
                     }
@@ -424,8 +424,8 @@ class Detected_Objects(object):
                 annotations.append(
                     {
                         "type":"circle", 
-                        "x":object_from_one_camera["shelf_x"], 
-                        "y":object_from_one_camera["shelf_y"], 
+                        "x":object_from_one_camera["camera_x"], 
+                        "y":object_from_one_camera["camera_y"], 
                         "radius":object_from_one_camera["radius"],
                         "color":circle_color
                     }
@@ -433,8 +433,8 @@ class Detected_Objects(object):
                 annotations.append(
                     {
                         "type":"text", 
-                        "x":object_from_one_camera["shelf_x"], 
-                        "y":object_from_one_camera["shelf_y"], 
+                        "x":object_from_one_camera["camera_x"], 
+                        "y":object_from_one_camera["camera_y"], 
                         "text": label,
                         "color":circle_color
                     }
@@ -498,8 +498,8 @@ class Detected_Objects(object):
                 for objects_from_single_camera_a, objects_from_single_camera_b in itertools.combinations(objects_from_single_camera, 2):
                     # todo: prevent comparing the same pairs of objects as switched inner/outer roles.  probably a looping solution
                     centroid_distance, radius_distance, radius_inside, centroid_inside = self.calculate_centroid_distance_and_radius_distance(
-                        (objects_from_single_camera_a["shelf_x"], objects_from_single_camera_a["shelf_y"], objects_from_single_camera_a["radius"]), 
-                        (objects_from_single_camera_b["shelf_x"], objects_from_single_camera_b["shelf_y"], objects_from_single_camera_b["radius"])
+                        (objects_from_single_camera_a["camera_x"], objects_from_single_camera_a["camera_y"], objects_from_single_camera_a["radius"]), 
+                        (objects_from_single_camera_b["camera_x"], objects_from_single_camera_b["camera_y"], objects_from_single_camera_b["radius"])
                     )
                     
     """
@@ -687,8 +687,8 @@ class Main(threading.Thread):
             r  = candidate['radius']
             (img_height, img_width) = image.shape[:2]
 
-            x1 = max(candidate['shelf_x']-r, 0)
-            y1 = max(candidate['shelf_y']-r, 0)
+            x1 = max(candidate['camera_x']-r, 0)
+            y1 = max(candidate['camera_y']-r, 0)
             x2 = min(x1 + r*2, img_width )
             y2 = min(y1 + r*2, img_height)
 

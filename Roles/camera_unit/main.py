@@ -499,13 +499,13 @@ class Data(object):
     def __init__(self, shelf_id, camera_id):
         self. shelf_id = shelf_id
         self.camera_id = camera_id
-    def create_blank_potential_object(self, object_type, shelf_x, shelf_y, radius):
+    def create_blank_potential_object(self, object_type, camera_x, camera_y, radius):
             return {
                 "shelf_id":self.shelf_id,
                 "camera_id":self.camera_id,
                 "object_type": object_type, 
-                "shelf_x":shelf_x,
-                "shelf_y":shelf_y,
+                "camera_x":camera_x,
+                "camera_y":camera_y,
                 "radius":radius
             }
 
