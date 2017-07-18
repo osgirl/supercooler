@@ -4,6 +4,7 @@ import os
 import re
 import cvFunctions as cvf
 import matplotlib.pyplot as plt
+import cv2
 
 parser = argparse.ArgumentParser()
 
@@ -18,7 +19,7 @@ for image_path in files:
     temp = filename[filename.index(args.shelf)+2:]
 
     camera = re.search('\d+\D', temp).group()[:-1]
-    distortion_path = 'C:\Users\smpsn\Freelance\SuperCooler\supercooler\Notes\distortion_new\d_20.5\Distortion_' + camera + '.png'
+    distortion_path = '/home/sam/Freelance/SuperCooler/supercooler/Notes/distortion_new/' + args.shelf + '_24.5_' + camera + '.png'
 
     print image_path
     print distortion_path + '\n'
@@ -27,6 +28,7 @@ for image_path in files:
     distortion_map = cvf.read_image(distortion_path)
 
     corrected = cvf.mapped_lens_correction(image, distortion_map)
+    cv2.imwrite(os.path.join(args.in_dir, 'undistorted_' + camera + '.png'), corrected)
 
     cvf.show_image(image, 'original')
     plt.imshow(corrected[...,::-1]), plt.show()
