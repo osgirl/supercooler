@@ -18,7 +18,7 @@ for image_path in files:
     temp = filename[filename.index(args.shelf)+2:]
 
     camera = re.search('\d+\D', temp).group()[:-1]
-    distortion_path = 'C:\Users\smpsn\Freelance\SuperCooler\supercooler\Notes\distortion_new\d_20.5\Distortion_' + camera + '.png'
+    distortion_path = '/home/sam/Freelance/SuperCooler/supercooler/Notes/distortion_new/' + args.shelf + '_20.5_' + camera + '.png'
 
     print image_path
     print distortion_path + '\n'
