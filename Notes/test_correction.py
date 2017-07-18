@@ -4,12 +4,12 @@ import os
 import re
 import cvFunctions as cvf
 import matplotlib.pyplot as plt
-import cv2
 
 parser = argparse.ArgumentParser()
 
-parser.add_argument('-i', required=True, dest='in_dir')
-parser.add_argument('-s', required=True, dest='shelf')
+parser.add_argument('-i', required=True, dest='in_dir' )
+parser.add_argument('-d', required=True, dest='map_dir')
+parser.add_argument('-s', required=True, dest='shelf'  )
 
 args = parser.parse_args()
 files = glob.glob(os.path.join(args.in_dir, '*' + args.shelf + '*.png'))
@@ -19,7 +19,7 @@ for image_path in files:
     temp = filename[filename.index(args.shelf)+2:]
 
     camera = re.search('\d+\D', temp).group()[:-1]
-    distortion_path = '/home/sam/Freelance/SuperCooler/supercooler/Notes/distortion_new/' + args.shelf + '_24.5_' + camera + '.png'
+    distortion_path = os.path.join(args.map_dir, args.shelf, camera, '205.png')
 
     print image_path
     print distortion_path + '\n'
@@ -28,7 +28,6 @@ for image_path in files:
     distortion_map = cvf.read_image(distortion_path)
 
     corrected = cvf.mapped_lens_correction(image, distortion_map)
-    cv2.imwrite(os.path.join(args.in_dir, 'undistorted_' + camera + '.png'), corrected)
 
     cvf.show_image(image, 'original')
     plt.imshow(corrected[...,::-1]), plt.show()

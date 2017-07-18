@@ -244,11 +244,11 @@ def undistort_minimal_square(distorted_image, distortion_points, min_x, min_y, m
         lowerLeft[0] = 0
         upperLeft[0] = 0
 
-    if max_x == max_real_x and max_x != 0:
+    if max_x == max_real_x and max_x != 110:
         upperLeft [1] = 0
         upperRight[1] = 0
 
-    if max_y == max_real_y and max_y != 0:
+    if max_y == max_real_y and max_y != 85:
         lowerRight[0] = min(lowerRight[0]+100, image_height)
         upperRight[0] = min(upperRight[0]+100, image_height)
 
