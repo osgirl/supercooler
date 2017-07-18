@@ -179,6 +179,9 @@ class Products(object):
             "canbusch12":                      {"height": 12.5,  "width":5.3,  "report_id": 13,  "confidence_threshold":0.95},
             "cannaturallight12":            {"height": 12.5,  "width":5.3,  "report_id": 15,  "confidence_threshold":0.95},
             "canbudice":                         {"height": 20.5,  "width":6.3,  "report_id": 17,  "confidence_threshold":0.95},
+            "canbudice25":                      {"height": 25,  "width":6.3,  "report_id": 17,  "confidence_threshold":0.95},
+            "canbudlight25":                    {"height": 25,  "width":6.3,  "report_id": 17,  "confidence_threshold":0.95},
+            "canbudamerica25":              {"height": 25,  "width":6.3,  "report_id": 17,  "confidence_threshold":0.95},
             "negative":                           {"height": 0,        "width":0,  "report_id": 0,  "confidence_threshold":0}
         }
     def get_product_parameters(self):
@@ -458,8 +461,8 @@ class Detected_Objects(object):
             detected_object["product"]["confidence_threshold"] = self.products.get_confidence_threshold(detected_object["product"]["name"])
 
     def filter_out_unconfident_objects(self, superset_objects):
-        self.confident_objects =  filter(lambda superset_object: superset_object["product"]["name"] != "negative"  and    superset_object["product"]["confidence"] >= superset_object["product"]["confidence_threshold"],   superset_objects )
-        #self.confident_objects =  filter(lambda ss_o: ss_o['classifier']["classification"][0][0] != "negative" and ss_o['classifier']["classification"][0][1] >= 0.95, superset_objects )
+        self.confident_objects =  filter(lambda superset_object: superset_object["product"]["name"] != "negative",   superset_objects )
+        #self.confident_objects =  filter(lambda superset_object: superset_object["product"]["name"] != "negative"  and    superset_object["product"]["confidence"] >= superset_object["product"]["confidence_threshold"],   superset_objects )
 
     def add_real_world_coordinates(self):
         shelf_camera_iterator = self. shelf_camera_ids_generator()
