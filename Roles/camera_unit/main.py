@@ -116,7 +116,7 @@ class Object_Detection(object):
         #circles = np.concatenate([bottle_circles[0], can_circles[0]])
         #return (circles, visualisation)
 
-    def can_detection(self, image, max_circle_radius=200, draw_circles_on_processed=False):
+    def can_detection(self, image, max_circle_radius=125, draw_circles_on_processed=False):
         processed = image.copy()
         vis = image.copy()
         edges = cv2.Canny(processed, 150, 250, L2gradient=True, apertureSize=3)
@@ -616,6 +616,8 @@ class Main(threading.Thread):
                         capture_with_bottles_ocv, bottle_circles = self.object_detection.bottle_detection( capture_corrected_ocv )
                         print "main.run can detection"
                         capture_with_cans_ocv, can_circles = self.object_detection.can_detection( capture_corrected_ocv )
+                        print "debug:"
+                        print can_circles
                         print "main.run collecting object  data"
                         #print can_circles[0]
                         #print repr(can_circles[0][0])
@@ -625,7 +627,7 @@ class Main(threading.Thread):
                         
                         if len(can_circles) > 0:
                             for can_circle in can_circles[0]:
-                                potential_objects.append( self.data.create_blank_potential_object("can", bottle_circle[0], bottle_circle[1], bottle_circle[2] )) 
+                                potential_objects.append( self.data.create_blank_potential_object("can", can_circle[0], can_circle[1], can_circle[2] )) 
                     self.network.thirtybirds.send(
                         "receive_image_data", 
                         {
