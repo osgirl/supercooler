@@ -174,8 +174,11 @@ def mapped_lens_correction(distorted_image, distortion_map, scale=15):
     min_real_y = min(map(lambda x: x[1], distortion_points_dict.keys()))
     max_real_y = max(map(lambda x: x[1], distortion_points_dict.keys()))
 
+    print 'min_real_x', min_real_x, 'min_real_y', min_real_y
+    print 'max_real_x', max_real_x, 'max_real_y', max_real_y
+
     undistorted_image = np.zeros(
-        (image_height, image_width, 3), np.uint8)
+        ((max_real_y-min_real_y)*scale, (max_real_x-min_real_x)*scale, 3), np.uint8)
 
     for x in range(min_real_x, max_real_x, 10):
         for y in range(min_real_y, max_real_y, 10):
@@ -194,6 +197,7 @@ def mapped_lens_correction(distorted_image, distortion_map, scale=15):
             col_end   = (max_x-min_real_x)*scale
 
             undistorted_image[row_start:row_end, col_start:col_end] = undistorted_minimal_square
+            #show_image(undistorted_image, 'ef')
 
     return undistorted_image
 
@@ -230,19 +234,19 @@ def undistort_minimal_square(distorted_image, distortion_points, min_x, min_y, m
 
     image_width, image_height, _ = distorted_image.shape
 
-    if min_x == min_real_x:
+    if min_x == min_real_x and min_x != 0:
         lowerLeft [1] = min( lowerLeft[1]+100, image_width)
         lowerRight[1] = min(lowerRight[1]+100, image_width)
 
-    if min_y == min_real_y:
+    if min_y == min_real_y and min_y !=0:
         lowerLeft[0] = 0
         upperLeft[0] = 0
 
-    if max_x == max_real_x:
+    if max_x == max_real_x and max_x != 0:
         upperLeft [1] = 0
         upperRight[1] = 0
 
-    if max_y == max_real_y:
+    if max_y == max_real_y and max_y != 0:
         lowerRight[0] = min(lowerRight[0]+100, image_height)
         upperRight[0] = min(upperRight[0]+100, image_height)
 
@@ -254,6 +258,8 @@ def undistort_minimal_square(distorted_image, distortion_points, min_x, min_y, m
 
     undistorted_image = cv2.warpPerspective(
         src=distorted_image, M=transformMatrix, dsize=((max_x-min_x)*scale, (max_y-min_y)*scale))
+
+    #show_image(undistorted_image, "sdf")
 
     return undistorted_image
 
