@@ -116,7 +116,7 @@ class Object_Detection(object):
         #circles = np.concatenate([bottle_circles[0], can_circles[0]])
         #return (circles, visualisation)
 
-    def can_detection(self, image, max_circle_radius=100, draw_circles_on_processed=False):
+    def can_detection(self, image, max_circle_radius=200, draw_circles_on_processed=False):
         processed = image.copy()
         vis = image.copy()
         edges = cv2.Canny(processed, 150, 250, L2gradient=True, apertureSize=3)
