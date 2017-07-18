@@ -534,7 +534,7 @@ class Main(threading.Thread):
         self.object_detection = Object_Detection()
         self.data = Data(self.utils.get_shelf_id(), self.utils.get_camera_id())
 
-        distortion_map_ocv = cv_helpers.read_image(os.path.join(self.distortion_map_dir, self.distortion_map_names[4])) 
+        distortion_map_ocv = cv_helpers.read_image(os.path.join(self.distortion_map_dir, self.distortion_map_names[1])) 
         self.lens_correction = Lens_Correction(distortion_map_ocv)
 
         self.network.thirtybirds.subscribe_to_topic("reboot")
