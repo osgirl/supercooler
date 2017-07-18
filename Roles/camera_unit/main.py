@@ -616,6 +616,8 @@ class Main(threading.Thread):
                         capture_with_bottles_ocv, bottle_circles = self.object_detection.bottle_detection( capture_corrected_ocv )
                         print "main.run can detection"
                         capture_with_cans_ocv, can_circles = self.object_detection.can_detection( capture_corrected_ocv )
+                        print "debug:"
+                        print can_circles
                         print "main.run collecting object  data"
                         #print can_circles[0]
                         #print repr(can_circles[0][0])
