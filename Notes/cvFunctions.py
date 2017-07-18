@@ -199,6 +199,8 @@ def mapped_lens_correction(distorted_image, distortion_map, scale=15):
             undistorted_image[row_start:row_end, col_start:col_end] = undistorted_minimal_square
             #show_image(undistorted_image, 'ef')
 
+    #cv2.circle(undistorted_image, ((10                      )*scale, (10                      )*scale), 15, (255,0,0), 2)
+    #cv2.circle(undistorted_image, ((max_real_x-10-min_real_x)*scale, (max_real_y-10-min_real_y)*scale), 15, (0,255,0), 2)
     return undistorted_image
 
 # This function takes in the manually created distortion map, finds the
@@ -532,8 +534,8 @@ def find_identical_candidates( circles, identical_radius ):
 
 class Real_World_Locator(object):
 
-    map_folder = "Location Maps/"
-    upper_shelf_height = 20.5
+    map_folder = "location_new/"
+    upper_shelf_height = 24.5
     lower_shelf_height = 12.5
 
     def __init__(self, shelf, camera):
@@ -579,7 +581,38 @@ class Real_World_Locator(object):
       top_left_pixel = (int(top_left_pixel[0]) , int(top_left_pixel[1]))
       bottom_right_pixel = (int(bottom_right_pixel[0]), int(bottom_right_pixel[1]))
 
+      print 'top_left_pixel',top_left_pixel
+      print 'bottom_right_pixel',bottom_right_pixel
+
       return (top_left_pixel, bottom_right_pixel)
+
+    '''
+    def init_map_points(self, location_map, scale=15):
+        distortion_points = []
+        distortion_points_dict = {}
+        distortion_point_locations = get_distortion_points(location_map)
+
+        for point in distortion_point_locations:
+            distortion_points += [Distortion_Point(point[1], point[0], location_map)]
+
+        for point in distortion_points:
+            distortion_points_dict[(point.real_coords_x, point.real_coords_y)] = point
+
+        min_real_x = min(map(lambda x: x[0], distortion_points_dict.keys()))
+        max_real_x = max(map(lambda x: x[0], distortion_points_dict.keys()))
+        min_real_y = min(map(lambda x: x[1], distortion_points_dict.keys()))
+        max_real_y = max(map(lambda x: x[1], distortion_points_dict.keys()))
+
+        top_left_pixel_x = 10 * scale
+        top_left_pixel_y = 10 * scale
+        bottom_right_pixel_x = (max_real_x-10-min_real_x)*scale
+        bottom_right_pixel_y = (max_real_y-10-min_real_y)*scale
+
+        print 'top_left_pixel_x'    , top_left_pixel_x    , 'top_left_pixel_y'    , top_left_pixel_y
+        print 'bottom_right_pixel_x', bottom_right_pixel_x, 'bottom_right_pixel_y', bottom_right_pixel_y
+
+        return ((top_left_pixel_x,top_left_pixel_y), (bottom_right_pixel_x,bottom_right_pixel_y))
+    '''
 
     def init_world_points(self, location_map):
       if ( self.upper_shelf_image_points is None or self.lower_shelf_image_points is None ):

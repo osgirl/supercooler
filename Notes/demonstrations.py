@@ -4,19 +4,19 @@ def real_world_locator_demo():
     print "Initialize Locators for cameras 0, 1 and 4 on shelf D"
     locator0 = cvf.Real_World_Locator("D", 0)
     locator1 = cvf.Real_World_Locator("D", 1)
-    locator4 = cvf.Real_World_Locator("D", 4)
+    #locator4 = cvf.Real_World_Locator("D", 4)
 
 
     print "At height 12.5, these locations are the square containing number 14 (check Shelf D heights/{height}/undistorted{x}.png)"
     print "camera 0 locates at:", locator0.get_real_world_location(340, 175, 12.5)
     print "camera 1 locates at:", locator1.get_real_world_location(220, 170, 12.5)
-    print "camera 4 locates at:", locator4.get_real_world_location(335, 290, 12.5)
+    #print "camera 4 locates at:", locator4.get_real_world_location(335, 290, 12.5)
 
 
     print "At height 24.5, these locations are the square containing number 46 (check Shelf D heights/{height}/undistorted{x}.png)"
     print "camera 0 locates at:", locator0.get_real_world_location(310, 630, 24.5)
     print "camera 1 locates at:", locator1.get_real_world_location(20, 610, 24.5)
-    print "camera 4 locates at:", locator4.get_real_world_location(308, 480, 24.5)
+    #print "camera 4 locates at:", locator4.get_real_world_location(308, 480, 24.5)
 
 
 def detect_things_demo():
