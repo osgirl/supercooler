@@ -352,9 +352,11 @@ class Detected_Objects(object):
     def create_potential_object_images(self, object_list):
         shelf_camera_iterator = self. shelf_camera_ids_generator()
         for shelf_id, camera_id in shelf_camera_iterator:
+            print shelf_id, camera_id
             objects_from_one_camera =  self.filter_object_list_by_shelf_and_camera(shelf_id, camera_id, object_list)
             annotations = []
             for object_from_one_camera in objects_from_one_camera:
+                print object_from_one_camera
                 annotations.append(
                     {
                         "type":"circle", 
@@ -618,6 +620,8 @@ class Main(threading.Thread):
                     shelf_id =  msg["shelf_id"]
                     camera_id =  int(msg["camera_id"])
                     potential_objects =  msg["potential_objects"]
+                    print shelf_id, camera_id
+                    print potential_objects
 
                     undistorted_capture_png = msg["undistorted_capture_ocv"]
 
