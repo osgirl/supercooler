@@ -57,3 +57,30 @@ class WebInterface:
 
     def send_door_close(self):
         return self.__upload_data('/door_close', {'timestamp': int(time.time())})
+
+    def prep_for_web(self, objects_for_web, xmax, ymax):
+
+        # emtpy list of objects to send to web interface
+        to_send = []
+
+        for obj in enumerate(objects_for_web):
+            # create new object to hold web properties
+            obj_new = {}
+
+            # transform normalized x and y coordinates to web interface coords
+            obj_new['x'] = obj['norm_x'] / xmax * self.xmax_web
+            obj_new['y'] = obj['norm_y'] / ymax * self.ymax_web
+
+            # get shelf ID by converting letters A-D to ordinal represenation
+            obj_new['shelf'] = ord(obj['shelf_id']) - 65
+
+            obj_new['type'] = obj['product']['report_id']
+
+            # add extra stuff?
+            obj_new['name'] = obj['product']['name'] 
+            obj_new['score'] = obj['product']['confidence']
+
+            # append to list of products to send to web
+            to_send.append(obj_new)
+
+        return to_send
