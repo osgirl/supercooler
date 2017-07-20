@@ -75,7 +75,7 @@ class Network(object):
         return mkdir_stdout.split(" ")[1]
 
     def push_to_ab_db(self, simplest_inventory):
-        try: 
+            #try: 
             print simplest_inventory
             tm_door = time.strftime("%H:%M")
             dt_door = time.strftime("%e/%m/%y")
@@ -98,8 +98,8 @@ class Network(object):
             dataframe = pd.DataFrame.from_csv("inventory.csv")
             engine = create_engine("mysql+pymysql://root:password@historicoosdata.c4z0sx2tgyqk.us-east-2.rds.amazonaws.com:3306/HistoricOOSData")
             dataframe.to_sql('inventory', engine, if_exists='replace', index=False)
-        except Exception as e:
-            print "can't connect to db!"
+            #except Exception as e:
+            #print "can't connect to db!"
 
 
 class Thirtybirds_Client_Monitor_Server(threading.Thread):
@@ -764,13 +764,13 @@ class Main(threading.Thread):
 
                     # Filter out duplicates, return list of objects with normalized global coords
                     objects_for_web = self.duplicate_filter.filter_and_transform(potential_objects)
-                    print objects_for_web
+                    #print objects_for_web
 
                     # prep for web interface (scale coordinates and lookup product ids) and send
                     res = self.web_interface.send_report(self.web_interface.prep_for_web(objects_for_web,
                         self.duplicate_filter.x_max, self.duplicate_filter.y_max))
 
-                    print res, res.text
+                    #print res, res.text
                     
                     
             except Exception as e:
