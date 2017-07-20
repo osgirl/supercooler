@@ -144,6 +144,8 @@ def network_message_handler(msg):
         print "set light level", data
         lights = main.lights.set_level_all(eval(data))
 
+    elif topic == "reboot":
+        utils.reboot()
 
     elif topic == "client_monitor_request":
         network.send("client_monitor_response", utils.get_client_status())
@@ -157,7 +159,7 @@ def network_message_handler(msg):
 def init(HOSTNAME):
     global main
     global network
-    global  utils
+    global utils
 
     wpi.wiringPiSetup()
 
@@ -181,6 +183,8 @@ def init(HOSTNAME):
     network.subscribe_to_topic("system")  # subscribe to all system messages
     network.subscribe_to_topic("set_light_level")
     network.subscribe_to_topic("client_monitor_request")
+    network.subscribe_to_topic("reboot")
+
     #network.subscribe_to_topic("client_monitor_request")
 
     return main
