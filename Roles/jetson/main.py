@@ -69,6 +69,7 @@ class Network(object):
         return mkdir_stdout.split(" ")[1]
 
 
+
 class Thirtybirds_Client_Monitor_Server(threading.Thread):
     def __init__(self, network, hostnames, update_period=60):
         threading.Thread.__init__(self)
