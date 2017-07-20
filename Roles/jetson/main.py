@@ -507,8 +507,7 @@ class Detected_Objects(object):
             else:
                 print "Detected_Objects.create_confident_object_images image not found at", source_image_filepath
 
-
-
+        """
         shelf_camera_iterator = self. shelf_camera_ids_generator()
         for shelf_id, camera_id in shelf_camera_iterator:
             objects_from_one_camera =  self.filter_object_list_by_shelf_and_camera(shelf_id, camera_id, object_list)
@@ -516,7 +515,7 @@ class Detected_Objects(object):
             for object_from_one_camera in objects_from_one_camera:
                 product_name,  confidence = self.get_best_guess(object_from_one_camera)
                 label = "{}({})".format(product_name,  confidence)
-
+        """
 
     def add_product_parameters(self, detected_objects):
         for detected_object in detected_objects:
