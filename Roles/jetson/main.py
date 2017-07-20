@@ -208,6 +208,22 @@ class Duplicate_Filter(object):
         self.shelf_ids = ['A','B','C','D']
         #self.confident_objects = []
 
+        # global coordinate system
+        self.x_max = 1000
+        self.y_max = 1000
+
+    # TODO: search for duplicates, transform to global coords & normalize
+    def filter_and_transform(self, potential_objects):
+        # for now, just go through list of potential objects + assign
+        # normalized global coords at random
+        objects_normalized_coords = []
+        for i, potential_object in enumerate(potential_objects):
+            objects_normalized_coords.append(potential_object.copy())
+            objects_normalized_coords[i]['norm_x'] = random.uniform(0, self.x_max)
+            objects_normalized_coords[i]['norm_y'] = random.uniform(0, self.y_max)
+
+        return objects_normalized_coords
+
     def search_for_duplicates(self, potential_objects):
         #self.add_global_coords(potential_objects)
         self.confident_objects = self.filter_out_unconfident_objects(potential_objects)
@@ -668,6 +684,16 @@ class Main(threading.Thread):
                     self.detected_objects.filter_out_unconfident_objects(potential_objects)
 
                     self.detected_objects.create_confident_object_images()
+
+
+                    # ----------- WEB INTERACE ---------------------------------------------------
+
+                    # Filter out duplicates, return list of objects with normalized global coords
+                    objects_for_web = self.duplicate_filter.filter_and_transform(potential_objects)
+
+                    # prep for web interface (scale coordinates and lookup product ids) and send
+                    web_interface.send_report(web_interface.prep_for_web(objects_for_web,
+                        self.duplicate_filter.x_max, self.duplicate_filter.y_max))
                     
                     
             except Exception as e:
