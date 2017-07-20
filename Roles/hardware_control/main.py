@@ -7,6 +7,50 @@ import wiringpi as wpi
 
 from thirtybirds_2_0.Network.manager import init as network_init
 
+
+
+########################
+## UTILS
+########################
+
+class Utils(object):
+    def __init__(self, hostname):
+        self.hostname = hostname
+    def reboot(self):
+        os.system("sudo reboot now")
+
+    def get_shelf_id(self):
+        return self.hostname[11:][:1]
+
+    def get_camera_id(self):
+        return self.hostname[12:]
+
+    def create_image_file_name(self, timestamp, light_level, process_type):
+        return "{}_{}_{}_{}_{}.png".format(timestamp, self.get_shelf_id() ,  self.get_camera_id(), light_level, process_type) 
+
+    def remote_update_git(self, supercooler, thirtybirds, update, upgrade):
+        if supercooler:
+            subprocess.call(['sudo', 'git', 'pull'], cwd='/home/pi/supercooler')
+        if thirtybirds:
+            subprocess.call(['sudo', 'git', 'pull'], cwd='/home/pi/thirtybirds_2_0')
+        return 
+
+    def remote_update_scripts(self):
+        updates_init("/home/pi/supercooler", False, True)
+        return
+
+    def get_update_script_version(self):
+        (updates, ghStatus, bsStatus) = updates_init("/home/pi/supercooler", False, False)
+        return updates.read_version_pickle()
+
+    def get_git_timestamp(self):
+        return commands.getstatusoutput("cd /home/pi/supercooler/; git log -1 --format=%cd")[1]   
+
+    def get_client_status(self):
+        return (self.hostname, self.get_update_script_version(), self.get_git_timestamp())
+
+
+
 class Door(threading.Thread):
     def __init__(self, door_close_event_callback, door_open_event_callback):
         threading.Thread.__init__(self)
@@ -100,6 +144,11 @@ def network_message_handler(msg):
         print "set light level", data
         lights = main.lights.set_level_all(eval(data))
 
+    elif topic == "reboot":
+        utils.reboot()
+
+    elif topic == "client_monitor_request":
+        network.send("client_monitor_response", utils.get_client_status())
     #elif topic == "client_monitor_request":
     #    network.send("client_monitor_response", main.thirtybirds_client_monitor_client.send_client_status())
     
@@ -110,6 +159,7 @@ def network_message_handler(msg):
 def init(HOSTNAME):
     global main
     global network
+    global utils
 
     wpi.wiringPiSetup()
 
@@ -124,12 +174,17 @@ def init(HOSTNAME):
         status_callback=network_status_handler
     )
 
+    utils = Utils(HOSTNAME)
+
     main = Main(network)
     #main.daemon = True
     #main.start()
 
     network.subscribe_to_topic("system")  # subscribe to all system messages
     network.subscribe_to_topic("set_light_level")
+    network.subscribe_to_topic("client_monitor_request")
+    network.subscribe_to_topic("reboot")
+
     #network.subscribe_to_topic("client_monitor_request")
 
     return main
