@@ -32,6 +32,7 @@ import settings
 import signal
 import sys
 import yaml
+import random
 import pandas as pd
 import sqlalchemy
 import pymysql
@@ -718,10 +719,13 @@ class Main(threading.Thread):
 
                     # Filter out duplicates, return list of objects with normalized global coords
                     objects_for_web = self.duplicate_filter.filter_and_transform(potential_objects)
+                    print objects_for_web
 
                     # prep for web interface (scale coordinates and lookup product ids) and send
-                    web_interface.send_report(web_interface.prep_for_web(objects_for_web,
+                    res = self.web_interface.send_report(self.web_interface.prep_for_web(objects_for_web,
                         self.duplicate_filter.x_max, self.duplicate_filter.y_max))
+
+                    print res, res.text
                     
                     
             except Exception as e:

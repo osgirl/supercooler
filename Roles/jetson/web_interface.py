@@ -7,6 +7,10 @@ from random import randint, uniform
 from web_endpoints import web_endpoint
 
 class WebInterface:
+    def __init__(self):
+        self.xmax_web = 565
+        self.ymax_web = 492
+
     # make sure web_endpoints.py is in the ./Roles/conductor on the raspberry pi
     endpoint = web_endpoint
 
@@ -63,7 +67,7 @@ class WebInterface:
         # emtpy list of objects to send to web interface
         to_send = []
 
-        for obj in enumerate(objects_for_web):
+        for obj in objects_for_web:
             # create new object to hold web properties
             obj_new = {}
 
@@ -71,16 +75,14 @@ class WebInterface:
             obj_new['x'] = obj['norm_x'] / xmax * self.xmax_web
             obj_new['y'] = obj['norm_y'] / ymax * self.ymax_web
 
-            # get shelf ID by converting letters A-D to ordinal represenation
-            obj_new['shelf'] = ord(obj['shelf_id']) - 65
-
+            obj_new['shelf'] = obj['shelf_id']
             obj_new['type'] = obj['product']['report_id']
 
-            # add extra stuff?
-            obj_new['name'] = obj['product']['name'] 
-            obj_new['score'] = obj['product']['confidence']
-
             # append to list of products to send to web
-            to_send.append(obj_new)
+            if obj_new['type'] == 0:
+                continue
+            else:
+                to_send.append(obj_new)
 
+        print to_send
         return to_send
