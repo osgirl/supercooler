@@ -130,7 +130,7 @@ class Camera_Units(object):
     def send_update_scripts_command(self):
         self.network.thirtybirds.send("remote_update_scripts", "")
     def send_reboot(self):
-        self.network.thirtybirds.send("reboot")
+        self.network.thirtybirds.send("reboot", "")
     def return_raw_images(self):
         self.network.thirtybirds.send("return_raw_images", "")
 
@@ -673,6 +673,16 @@ class Main(threading.Thread):
             except Exception as e:
                 exc_type, exc_value, exc_traceback = sys.exc_info()
                 print e, repr(traceback.format_exception(exc_type, exc_value,exc_traceback))
+
+    def reboot_system(self):
+        # send reboot command to camera nodes + hardware controller
+        print "sending reboot command to nodes..."
+        self.camera_units.send_reboot()
+
+        time.sleep(5)
+
+        print "rebooting..."
+        os.system("sudo reboot now")
 
     def crop_and_classify_images(self, potential_objects, image, sess, threshold=0.6):
 
