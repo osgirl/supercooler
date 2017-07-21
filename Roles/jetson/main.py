@@ -87,7 +87,7 @@ class Network(object):
             csv_inventory_output.writerow(["sku_id", "tm_door", "dt_door", "num_instock"])
 
             for ab_id_key,  ab_id_value in simplest_inventory.items():
-                inventory.writerow(
+                csv_inventory_output.writerow(
                         [
                             ab_id_key,
                             tm_door,
