@@ -95,6 +95,7 @@ class Network(object):
                 ]
                 print "inventory_row", inventory_row
                 csv_inventory_output.writerow(inventory_row)
+            csv_inventory_output.close()
             dataframe = pd.DataFrame.from_csv("inventory.csv")
             engine = create_engine("mysql+pymysql://root:password@historicoosdata.c4z0sx2tgyqk.us-east-2.rds.amazonaws.com:3306/HistoricOOSData")
             dataframe.to_sql('inventory', engine, if_exists='replace', index=False)
