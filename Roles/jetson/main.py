@@ -87,14 +87,14 @@ class Network(object):
             csv_inventory_output.writerow(["sku_id", "tm_door", "dt_door", "num_instock"])
 
             for ab_id_key,  ab_id_value in simplest_inventory.items():
-                csv_inventory_output.writerow(
-                        [
-                            ab_id_key,
-                            tm_door,
-                            dt_door,
-                            ab_id_value
-                        ]
-                )
+                inventory_row = [
+                    ab_id_key,
+                    tm_door,
+                    dt_door,
+                    ab_id_value
+                ]
+                print "inventory_row", inventory_row
+                csv_inventory_output.writerow(inventory_row)
             dataframe = pd.DataFrame.from_csv("inventory.csv")
             engine = create_engine("mysql+pymysql://root:password@historicoosdata.c4z0sx2tgyqk.us-east-2.rds.amazonaws.com:3306/HistoricOOSData")
             dataframe.to_sql('inventory', engine, if_exists='replace', index=False)
