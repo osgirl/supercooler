@@ -54,7 +54,7 @@ class Door(threading.Thread):
     def __init__(self, door_close_event_callback, door_open_event_callback):
         threading.Thread.__init__(self)
         self.closed = True
-        self.door_pin_number = 29
+        self.door_pin_number = 25
         self.last_closure = time.time()
         self.door_close_event_callback = door_close_event_callback
         self.door_open_event_callback = door_open_event_callback
@@ -179,6 +179,7 @@ def init(HOSTNAME):
     #main.daemon = True
     #main.start()
 
+    # TODO: clean this up
     # initialize shelf power control
     wpi.pinMode(27, wpi.OUTPUT)
     wpi.pinMode(28, wpi.OUTPUT)
