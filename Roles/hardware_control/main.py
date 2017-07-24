@@ -179,6 +179,14 @@ def init(HOSTNAME):
     #main.daemon = True
     #main.start()
 
+    # initialize shelf power control
+    wpi.pinMode(27, wpi.OUTPUT)
+    wpi.pinMode(28, wpi.OUTPUT)
+    wpi.pinMode(29, wpi.OUTPUT)
+    wpi.digitalWrite(27, 1)
+    wpi.digitalWrite(28, 1)
+    wpi.digitalWrite(29, 1)
+
     network.subscribe_to_topic("system")  # subscribe to all system messages
     network.subscribe_to_topic("set_light_level")
     network.subscribe_to_topic("client_monitor_request")
