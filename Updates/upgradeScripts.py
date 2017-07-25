@@ -11,8 +11,5 @@ scripts = {
 		"sudo chmod +x /home/pi/gdrive",
 		"sudo install /home/pi/gdrive /usr/local/bin/gdrive",
 		"mkdir /home/pi/.gdrive",
-    ],
-    "0.1":[
-    	"{ sudo crontab -l; echo \"0 9 * * * /sbin/shutdown -r\"; } | sudo crontab -",
     ]
 }
