@@ -251,8 +251,12 @@ class Duplicate_Filter(object):
             delta_y = 400
 
              # start by doing a rough transformation with standard offsets
-            x_prime = potential_object['camera_x'] + delta_x * (camera_id // 4)
-            y_prime = potential_object['camera_y'] + delta_y * (3 - camera_id % 4)
+            x = potential_object['camera_x']
+            y = potential_object['camera_y']
+            camera_id = potential_object['camera_id']
+
+            x_prime = x + delta_x * (camera_id // 4)
+            y_prime = y + delta_y * (3 - camera_id % 4)
 
             # full-scale x and y in terms of camera coordinates, for scaling (adjust as necessary)
             x_full_scale = float(delta_x * 2 + 1280)
