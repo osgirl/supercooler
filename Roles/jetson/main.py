@@ -263,7 +263,7 @@ class Duplicate_Filter(object):
             y_full_scale = float(delta_y * 3 + 720)
 
             # normalize and swap x and y coordinates
-            x_norm = x_full_scale_web - (y_prime / y_full_scale * 1000)
+            x_norm = 1000 - (y_prime / y_full_scale * 1000)
             y_norm = x_prime / x_full_scale * 1000
 
             objects_normalized_coords[i]['norm_x'] = x_norm;
