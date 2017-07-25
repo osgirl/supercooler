@@ -245,6 +245,8 @@ class Duplicate_Filter(object):
 
         # for now, use approximate coordinate system
         for i, potential_object in enumerate(potential_objects):
+            
+            objects_normalized_coords.append(potential_object.copy())
 
              # standard x and y distances between camera origins. adjust as necessary
             delta_x = 850
