@@ -241,7 +241,7 @@ class Duplicate_Filter(object):
     # TODO: search for duplicates, transform to global coords & normalize
     def filter_and_transform(self, potential_objects):
         
-        bjects_normalized_coords = []
+        objects_normalized_coords = []
 
         # for now, use approximate coordinate system
         for i, potential_object in enumerate(potential_objects):
