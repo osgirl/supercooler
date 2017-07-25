@@ -240,13 +240,32 @@ class Duplicate_Filter(object):
 
     # TODO: search for duplicates, transform to global coords & normalize
     def filter_and_transform(self, potential_objects):
-        # for now, just go through list of potential objects + assign
-        # normalized global coords at random
-        objects_normalized_coords = []
+        
+        bjects_normalized_coords = []
+
+        # for now, use approximate coordinate system
         for i, potential_object in enumerate(potential_objects):
-            objects_normalized_coords.append(potential_object.copy())
-            objects_normalized_coords[i]['norm_x'] = random.uniform(0, self.x_max)
-            objects_normalized_coords[i]['norm_y'] = random.uniform(0, self.y_max)
+
+             # standard x and y distances between camera origins. adjust as necessary
+            delta_x = 850
+            delta_y = 400
+
+             # start by doing a rough transformation with standard offsets
+            x_prime = x + delta_x * (camera_id // 4)
+            y_prime = y + delta_y * (3 - camera_id % 4)
+
+            # full-scale x and y in terms of camera coordinates, for scaling (adjust as necessary)
+            x_full_scale = float(delta_x * 2 + 1280)
+            y_full_scale = float(delta_y * 3 + 720)
+
+            # normalize and swap x and y coordinates
+            x_norm = x_full_scale_web - (y_prime / y_full_scale * 1000)
+            y_norm = x_prime / x_full_scale * 1000
+
+            objects_normalized_coords[i]['norm_x'] = x_norm;
+            objects_normalized_coords[i]['norm_y'] = y_norm;
+
+            print objects_normalized_coords[i]
 
         return objects_normalized_coords
 
