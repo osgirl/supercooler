@@ -4,6 +4,7 @@ import threading
 import settings
 import subprocess
 import wiringpi as wpi
+import commands
 
 from thirtybirds_2_0.Network.manager import init as network_init
 from thirtybirds_2_0.Updates.manager import init as updates_init
