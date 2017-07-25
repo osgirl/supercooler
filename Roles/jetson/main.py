@@ -253,7 +253,7 @@ class Duplicate_Filter(object):
              # start by doing a rough transformation with standard offsets
             x = potential_object['camera_x']
             y = potential_object['camera_y']
-            camera_id = potential_object['camera_id']
+            camera_id = int(potential_object['camera_id'])
 
             x_prime = x + delta_x * (camera_id // 4)
             y_prime = y + delta_y * (3 - camera_id % 4)
