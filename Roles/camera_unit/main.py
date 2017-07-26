@@ -529,7 +529,7 @@ class Main(threading.Thread):
         self.network = Network(hostname, self.network_message_handler, self.network_status_handler)
         self.utils = Utils(hostname)
         self.images = Images(self.capture_path)
-        self.distortion_map_dir = os.path.join(DISTORTION_MAP_PATH, self.utils.get_shelf_id(), self.utils.get_camera_id())
+        self.distortion_map_dir = os.path.join(DISTORTION_MAP_PATH, "C", self.utils.get_camera_id())
         self.distortion_map_names = ["125.png", "205.png", "220.png", "230.png", "240.png"]
         self.object_detection = Object_Detection()
         self.data = Data(self.utils.get_shelf_id(), self.utils.get_camera_id())
