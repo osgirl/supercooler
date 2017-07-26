@@ -635,6 +635,8 @@ class Main(threading.Thread):
         self.response_accumulator = Response_Accumulator()
         self.detected_objects = Detected_Objects(CAPTURES_PATH, PARSED_CAPTURES_PATH, self.products)
 
+        self.door_open = False
+
         self.door_log = [time.time()]  # hold timestamps of door closures since last scan
         self.scan_log = [0]            # hold timestamps of scans since unit was rebooted
 
@@ -687,6 +689,22 @@ class Main(threading.Thread):
     def add_to_queue(self, topic, msg):
         self.queue.put((topic, msg))
 
+    def quick_picture(self):
+        "taking picture"
+        timestamp = time.strftime("%Y-%m-%d-%H-%M-%S")
+
+        # turn on the lights
+        self.network.thirtybirds.send("set_light_level", self.light_level)
+        time.sleep(1)
+
+        # send command to camera nodes to capture image
+        self.camera_units.capture_image(self.light_level, timestamp)
+        time.sleep(self.camera_capture_delay)
+
+        # turn off the lights
+        self.network.thirtybirds.send("set_light_level", 0)
+
+
     def run(self):
         while True:
 
@@ -696,7 +714,7 @@ class Main(threading.Thread):
             last_close = self.door_log[-1]
 
             # trigger scan
-            if ((now - last_scan > 1800) and (now - last_close > 300)) or ((now - last_scan > 3600) and (now - last_close > 1)):
+            if not self.door_open and (((now - last_scan > 1800) and (now - last_close > 300)) or ((now - last_scan > 3600) and (now - last_close > 1))):
 
                 timestamp = time.strftime("%Y-%m-%d-%H-%M-%S")
                 print "initiating scan:", timestamp
@@ -732,6 +750,7 @@ class Main(threading.Thread):
                 if topic == "client_monitor_response":
                     self.client_monitor_server.add_to_queue(msg[0],msg[2],msg[1])
                 if topic == "door_closed":
+                    self.door_open = False
                     self.web_interface.send_door_close()
                     self.door_log.append(time.time())
 
@@ -757,6 +776,7 @@ class Main(threading.Thread):
                     #     print "too soon.  next available run time:", self.soonest_run_time
 
                 if topic == "door_opened":
+                    self.door_open = True
                     self.web_interface.send_door_open()
                 if topic == "receive_image_data":
                     shelf_id =  msg["shelf_id"]
@@ -818,7 +838,7 @@ class Main(threading.Thread):
                     # ----------- WEB INTERACE ---------------------------------------------------
 
                     # Filter out duplicates, return list of objects with normalized global coords
-                    objects_for_web = self.duplicate_filter.filter_and_transform(potential_objects)
+                    objects_for_web = self.duplicate_filter.filter_and_transform(self.detected_objects.confident_objects)
                     #print objects_for_web
 
                     # prep for web interface (scale coordinates and lookup product ids) and send
