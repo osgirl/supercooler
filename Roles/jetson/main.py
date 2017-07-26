@@ -635,6 +635,9 @@ class Main(threading.Thread):
         self.response_accumulator = Response_Accumulator()
         self.detected_objects = Detected_Objects(CAPTURES_PATH, PARSED_CAPTURES_PATH, self.products)
 
+        self.door_log = [time.time()]  # hold timestamps of door closures since last scan
+        self.scan_log = [0]            # hold timestamps of scans since unit was rebooted
+
         self.label_lines = [line.rstrip() for line 
             in tf.gfile.GFile("/home/nvidia/supercooler/Roles/jetson/tf_files/retrained_labels.txt")]
 
@@ -686,6 +689,42 @@ class Main(threading.Thread):
 
     def run(self):
         while True:
+
+            # check and see if sufficient time has elapsed between inventory scan
+            now = time.time()
+            last_scan = self.scan_log[-1]
+            last_close = self.door_log[-1]
+
+            # only trigger scan if half and hour has passed since the last scan,
+            # AND door has been closed for at least five minutes
+            if (now - last_scan > 1800) and (now - last_close > 300):
+                print "initiating scan"
+
+                # update scan and door logs with current time
+                self.scan_log.append(now)
+                self.scan_log.append(now)
+
+                # turn on the lights
+                self.network.thirtybirds.send("set_light_level", self.light_level)
+                time.sleep(1)
+
+                # send command to camera nodes to capture image
+                self.camera_units.capture_image(self.light_level, timestamp)
+                time.sleep(self.camera_capture_delay)
+
+                # turn off the lights
+                self.network.thirtybirds.send("set_light_level", 0)
+                
+                # wait for cameras to capture and process images
+                self.response_accumulator.clear_potential_objects()
+                self.images_undistorted.clear()
+                time.sleep(self.camera_capture_delay)
+                
+                # set a timer, process receieved images
+                object_detection_timer = threading.Timer(self.object_detection_wait_period, self.add_to_queue, ("object_detection_complete",""))
+                object_detection_timer.start()
+                self.camera_units.process_images_and_report()
+
             try:
                 topic, msg = self.queue.get(True)
                 if topic not in ["client_monitor_response"]:
@@ -695,26 +734,27 @@ class Main(threading.Thread):
                 if topic == "door_closed":
                     self.web_interface.send_door_close()
 
-                    if time.time() >= self.soonest_run_time:
-                        self.soonest_run_time = time.time() + self.whole_process_wait_period
-                        timestamp = time.strftime("%Y-%m-%d-%H-%M-%S")
-                        #dir_captures_now = self.network.make_directory_on_gdrive(self.gdrive_captures_directory, 'captures_' + timestamp)
-                        #dir_unprocessed = self.network.make_directory_on_gdrive(dir_captures_now, 'unprocessed')
-                        #dir_annotated = self.network.make_directory_on_gdrive(dir_captures_now, 'annotated')
-                        #dir_parsed = self.network.make_directory_on_gdrive(dir_captures_now, 'parsed')
-                        self.network.thirtybirds.send("set_light_level", self.light_level)
-                        time.sleep(1)
-                        self.camera_units.capture_image(self.light_level, timestamp)
-                        time.sleep(self.camera_capture_delay)
-                        self.network.thirtybirds.send("set_light_level", 0)
-                        self.response_accumulator.clear_potential_objects()
-                        self.images_undistorted.clear()
-                        time.sleep(self.camera_capture_delay)
-                        object_detection_timer = threading.Timer(self.object_detection_wait_period, self.add_to_queue, ("object_detection_complete",""))
-                        object_detection_timer.start()
-                        self.camera_units.process_images_and_report()
-                    else:
-                        print "too soon.  next available run time:", self.soonest_run_time
+                    # if time.time() >= self.soonest_run_time:
+                    #     self.soonest_run_time = time.time() + self.whole_process_wait_period
+                    #     timestamp = time.strftime("%Y-%m-%d-%H-%M-%S")
+                    #     #dir_captures_now = self.network.make_directory_on_gdrive(self.gdrive_captures_directory, 'captures_' + timestamp)
+                    #     #dir_unprocessed = self.network.make_directory_on_gdrive(dir_captures_now, 'unprocessed')
+                    #     #dir_annotated = self.network.make_directory_on_gdrive(dir_captures_now, 'annotated')
+                    #     #dir_parsed = self.network.make_directory_on_gdrive(dir_captures_now, 'parsed')
+                    #     self.network.thirtybirds.send("set_light_level", self.light_level)
+                    #     time.sleep(1)
+                    #     self.camera_units.capture_image(self.light_level, timestamp)
+                    #     time.sleep(self.camera_capture_delay)
+                    #     self.network.thirtybirds.send("set_light_level", 0)
+                    #     self.response_accumulator.clear_potential_objects()
+                    #     self.images_undistorted.clear()
+                    #     time.sleep(self.camera_capture_delay)
+                    #     object_detection_timer = threading.Timer(self.object_detection_wait_period, self.add_to_queue, ("object_detection_complete",""))
+                    #     object_detection_timer.start()
+                    #     self.camera_units.process_images_and_report()
+                    # else:
+                    #     print "too soon.  next available run time:", self.soonest_run_time
+
                 if topic == "door_opened":
                     self.web_interface.send_door_open()
                 if topic == "receive_image_data":
@@ -790,6 +830,7 @@ class Main(threading.Thread):
             except Exception as e:
                 exc_type, exc_value, exc_traceback = sys.exc_info()
                 print e, repr(traceback.format_exception(exc_type, exc_value,exc_traceback))
+
 
     def reboot_system(self):
         # send reboot command to camera nodes + hardware controller
