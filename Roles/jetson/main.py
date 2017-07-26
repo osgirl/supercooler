@@ -695,13 +695,13 @@ class Main(threading.Thread):
             last_scan = self.scan_log[-1]
             last_close = self.door_log[-1]
 
-            # only trigger scan if half and hour has passed since the last scan,
-            # AND door has been closed for at least five minutes
-            if (now - last_scan > 1800) and (now - last_close > 300):
-                print "initiating scan"
+            # trigger scan
+            if ((now - last_scan > 1800) and (now - last_close > 300)) or ((now - last_scan > 3600) and (now - last_close > 1)):
 
-                # update scan and door logs with current time
-                self.scan_log.append(now)
+                timestamp = time.strftime("%Y-%m-%d-%H-%M-%S")
+                print "initiating scan:", timestamp
+
+                # update scan log with current time
                 self.scan_log.append(now)
 
                 # turn on the lights
@@ -715,7 +715,7 @@ class Main(threading.Thread):
                 # turn off the lights
                 self.network.thirtybirds.send("set_light_level", 0)
                 
-                # wait for cameras to capture and process images
+                # wait for cameras to capture images
                 self.response_accumulator.clear_potential_objects()
                 self.images_undistorted.clear()
                 time.sleep(self.camera_capture_delay)
@@ -733,6 +733,7 @@ class Main(threading.Thread):
                     self.client_monitor_server.add_to_queue(msg[0],msg[2],msg[1])
                 if topic == "door_closed":
                     self.web_interface.send_door_close()
+                    self.door_log.append(time.time())
 
                     # if time.time() >= self.soonest_run_time:
                     #     self.soonest_run_time = time.time() + self.whole_process_wait_period
