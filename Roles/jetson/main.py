@@ -626,7 +626,7 @@ class Main(threading.Thread):
         self.inventory = Inventory()
         self.network = Network(hostname, self.network_message_handler, self.network_status_handler)
         self.gdrive_captures_directory = "0BzpNPyJoi6uoSGlhTnN5RWhXRFU"
-        self.light_level = 7
+        self.light_level = 10
         self.camera_capture_delay = 10
         self.object_detection_wait_period = 300
         self.whole_process_wait_period = 330
