@@ -200,9 +200,9 @@ class Products(object):
             "canbudlight12":                  {"ab_id":"12","height": 12.5,  "width":5.3,  "report_id": 12,  "confidence_threshold":0.95},
             "canbusch12":                      {"ab_id":"13","height": 12.5,  "width":5.3,  "report_id": 13,  "confidence_threshold":0.95},
             "cannaturallight12":            {"ab_id":"15","height": 12.5,  "width":5.3,  "report_id": 15,  "confidence_threshold":0.95},
-            "canbudice25":                    {"ab_id":"17","height": 20.5,  "width":6.3,  "report_id": 17,  "confidence_threshold":0.95},
+            "canbudice25":                    {"ab_id":"17","height": 20.5,  "width":6.3,  "report_id": 16,  "confidence_threshold":0.95},
             "canbudlight25":                 {"ab_id":"18","height": 20.5,  "width":6.3,  "report_id": 17,  "confidence_threshold":0.95},
-            "canbudamerica25":           {"ab_id":"16","height": 20.5,  "width":6.3,  "report_id": 17,  "confidence_threshold":0.95},
+            "canbudamerica25":           {"ab_id":"16","height": 20.5,  "width":6.3,  "report_id": 18,  "confidence_threshold":0.95},
             "negative":                           {"ab_id":"0","height": 0,        "width":0,  "report_id": 0,  "confidence_threshold":0}
         }
 
