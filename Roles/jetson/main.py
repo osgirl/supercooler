@@ -249,24 +249,24 @@ class Duplicate_Filter(object):
             objects_normalized_coords.append(potential_object.copy())
 
              # standard x and y distances between camera origins. adjust as necessary
-            delta_x = 850
-            delta_y = 400
+            delta_x = 450
+            delta_y = 750
 
              # start by doing a rough transformation with standard offsets
             x = potential_object['camera_x']
             y = potential_object['camera_y']
             camera_id = int(potential_object['camera_id'])
 
-            x_prime = x + delta_x * (camera_id // 4)
-            y_prime = y + delta_y * (3 - camera_id % 4)
+            x_prime = x + delta_x * (camera_id % 4)
+            y_prime = y + delta_y * (camera_id // 4)
 
             # full-scale x and y in terms of camera coordinates, for scaling (adjust as necessary)
-            x_full_scale = float(delta_x * 2 + 1280)
-            y_full_scale = float(delta_y * 3 + 720)
+            x_full_scale = float(delta_x * 3 + 750)
+            y_full_scale = float(delta_y * 2 + 450)
 
-            # normalize and swap x and y coordinates
-            x_norm = 1000 - (y_prime / y_full_scale * 1000)
-            y_norm = x_prime / x_full_scale * 1000
+            # normalize swap x and y coordinates
+            x_norm = x_prime / y_full_scale * 1000
+            y_norm = y_prime / y_full_scale * 1000
 
             objects_normalized_coords[i]['norm_x'] = x_norm;
             objects_normalized_coords[i]['norm_y'] = y_norm;
