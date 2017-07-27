@@ -4,6 +4,7 @@ import threading
 import settings
 import subprocess
 import wiringpi as wpi
+import commands
 
 from thirtybirds_2_0.Network.manager import init as network_init
 from thirtybirds_2_0.Updates.manager import init as updates_init
@@ -54,7 +55,7 @@ class Door(threading.Thread):
     def __init__(self, door_close_event_callback, door_open_event_callback):
         threading.Thread.__init__(self)
         self.closed = True
-        self.door_pin_number = 29
+        self.door_pin_number = 25
         self.last_closure = time.time()
         self.door_close_event_callback = door_close_event_callback
         self.door_open_event_callback = door_open_event_callback
@@ -178,6 +179,15 @@ def init(HOSTNAME):
     main = Main(network)
     #main.daemon = True
     #main.start()
+
+    # TODO: clean this up
+    # initialize shelf power control
+    wpi.pinMode(27, wpi.OUTPUT)
+    wpi.pinMode(28, wpi.OUTPUT)
+    wpi.pinMode(29, wpi.OUTPUT)
+    wpi.digitalWrite(27, 1)
+    wpi.digitalWrite(28, 1)
+    wpi.digitalWrite(29, 1)
 
     network.subscribe_to_topic("system")  # subscribe to all system messages
     network.subscribe_to_topic("set_light_level")

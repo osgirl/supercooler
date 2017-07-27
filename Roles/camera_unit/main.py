@@ -119,7 +119,7 @@ class Object_Detection(object):
     def can_detection(self, image, max_circle_radius=100, draw_circles_on_processed=False):
         processed = image.copy()
         vis = image.copy()
-        edges = cv2.Canny(processed, 150, 250, L2gradient=True, apertureSize=3)
+        edges = cv2.Canny(processed, 25, 100, L2gradient=True, apertureSize=3)
         extendedWidth = edges.shape[0] + 2*max_circle_radius
         extendedHeight = edges.shape[1] + 2*max_circle_radius
         processed = np.zeros((extendedWidth, extendedHeight), np.uint8)
@@ -155,7 +155,7 @@ class Object_Detection(object):
         processed = image.copy()
         octaves = [ cv2.resize( processed, dsize=(0, 0), fx=1/float(x), fy=1/float(x), interpolation=cv2.INTER_LINEAR ) for x in range(1, number_of_octaves+1) ]
         octaves = map( lambda img: cv2.GaussianBlur(img, (5, 5), 0, 0), octaves )
-        octaves = map( lambda img: cv2.Canny(img, 150, 250, L2gradient=True, apertureSize=3), octaves )
+        octaves = map( lambda img: cv2.Canny(img, 25, 125, L2gradient=True, apertureSize=3), octaves )
         octave_circles = map( 
                 lambda i: cv2.HoughCircles(
                         octaves[i], 
@@ -529,12 +529,12 @@ class Main(threading.Thread):
         self.network = Network(hostname, self.network_message_handler, self.network_status_handler)
         self.utils = Utils(hostname)
         self.images = Images(self.capture_path)
-        self.distortion_map_dir = os.path.join(DISTORTION_MAP_PATH, self.utils.get_shelf_id(), self.utils.get_camera_id())
+        self.distortion_map_dir = os.path.join(DISTORTION_MAP_PATH, "C", self.utils.get_camera_id())
         self.distortion_map_names = ["125.png", "205.png", "220.png", "230.png", "240.png"]
         self.object_detection = Object_Detection()
         self.data = Data(self.utils.get_shelf_id(), self.utils.get_camera_id())
 
-        distortion_map_ocv = cv_helpers.read_image(os.path.join(self.distortion_map_dir, self.distortion_map_names[1])) 
+        distortion_map_ocv = cv_helpers.read_image(os.path.join(self.distortion_map_dir, self.distortion_map_names[4])) 
         self.lens_correction = Lens_Correction(distortion_map_ocv)
 
         self.network.thirtybirds.subscribe_to_topic("reboot")

@@ -200,9 +200,9 @@ class Products(object):
             "canbudlight12":                  {"ab_id":"12","height": 12.5,  "width":5.3,  "report_id": 12,  "confidence_threshold":0.95},
             "canbusch12":                      {"ab_id":"13","height": 12.5,  "width":5.3,  "report_id": 13,  "confidence_threshold":0.95},
             "cannaturallight12":            {"ab_id":"15","height": 12.5,  "width":5.3,  "report_id": 15,  "confidence_threshold":0.95},
-            "canbudice25":                    {"ab_id":"17","height": 20.5,  "width":6.3,  "report_id": 17,  "confidence_threshold":0.95},
+            "canbudice25":                    {"ab_id":"17","height": 20.5,  "width":6.3,  "report_id": 16,  "confidence_threshold":0.95},
             "canbudlight25":                 {"ab_id":"18","height": 20.5,  "width":6.3,  "report_id": 17,  "confidence_threshold":0.95},
-            "canbudamerica25":           {"ab_id":"16","height": 20.5,  "width":6.3,  "report_id": 17,  "confidence_threshold":0.95},
+            "canbudamerica25":           {"ab_id":"16","height": 20.5,  "width":6.3,  "report_id": 18,  "confidence_threshold":0.95},
             "negative":                           {"ab_id":"0","height": 0,        "width":0,  "report_id": 0,  "confidence_threshold":0}
         }
 
@@ -324,13 +324,38 @@ class Duplicate_Filter(object):
 
     # TODO: search for duplicates, transform to global coords & normalize
     def filter_and_transform(self, potential_objects):
-        # for now, just go through list of potential objects + assign
-        # normalized global coords at random
+        
         objects_normalized_coords = []
+
+        # for now, use approximate coordinate system
         for i, potential_object in enumerate(potential_objects):
+            
             objects_normalized_coords.append(potential_object.copy())
-            objects_normalized_coords[i]['norm_x'] = random.uniform(0, self.x_max)
-            objects_normalized_coords[i]['norm_y'] = random.uniform(0, self.y_max)
+
+             # standard x and y distances between camera origins. adjust as necessary
+            delta_x = 450
+            delta_y = 750
+
+             # start by doing a rough transformation with standard offsets
+            x = potential_object['camera_x']
+            y = potential_object['camera_y']
+            camera_id = int(potential_object['camera_id'])
+
+            x_prime = x + delta_x * (camera_id % 4)
+            y_prime = y + delta_y * (camera_id // 4)
+
+            # full-scale x and y in terms of camera coordinates, for scaling (adjust as necessary)
+            x_full_scale = float(delta_x * 3 + 750)
+            y_full_scale = float(delta_y * 2 + 450)
+
+            # normalize swap x and y coordinates
+            x_norm = x_prime / y_full_scale * 1000
+            y_norm = y_prime / y_full_scale * 1000
+
+            objects_normalized_coords[i]['norm_x'] = x_norm;
+            objects_normalized_coords[i]['norm_y'] = y_norm;
+
+            print objects_normalized_coords[i]
 
         return objects_normalized_coords
 
@@ -654,7 +679,7 @@ class Main(threading.Thread):
         self.inventory = Inventory()
         self.network = Network(hostname, self.network_message_handler, self.network_status_handler)
         self.gdrive_captures_directory = "0BzpNPyJoi6uoSGlhTnN5RWhXRFU"
-        self.light_level = 7
+        self.light_level = 10
         self.camera_capture_delay = 10
         self.object_detection_wait_period = 300
         self.whole_process_wait_period = 330
@@ -662,6 +687,11 @@ class Main(threading.Thread):
         self.camera_units = Camera_Units(self.network)
         self.response_accumulator = Response_Accumulator()
         self.detected_objects = Detected_Objects(CAPTURES_PATH, PARSED_CAPTURES_PATH, self.products)
+
+        self.door_open = False
+
+        self.door_log = [time.time()]         # hold timestamps of door closures since last scan
+        self.scan_log = [time.time() - 1800]  # hold timestamps of scans since unit was rebooted
 
         self.label_lines = [line.rstrip() for line 
             in tf.gfile.GFile("/home/nvidia/supercooler/Roles/jetson/tf_files/retrained_labels.txt")]
@@ -712,8 +742,60 @@ class Main(threading.Thread):
     def add_to_queue(self, topic, msg):
         self.queue.put((topic, msg))
 
+    def quick_picture(self):
+        "taking picture"
+        timestamp = time.strftime("%Y-%m-%d-%H-%M-%S")
+
+        # turn on the lights
+        self.network.thirtybirds.send("set_light_level", self.light_level)
+        time.sleep(1)
+
+        # send command to camera nodes to capture image
+        self.camera_units.capture_image(self.light_level, timestamp)
+        time.sleep(self.camera_capture_delay)
+
+        # turn off the lights
+        self.network.thirtybirds.send("set_light_level", 0)
+
+
     def run(self):
         while True:
+
+            # check and see if sufficient time has elapsed between inventory scan
+            now = time.time()
+            last_scan = self.scan_log[-1]
+            last_close = self.door_log[-1]
+
+            # trigger scan
+            if not self.door_open and (((now - last_scan > 1800) and (now - last_close > 300)) or ((now - last_scan > 3600) and (now - last_close > 1))):
+
+                timestamp = time.strftime("%Y-%m-%d-%H-%M-%S")
+                print "initiating scan:", timestamp
+
+                # update scan log with current time
+                self.scan_log.append(now)
+
+                # turn on the lights
+                self.network.thirtybirds.send("set_light_level", self.light_level)
+                time.sleep(1)
+
+                # send command to camera nodes to capture image
+                self.camera_units.capture_image(self.light_level, timestamp)
+                time.sleep(self.camera_capture_delay)
+
+                # turn off the lights
+                self.network.thirtybirds.send("set_light_level", 0)
+                
+                # wait for cameras to capture images
+                self.response_accumulator.clear_potential_objects()
+                self.images_undistorted.clear()
+                time.sleep(self.camera_capture_delay)
+                
+                # set a timer, process receieved images
+                object_detection_timer = threading.Timer(self.object_detection_wait_period, self.add_to_queue, ("object_detection_complete",""))
+                object_detection_timer.start()
+                self.camera_units.process_images_and_report()
+
             try:
                 topic, msg = self.queue.get(True)
                 if topic not in ["client_monitor_response"]:
@@ -721,29 +803,33 @@ class Main(threading.Thread):
                 if topic == "client_monitor_response":
                     self.client_monitor_server.add_to_queue(msg[0],msg[2],msg[1])
                 if topic == "door_closed":
+                    self.door_open = False
                     self.web_interface.send_door_close()
+                    self.door_log.append(time.time())
 
-                    if time.time() >= self.soonest_run_time:
-                        self.soonest_run_time = time.time() + self.whole_process_wait_period
-                        timestamp = time.strftime("%Y-%m-%d-%H-%M-%S")
-                        #dir_captures_now = self.network.make_directory_on_gdrive(self.gdrive_captures_directory, 'captures_' + timestamp)
-                        #dir_unprocessed = self.network.make_directory_on_gdrive(dir_captures_now, 'unprocessed')
-                        #dir_annotated = self.network.make_directory_on_gdrive(dir_captures_now, 'annotated')
-                        #dir_parsed = self.network.make_directory_on_gdrive(dir_captures_now, 'parsed')
-                        self.network.thirtybirds.send("set_light_level", self.light_level)
-                        time.sleep(1)
-                        self.camera_units.capture_image(self.light_level, timestamp)
-                        time.sleep(self.camera_capture_delay)
-                        self.network.thirtybirds.send("set_light_level", 0)
-                        self.response_accumulator.clear_potential_objects()
-                        self.images_undistorted.clear()
-                        time.sleep(self.camera_capture_delay)
-                        object_detection_timer = threading.Timer(self.object_detection_wait_period, self.add_to_queue, ("object_detection_complete",""))
-                        object_detection_timer.start()
-                        self.camera_units.process_images_and_report()
-                    else:
-                        print "too soon.  next available run time:", self.soonest_run_time
+                    # if time.time() >= self.soonest_run_time:
+                    #     self.soonest_run_time = time.time() + self.whole_process_wait_period
+                    #     timestamp = time.strftime("%Y-%m-%d-%H-%M-%S")
+                    #     #dir_captures_now = self.network.make_directory_on_gdrive(self.gdrive_captures_directory, 'captures_' + timestamp)
+                    #     #dir_unprocessed = self.network.make_directory_on_gdrive(dir_captures_now, 'unprocessed')
+                    #     #dir_annotated = self.network.make_directory_on_gdrive(dir_captures_now, 'annotated')
+                    #     #dir_parsed = self.network.make_directory_on_gdrive(dir_captures_now, 'parsed')
+                    #     self.network.thirtybirds.send("set_light_level", self.light_level)
+                    #     time.sleep(1)
+                    #     self.camera_units.capture_image(self.light_level, timestamp)
+                    #     time.sleep(self.camera_capture_delay)
+                    #     self.network.thirtybirds.send("set_light_level", 0)
+                    #     self.response_accumulator.clear_potential_objects()
+                    #     self.images_undistorted.clear()
+                    #     time.sleep(self.camera_capture_delay)
+                    #     object_detection_timer = threading.Timer(self.object_detection_wait_period, self.add_to_queue, ("object_detection_complete",""))
+                    #     object_detection_timer.start()
+                    #     self.camera_units.process_images_and_report()
+                    # else:
+                    #     print "too soon.  next available run time:", self.soonest_run_time
+
                 if topic == "door_opened":
+                    self.door_open = True
                     self.web_interface.send_door_open()
                 if topic == "receive_image_data":
                     shelf_id =  msg["shelf_id"]
@@ -809,7 +895,7 @@ class Main(threading.Thread):
                     # ----------- WEB INTERACE ---------------------------------------------------
 
                     # Filter out duplicates, return list of objects with normalized global coords
-                    objects_for_web = self.duplicate_filter.filter_and_transform(potential_objects)
+                    objects_for_web = self.duplicate_filter.filter_and_transform(self.detected_objects.confident_objects)
                     #print objects_for_web
 
                     # prep for web interface (scale coordinates and lookup product ids) and send
@@ -821,6 +907,7 @@ class Main(threading.Thread):
             except Exception as e:
                 exc_type, exc_value, exc_traceback = sys.exc_info()
                 print e, repr(traceback.format_exception(exc_type, exc_value,exc_traceback))
+
 
     def reboot_system(self):
         # send reboot command to camera nodes + hardware controller
