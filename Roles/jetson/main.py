@@ -225,18 +225,102 @@ class Products(object):
     def get_ab_id(self, product_name):
         return self.products[product_name]["ab_id"]
 
+
+
+
+
+
 class Duplicate_Filter(object):
     def __init__(self, products):
         self.products = products
         self.clusters = []
         self.diameter_threshold = 80 # mm - that's a guess. verify
         self.confidence_threshold = 0.95
-        self.shelf_ids = ['A','B','C','D']
-        #self.confident_objects = []
-
+        self.objects_mapped_by_shelf_camera_ids = {
+            'A':[[],[],[],[],[],[],[],[],[],[],[],[]],
+            'B':[[],[],[],[],[],[],[],[],[],[],[],[]],
+            'C':[[],[],[],[],[],[],[],[],[],[],[],[]],
+            'D':[[],[],[],[],[],[],[],[],[],[],[],[]]
+        }
+        self.detected_objects = []
         # global coordinate system
         self.x_max = 1000
         self.y_max = 1000
+
+    def shelf_camera_ids_generator(self):
+        for s in self.shelf_ids:
+            for c in range(12): 
+                yield s, c
+
+    def tag_all_duplicates(self, detected_objects):
+        self.detected_objects = detected_objects
+        #self.map_by_shelf_camera_ids()
+        self.tag_overlaping_objects_from_one_camera()
+        self.tag_duplicate_objects_from_one_camera()
+        return self.detected_objects
+        #self.tag_overlaping_objects_between_cameras(detected_objects)
+
+    #def map_by_shelf_camera_ids(self):
+    #    shelf_camera_iterator = self. shelf_camera_ids_generator()
+    #    for shelf_id, camera_id in shelf_camera_iterator:
+    #        objects_from_one_camera = filter(lambda d: d['shelf_id'] == shelf_id and int(d['camera_id']) == camera_id,  self.detected_objects)
+    #        for object_from_one_camera in objects_from_one_camera:
+    #            self.objects_mapped_by_shelf_camera_ids[shelf_id][int(camera_id)].append(object_from_one_camera)
+
+    def tag_overlaping_objects_from_one_camera(self):
+        for shelf_id in ["A","B","C","D"]:
+            for camera_id in range(12):
+                objects_from_one_camera = filter(lambda d: d['shelf_id'] == shelf_id and int(d['camera_id']) == camera_id,  self.detected_objects)
+                for i, object_from_one_camera_outer in enumerate(objects_from_one_camera):
+                    object_from_one_camera_outer.setdefault("duplicate", None)
+                    object_from_one_camera_outer.setdefault("overlapping_objects_from_one_camera", [])
+                    if object_from_one_camera_outer["product"]["name"]  == "negative":
+                        continue
+                    for j, object_from_one_camera_inner in enumerate(objects_from_one_camera):
+                        if i == j:
+                            continue
+                        if object_from_one_camera_inner["product"]["name"]  == "negative":
+                            continue
+                        # if object_from_one_camera_outer and object_from_one_camera_inner overlap by n%, add to object_from_one_camera_outer.overlapping_objects_from_one_camera
+                         centroid_distance, radius_distance, radius_inside, centroid_inside = self.calculate_centroid_distance_and_radius_distance(
+                            (object_from_one_camera_outer["camera_x"], object_from_one_camera_outer["camera_y"], object_from_one_camera_outer["radius"]), 
+                            (object_from_one_camera_inner["camera_x"], object_from_one_camera_inner["camera_y"], object_from_one_camera_inner["radius"])
+                        )
+                         if centroid_inside:
+                            object_from_one_camera_outer["overlapping_objects_from_one_camera"].append(object_from_one_camera_inner)
+                         #centroid_distance, radius_distance, radius_inside, centroid_inside
+
+    def tag_duplicate_objects_from_one_camera(self):
+        for shelf_id in ["A","B","C","D"]:
+            for camera_id in range(12):
+                objects_from_one_camera = filter(lambda d: d['shelf_id'] == shelf_id and int(d['camera_id']) == camera_id,  self.detected_objects)
+                for object_from_one_camera in objects_from_one_camera:
+                    if object_from_one_camera["duplicate"] is not None:
+                        continue
+                    #make this pythonic after sleeping
+                    if len(object_from_one_camera["overlapping_objects_from_one_camera"]) == 0:
+                        object_from_one_camera["duplicate"] = False
+                        continue
+                    highest_confidence = {"index":-1, "confidence":-1}
+                    for i, overlapping_object in enumerate(object_from_one_camera["overlapping_objects_from_one_camera"]):
+                        overlapping_object["duplicate"] = True
+                        if overlapping_object["product"]["confidence"] > highest_confidence["confidence"]:
+                            highest_confidence  = [i, overlapping_object["product"]["confidence"]]
+                    # highest confidence
+                    if highest_confidence["confidence"] > object_from_one_camera["product"]["confidence"]:
+                        object_from_one_camera["overlapping_objects_from_one_camera"][highest_confidence["index"]]["duplicate"] = False
+                        object_from_one_camera["duplicate"] = True
+                    else: 
+                        object_from_one_camera["overlapping_objects_from_one_camera"][highest_confidence["index"]]["duplicate"]s = True
+                        object_from_one_camera["duplicate"] = False
+
+    def calculate_centroid_distance_and_radius_distance(self, circle_a, circle_b ):
+        centroid_distance = math.pow( math.pow(circle_a['x'] - circle_b['x'], 2) + math.pow(circle_a['y'] - circle_b['y'], 2), 0.5)
+        circle_outer, inner_circle = circle_a, circle_b if circle_a['r'] > circle_b['r'] else circle_b, circle_a
+        radius_distance =  circle_outer['r'] - (inner_circle['r'] + centroid_distance)
+        radius_inside = True if radius_distance > 0 else False
+        centroid_inside = True if radius_distance + inner_circle['r'] > 0 else False
+        return  centroid_distance, radius_distance, radius_inside, centroid_inside
 
     # TODO: search for duplicates, transform to global coords & normalize
     def filter_and_transform(self, potential_objects):
@@ -250,6 +334,7 @@ class Duplicate_Filter(object):
 
         return objects_normalized_coords
 
+    """
     def search_for_duplicates(self, potential_objects):
         #self.add_global_coords(potential_objects)
         self.confident_objects = self.filter_out_unconfident_objects(potential_objects)
@@ -268,29 +353,25 @@ class Duplicate_Filter(object):
                                 # how to match with existing clusters?
                                 pass
 
-
-
     def filter_out_spatially_nested_objects(self, superset_objects):
-        #internal comparrison
-        for shelf_id in self.shelf_ids:
-            for camera_id in range(12):
-                objects_from_single_camera = filter(lambda d: d['shelf_id'] == shelf_id and int(d['camera_id']) == camera_id,  superset_objects)
-                for objects_from_single_camera_a, objects_from_single_camera_b in itertools.combinations(objects_from_single_camera, 2):
-                    # todo: prevent comparing the same pairs of objects as switched inner/outer roles.  probably a looping solution
-                    centroid_distance, radius_distance, radius_inside, centroid_inside = self.calculate_centroid_distance_and_radius_distance(
-                        (objects_from_single_camera_a["camera_x"], objects_from_single_camera_a["camera_y"], objects_from_single_camera_a["radius"]), 
-                        (objects_from_single_camera_b["camera_x"], objects_from_single_camera_b["camera_y"], objects_from_single_camera_b["radius"])
-                    )
-                    
-
-    def calculate_centroid_distance_and_radius_distance(self, circle_a, circle_b ):
-        centroid_distance = math.pow( math.pow(circle_a['x'] - circle_b['x'], 2) + math.pow(circle_a['y'] - circle_b['y'], 2), 0.5)
-        circle_outer, inner_circle = circle_a, circle_b if circle_a['r'] > circle_b['r'] else circle_b, circle_a
-        radius_distance =  circle_outer['r'] - (inner_circle['r'] + centroid_distance)
-        radius_inside = True if radius_distance > 0 else False
-        centroid_inside = True if radius_distance + inner_circle['r'] > 0 else False
-        return  centroid_distance, radius_distance, radius_inside, centroid_inside
-
+        # different valid objects can be connected in a cluster of overlapping potential objects
+        # duplicate objects have one common overlapping area
+        # what is the search algorithm to find overlapping areas in all potential objects, not just pairs?
+        # it must be a test for a specific geometric area, not just a string of overlapping pairs.  the latter can be a cluster or a ring
+        # guess:
+        #    start with one potential object
+        #    loop through all other potential objects
+        #      collect all objects overlapping with starting object
+        #        for each overlapping object, test its overlap with all other overlapping  objects
+        #          collect overlapping 
+        shelf_camera_iterator = self. shelf_camera_ids_generator()
+        for shelf_id, camera_id in shelf_camera_iterator:
+            objects_from_single_camera = filter(lambda d: d['shelf_id'] == shelf_id and int(d['camera_id']) == camera_id,  superset_objects)
+            for objects_from_single_camera_a, objects_from_single_camera_b in itertools.combinations(objects_from_single_camera, 2):
+                centroid_distance, radius_distance, radius_inside, centroid_inside = self.calculate_centroid_distance_and_radius_distance(
+                    (objects_from_single_camera_a["camera_x"], objects_from_single_camera_a["camera_y"], objects_from_single_camera_a["radius"]), 
+                    (objects_from_single_camera_b["camera_x"], objects_from_single_camera_b["camera_y"], objects_from_single_camera_b["radius"])
+                )
 
     def group_suspiciously_proximal_objects(self, objects):
         pass
@@ -300,7 +381,7 @@ class Duplicate_Filter(object):
 
     def calculate_distance(self, outer_x, outer_y, inner_x, inner_y ):
         return math.sqrt( math.pow((outer_x-inner_x),  2) + math.pow((outer_y-inner_y),  2))
-
+    """
 
 
 class Inventory(object):
@@ -518,6 +599,13 @@ class Detected_Objects(object):
         self.confident_objects =  filter(lambda superset_object: superset_object["product"]["name"] != "negative",   superset_objects )
         #self.confident_objects =  filter(lambda superset_object: superset_object["product"]["name"] != "negative"  and    superset_object["product"]["confidence"] >= superset_object["product"]["confidence_threshold"],   superset_objects )
 
+    def filter_out_duplicate_objects(self, detected_objects):
+        unique_images = []
+        for detected_object in detected_objects:
+            if detected_object["duplicate"] == False:
+              unique_images.append(detected_object)
+        return unique_images
+
     def add_real_world_coordinates(self):
         shelf_camera_iterator = self. shelf_camera_ids_generator()
         for shelf_id, camera_id in shelf_camera_iterator:
@@ -552,41 +640,6 @@ class Detected_Objects(object):
             ab_id = self.products.get_ab_id(confident_object["product"]["name"])
             inventory[ab_id] += 1
         return inventory
-
-    """
-    def search_for_duplicates(self, potential_objects):
-
-        # start with shelf x/y coordinates.  calculate here if neccessary
-        for shelf_id in self.shelf_ids:
-            for i, outer_confident_object in enumerate( confident_objects ):
-                for j, inner_confident_object in  enumerate( confident_objects ):
-                        if i != j:  # avoid comparing same potential_objects
-                            distance  = self.calculate_distance(outer_confident_object['global_x'],outer_confident_object['global_y'],inner_confident_object['global_x'],inner_confident_object['global_y'])  # calculate proximity based on shelf-based coordinates, object diameter, elastic factor
-                            if distance < self.diameter_threshold: # if objects are close
-                                # if in clusters, add to cluster
-                                # if not in cluters, create new cluster
-                                # if objects are within duplicate range
-                                # how to match with existing clusters?
-                                pass
-
-
-
-    def filter_out_spatially_nested_objects(self, superset_objects):
-        #internal comparrison
-        for shelf_id in self.shelf_ids:
-            for camera_id in range(12):
-                objects_from_single_camera = filter(lambda d: d['shelf_id'] == shelf_id and int(d['camera_id']) == camera_id,  superset_objects)
-                for objects_from_single_camera_a, objects_from_single_camera_b in itertools.combinations(objects_from_single_camera, 2):
-                    # todo: prevent comparing the same pairs of objects as switched inner/outer roles.  probably a looping solution
-                    centroid_distance, radius_distance, radius_inside, centroid_inside = self.calculate_centroid_distance_and_radius_distance(
-                        (objects_from_single_camera_a["camera_x"], objects_from_single_camera_a["camera_y"], objects_from_single_camera_a["radius"]), 
-                        (objects_from_single_camera_b["camera_x"], objects_from_single_camera_b["camera_y"], objects_from_single_camera_b["radius"])
-                    )
-                    
-    """
-
-
-
 
 
 # Main handles network send/recv and can see all other classes directly
@@ -743,6 +796,10 @@ class Main(threading.Thread):
 
                     self.detected_objects.filter_out_unconfident_objects(potential_objects)
 
+                    self.confident_objects = self.duplicate_filter.tag_all_duplicates(self.confident_objects)
+
+                    self.confident_objects = self.detected_objects.filter_out_duplicate_objects(self.confident_objects)
+
                     self.detected_objects.create_confident_object_images()
 
                     simplest_inventory = self.detected_objects.tabulate_inventory()
@@ -756,8 +813,7 @@ class Main(threading.Thread):
                     #print objects_for_web
 
                     # prep for web interface (scale coordinates and lookup product ids) and send
-                    res = self.web_interface.send_report(self.web_interface.prep_for_web(objects_for_web,
-                        self.duplicate_filter.x_max, self.duplicate_filter.y_max))
+                    res = self.web_interface.send_report(self.web_interface.prep_for_web(objects_for_web, self.duplicate_filter.x_max, self.duplicate_filter.y_max))
 
                     #print res, res.text
                     
