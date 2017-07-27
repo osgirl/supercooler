@@ -282,11 +282,11 @@ class Duplicate_Filter(object):
                         if object_from_one_camera_inner["product"]["name"]  == "negative":
                             continue
                         # if object_from_one_camera_outer and object_from_one_camera_inner overlap by n%, add to object_from_one_camera_outer.overlapping_objects_from_one_camera
-                         centroid_distance, radius_distance, radius_inside, centroid_inside = self.calculate_centroid_distance_and_radius_distance(
+                        centroid_distance, radius_distance, radius_inside, centroid_inside = self.calculate_centroid_distance_and_radius_distance(
                             (object_from_one_camera_outer["camera_x"], object_from_one_camera_outer["camera_y"], object_from_one_camera_outer["radius"]), 
                             (object_from_one_camera_inner["camera_x"], object_from_one_camera_inner["camera_y"], object_from_one_camera_inner["radius"])
                         )
-                         if centroid_inside:
+                        if centroid_inside:
                             object_from_one_camera_outer["overlapping_objects_from_one_camera"].append(object_from_one_camera_inner)
                          #centroid_distance, radius_distance, radius_inside, centroid_inside
 
@@ -311,7 +311,7 @@ class Duplicate_Filter(object):
                         object_from_one_camera["overlapping_objects_from_one_camera"][highest_confidence["index"]]["duplicate"] = False
                         object_from_one_camera["duplicate"] = True
                     else: 
-                        object_from_one_camera["overlapping_objects_from_one_camera"][highest_confidence["index"]]["duplicate"]s = True
+                        object_from_one_camera["overlapping_objects_from_one_camera"][highest_confidence["index"]]["duplicate"] = True
                         object_from_one_camera["duplicate"] = False
 
     def calculate_centroid_distance_and_radius_distance(self, circle_a, circle_b ):
