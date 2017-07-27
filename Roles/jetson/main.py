@@ -622,6 +622,7 @@ class Detected_Objects(object):
 
     def filter_out_unconfident_objects(self, superset_objects):
         self.confident_objects =  filter(lambda superset_object: superset_object["product"]["name"] != "negative",   superset_objects )
+        return self.confident_objectss
         #self.confident_objects =  filter(lambda superset_object: superset_object["product"]["name"] != "negative"  and    superset_object["product"]["confidence"] >= superset_object["product"]["confidence_threshold"],   superset_objects )
 
     def filter_out_duplicate_objects(self, detected_objects):
@@ -629,6 +630,7 @@ class Detected_Objects(object):
         for detected_object in detected_objects:
             if detected_object["duplicate"] == False:
               unique_images.append(detected_object)
+        self.confident_objects = unique_images
         return unique_images
 
     def add_real_world_coordinates(self):
@@ -880,11 +882,11 @@ class Main(threading.Thread):
 
                     self.detected_objects.add_product_parameters(potential_objects)
 
-                    self.detected_objects.filter_out_unconfident_objects(potential_objects)
+                    confident_objects =  self.detected_objects.filter_out_unconfident_objects(potential_objects)
 
-                    self.confident_objects = self.duplicate_filter.tag_all_duplicates(self.confident_objects)
+                    confident_objects = self.duplicate_filter.tag_all_duplicates(confident_objects)
 
-                    self.confident_objects = self.detected_objects.filter_out_duplicate_objects(self.confident_objects)
+                    self.confident_objects = self.detected_objects.filter_out_duplicate_objects(confident_objects)
 
                     self.detected_objects.create_confident_object_images()
 
