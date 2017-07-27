@@ -637,8 +637,8 @@ class Main(threading.Thread):
 
         self.door_open = False
 
-        self.door_log = [time.time()]  # hold timestamps of door closures since last scan
-        self.scan_log = [0]            # hold timestamps of scans since unit was rebooted
+        self.door_log = [time.time()]         # hold timestamps of door closures since last scan
+        self.scan_log = [time.time() - 1800]  # hold timestamps of scans since unit was rebooted
 
         self.label_lines = [line.rstrip() for line 
             in tf.gfile.GFile("/home/nvidia/supercooler/Roles/jetson/tf_files/retrained_labels.txt")]
