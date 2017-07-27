@@ -529,12 +529,12 @@ class Main(threading.Thread):
         self.network = Network(hostname, self.network_message_handler, self.network_status_handler)
         self.utils = Utils(hostname)
         self.images = Images(self.capture_path)
-        self.distortion_map_dir = os.path.join(DISTORTION_MAP_PATH, self.utils.get_shelf_id(), self.utils.get_camera_id())
+        self.distortion_map_dir = os.path.join(DISTORTION_MAP_PATH, "C", self.utils.get_camera_id())
         self.distortion_map_names = ["125.png", "205.png", "220.png", "230.png", "240.png"]
         self.object_detection = Object_Detection()
         self.data = Data(self.utils.get_shelf_id(), self.utils.get_camera_id())
 
-        distortion_map_ocv = cv_helpers.read_image(os.path.join(self.distortion_map_dir, self.distortion_map_names[1])) 
+        distortion_map_ocv = cv_helpers.read_image(os.path.join(self.distortion_map_dir, self.distortion_map_names[4])) 
         self.lens_correction = Lens_Correction(distortion_map_ocv)
 
         self.network.thirtybirds.subscribe_to_topic("reboot")
