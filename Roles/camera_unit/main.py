@@ -119,7 +119,7 @@ class Object_Detection(object):
     def can_detection(self, image, max_circle_radius=100, draw_circles_on_processed=False):
         processed = image.copy()
         vis = image.copy()
-        edges = cv2.Canny(processed, 50, 150, L2gradient=True, apertureSize=3)
+        edges = cv2.Canny(processed, 25, 100, L2gradient=True, apertureSize=3)
         extendedWidth = edges.shape[0] + 2*max_circle_radius
         extendedHeight = edges.shape[1] + 2*max_circle_radius
         processed = np.zeros((extendedWidth, extendedHeight), np.uint8)
@@ -155,7 +155,7 @@ class Object_Detection(object):
         processed = image.copy()
         octaves = [ cv2.resize( processed, dsize=(0, 0), fx=1/float(x), fy=1/float(x), interpolation=cv2.INTER_LINEAR ) for x in range(1, number_of_octaves+1) ]
         octaves = map( lambda img: cv2.GaussianBlur(img, (5, 5), 0, 0), octaves )
-        octaves = map( lambda img: cv2.Canny(img, 150, 250, L2gradient=True, apertureSize=3), octaves )
+        octaves = map( lambda img: cv2.Canny(img, 25, 125, L2gradient=True, apertureSize=3), octaves )
         octave_circles = map( 
                 lambda i: cv2.HoughCircles(
                         octaves[i], 
