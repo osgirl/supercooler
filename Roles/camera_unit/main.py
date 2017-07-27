@@ -119,7 +119,7 @@ class Object_Detection(object):
     def can_detection(self, image, max_circle_radius=100, draw_circles_on_processed=False):
         processed = image.copy()
         vis = image.copy()
-        edges = cv2.Canny(processed, 150, 250, L2gradient=True, apertureSize=3)
+        edges = cv2.Canny(processed, 50, 150, L2gradient=True, apertureSize=3)
         extendedWidth = edges.shape[0] + 2*max_circle_radius
         extendedHeight = edges.shape[1] + 2*max_circle_radius
         processed = np.zeros((extendedWidth, extendedHeight), np.uint8)
