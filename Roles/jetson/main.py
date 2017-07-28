@@ -643,9 +643,12 @@ class Detected_Objects(object):
         unique_images = []
         for detected_object in detected_objects:
             if detected_object["duplicate"] == False:
-              unique_images.append(detected_object)
+                unique_images.append(detected_object)
+                print "filter_out_duplicate_objects selected"
+            else:
+                print "filter_out_duplicate_objects rejected"
         self.confident_objects = unique_images
-        return unique_images
+        #return unique_images
 
     def add_real_world_coordinates(self):
         shelf_camera_iterator = self. shelf_camera_ids_generator()
@@ -901,7 +904,7 @@ class Main(threading.Thread):
 
                     confident_objects = self.duplicate_filter.tag_all_duplicates(confident_objects)
 
-                    confident_objects = self.detected_objects.filter_out_duplicate_objects(confident_objects)
+                    self.detected_objects.filter_out_duplicate_objects(confident_objects)
 
                     self.detected_objects.create_confident_object_images()
 
