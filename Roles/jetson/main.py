@@ -587,7 +587,10 @@ class Detected_Objects(object):
             for object_from_one_camera in objects_from_one_camera:
                 product_name,  confidence = self.get_best_guess(object_from_one_camera)
                 label = "{}({})".format(product_name,  confidence)
-                circle_color = (0, 255, 0) # green
+                if object_from_one_camera["duplicate"]:
+                    circle_color = (0, 0, 255) # green
+                else:
+                    circle_color = (0, 255, 0) # green
                 annotations.append(
                     {
                         "type":"circle", 
@@ -640,6 +643,8 @@ class Detected_Objects(object):
         #self.confident_objects =  filter(lambda superset_object: superset_object["product"]["name"] != "negative"  and    superset_object["product"]["confidence"] >= superset_object["product"]["confidence_threshold"],   superset_objects )
 
     def filter_out_duplicate_objects(self, detected_objects):
+        self.confident_objects = detected_objects
+        return
         unique_images = []
         for detected_object in detected_objects:
             if detected_object["duplicate"] == False:
