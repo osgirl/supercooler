@@ -186,25 +186,33 @@ class Images(object):
 class Products(object):
     def __init__(self):
         self.products = {
-            "bottlebecks":                      {"ab_id":"1", "height": 23,     "width":6,  "report_id": 1,  "confidence_threshold":0.95},
-            "bottlebudamerica":            {"ab_id":"2", "height": 23,     "width":6,  "report_id": 2,  "confidence_threshold":0.95},
-            "bottlebudlight":                  {"ab_id":"3", "height": 23,     "width":6,  "report_id": 3,  "confidence_threshold":0.95},
-            "bottleplatinum":                 {"ab_id":"4", "height": 23,     "width":6,  "report_id": 4,  "confidence_threshold":0.95},
-            "bottlecorona":                     {"ab_id":"5", "height": 24.5,  "width":6,  "report_id": 5,  "confidence_threshold":0.95},
-            "bottlehoegaarden":            {"ab_id":"6", "height": 23,     "width":6,  "report_id": 6,  "confidence_threshold":0.95},
-            "bottleultra":                        {"ab_id":"7", "height": 23,     "width":6,  "report_id": 7,  "confidence_threshold":0.95},
-            "bottleshocktopraspberry":{"ab_id":"8", "height": 23,     "width":6,  "report_id": 8,  "confidence_threshold":0.95},
-            "bottleshocktoppretzel":     {"ab_id":"9","height": 23,     "width":6,  "report_id": 9,  "confidence_threshold":0.95},
-            "bottlestella":                       {"ab_id":"10","height": 23,     "width":6,  "report_id": 10,  "confidence_threshold":0.95},
-            "canbudamerica12":            {"ab_id":"11","height": 12.5,  "width":5.3,  "report_id": 11,  "confidence_threshold":0.95},
-            "canbudlight12":                  {"ab_id":"12","height": 12.5,  "width":5.3,  "report_id": 12,  "confidence_threshold":0.95},
-            "canbusch12":                      {"ab_id":"13","height": 12.5,  "width":5.3,  "report_id": 13,  "confidence_threshold":0.95},
-            "cannaturallight12":            {"ab_id":"15","height": 12.5,  "width":5.3,  "report_id": 15,  "confidence_threshold":0.95},
-            "canbudice25":                    {"ab_id":"17","height": 20.5,  "width":6.3,  "report_id": 16,  "confidence_threshold":0.95},
-            "canbudlight25":                 {"ab_id":"18","height": 20.5,  "width":6.3,  "report_id": 17,  "confidence_threshold":0.95},
-            "canbudamerica25":           {"ab_id":"16","height": 20.5,  "width":6.3,  "report_id": 18,  "confidence_threshold":0.95},
+
+
+            "bottlebecks":                      {"ab_id":"1", "height": 23,     "width":6,  "report_id": 1,  "confidence_threshold":0.90},
+            "bottlebudamerica":            {"ab_id":"2", "height": 23,     "width":6,  "report_id": 2,  "confidence_threshold":0.90},
+            "bottlebudlight":                  {"ab_id":"3", "height": 23,     "width":6,  "report_id": 3,  "confidence_threshold":0.90},
+            "bottleplatinum":                 {"ab_id":"4", "height": 23,     "width":6,  "report_id": 4,  "confidence_threshold":0.90},
+            "bottlecorona":                     {"ab_id":"5", "height": 24.5,  "width":6,  "report_id": 5,  "confidence_threshold":0.90},
+            "bottlehoegaarden":            {"ab_id":"6", "height": 23,     "width":6,  "report_id": 6,  "confidence_threshold":0.90},
+            "bottleultra":                        {"ab_id":"7", "height": 23,     "width":6,  "report_id": 7,  "confidence_threshold":0.90},
+            "bottleshocktopraspberry":{"ab_id":"8", "height": 23,     "width":6,  "report_id": 8,  "confidence_threshold":0.90},
+            "bottleshocktoppretzel":     {"ab_id":"9","height": 23,     "width":6,  "report_id": 9,  "confidence_threshold":0.90},
+            "bottlestella":                       {"ab_id":"10","height": 23,     "width":6,  "report_id": 10,  "confidence_threshold":0.90},
+            "bottlegoose312":               {"ab_id":"19", "height": 23,     "width":6,  "report_id": 1,  "confidence_threshold":0.90},
+            "bottlecoronalight":             {"ab_id":"20", "height": 23,     "width":6,  "report_id": 1,  "confidence_threshold":0.90},
+            "bottlegooseipa":                {"ab_id":"21", "height": 23,     "width":6,  "report_id": 1,  "confidence_threshold":0.90},
+            "bottlebluepoint":                {"ab_id":"22", "height": 23,     "width":6,  "report_id": 1,  "confidence_threshold":0.90},
+            "canbudamerica12":            {"ab_id":"11","height": 12.5,  "width":5.3,  "report_id": 11,  "confidence_threshold":0.90},
+            "canbudlight12":                  {"ab_id":"12","height": 12.5,  "width":5.3,  "report_id": 12,  "confidence_threshold":0.90},
+            "canbusch12":                      {"ab_id":"13","height": 12.5,  "width":5.3,  "report_id": 13,  "confidence_threshold":0.90},
+            "cannaturallight12":            {"ab_id":"15","height": 12.5,  "width":5.3,  "report_id": 15,  "confidence_threshold":0.90},
+            "canbudice25":                    {"ab_id":"17","height": 20.5,  "width":6.3,  "report_id": 16,  "confidence_threshold":0.90},
+            "canbudlight25":                 {"ab_id":"18","height": 20.5,  "width":6.3,  "report_id": 17,  "confidence_threshold":0.90},
+            "canbudamerica25":           {"ab_id":"16","height": 20.5,  "width":6.3,  "report_id": 18,  "confidence_threshold":0.90},
             "negative":                           {"ab_id":"0","height": 0,        "width":0,  "report_id": 0,  "confidence_threshold":0}
         }
+
+
 
 
     def get_product_parameters(self):
@@ -894,7 +902,7 @@ class Main(threading.Thread):
                             #print potential_objects_subset
                     self.detected_objects.create_classified_object_images(potential_objects)
 
-                    self.detected_objects.add_product_parameters(potential_objects)
+                    self.detected_objects.  (potential_objects)
 
                     confident_objects =  self.detected_objects.filter_out_unconfident_objects(potential_objects)
 
