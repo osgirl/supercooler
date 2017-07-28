@@ -193,24 +193,15 @@ class Products(object):
             "bottlecorona":                     {"ab_id":"5", "height": 24.5,  "width":6,  "report_id": 5,  "confidence_threshold":0.90},
             "bottlehoegaarden":            {"ab_id":"6", "height": 23,     "width":6,  "report_id": 6,  "confidence_threshold":0.90},
             "bottleultra":                        {"ab_id":"7", "height": 23,     "width":6,  "report_id": 7,  "confidence_threshold":0.90},
-            "bottleshocktopraspberry":{"ab_id":"8", "height": 23,     "width":6,  "report_id": 8,  "confidence_threshold":0.90},
-            "bottleshocktoppretzel":     {"ab_id":"9","height": 23,     "width":6,  "report_id": 9,  "confidence_threshold":0.90},
             "bottlestella":                       {"ab_id":"10","height": 23,     "width":6,  "report_id": 10,  "confidence_threshold":0.90},
-            "bottlegoose312":               {"ab_id":"19", "height": 23,     "width":6,  "report_id": 1,  "confidence_threshold":0.90},
-            "bottlecoronalight":             {"ab_id":"20", "height": 23,     "width":6,  "report_id": 1,  "confidence_threshold":0.90},
-            "bottlegooseipa":                {"ab_id":"21", "height": 23,     "width":6,  "report_id": 1,  "confidence_threshold":0.90},
-            "bottlebluepoint":                {"ab_id":"22", "height": 23,     "width":6,  "report_id": 1,  "confidence_threshold":0.90},
-            "canbudamerica12":            {"ab_id":"11","height": 12.5,  "width":5.3,  "report_id": 11,  "confidence_threshold":0.90},
-            "canbudlight12":                  {"ab_id":"12","height": 12.5,  "width":5.3,  "report_id": 12,  "confidence_threshold":0.90},
-            "canbusch12":                      {"ab_id":"13","height": 12.5,  "width":5.3,  "report_id": 13,  "confidence_threshold":0.90},
-            "cannaturallight12":            {"ab_id":"15","height": 12.5,  "width":5.3,  "report_id": 15,  "confidence_threshold":0.90},
-            "canbudice25":                    {"ab_id":"17","height": 20.5,  "width":6.3,  "report_id": 16,  "confidence_threshold":0.90},
-            "canbudlight25":                 {"ab_id":"18","height": 20.5,  "width":6.3,  "report_id": 17,  "confidence_threshold":0.90},
+            "bottlegoose312":               {"ab_id":"8", "height": 23,     "width":6,  "report_id": 1,  "confidence_threshold":0.90},
+            "bottlecoronalight":             {"ab_id":"9", "height": 23,     "width":6,  "report_id": 1,  "confidence_threshold":0.90},
+            "bottlegooseipa":                {"ab_id":"13", "height": 23,     "width":6,  "report_id": 1,  "confidence_threshold":0.90},
+            "bottlebluepoint":                {"ab_id":"15", "height": 23,     "width":6,  "report_id": 1,  "confidence_threshold":0.90},
             "canbudamerica25":           {"ab_id":"16","height": 20.5,  "width":6.3,  "report_id": 18,  "confidence_threshold":0.90},
             "negative":                           {"ab_id":"0","height": 0,        "width":0,  "report_id": 0,  "confidence_threshold":0}
         }
-
-
+        
 
 
     def get_product_parameters(self):
