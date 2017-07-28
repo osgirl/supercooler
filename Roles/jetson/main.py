@@ -201,7 +201,7 @@ class Products(object):
             "canbudamerica25":           {"ab_id":"16","height": 20.5,  "width":6.3,  "report_id": 18,  "confidence_threshold":0.90},
             "negative":                           {"ab_id":"0","height": 0,        "width":0,  "report_id": 0,  "confidence_threshold":0}
         }
-        
+
 
 
     def get_product_parameters(self):
@@ -291,8 +291,10 @@ class Duplicate_Filter(object):
                                 "r":object_from_one_camera_inner["radius"]
                             }
                         )
+                        print "Duplicate_Filter.tag_overlaping_objects_from_one_camera ", shelf_id, camera_id, centroid_distance, radius_distance, radius_inside, centroid_inside
                         if centroid_inside:
                             object_from_one_camera_outer["overlapping_objects_from_one_camera"].append(object_from_one_camera_inner)
+                         
                          #centroid_distance, radius_distance, radius_inside, centroid_inside
 
     def tag_duplicate_objects_from_one_camera(self):
@@ -313,6 +315,7 @@ class Duplicate_Filter(object):
                             #highest_confidence  = [i, overlapping_object["product"]["confidence"]]
                             highest_confidence  = {"index":i, "confidence":overlapping_object["product"]["confidence"]}
                     # highest confidence
+                    print "Duplicate_Filter.tag_duplicate_objects_from_one_camera", highest_confidence["confidence"] , object_from_one_camera["product"]["confidence"]
                     if highest_confidence["confidence"] > object_from_one_camera["product"]["confidence"]:
                         object_from_one_camera["overlapping_objects_from_one_camera"][highest_confidence["index"]]["duplicate"] = False
                         object_from_one_camera["duplicate"] = True
@@ -844,6 +847,7 @@ class Main(threading.Thread):
                 if topic == "door_opened":
                     self.door_open = True
                     self.web_interface.send_door_open()
+                    print "Door is open.  Dammit, Fudge!"
                 if topic == "receive_image_data":
                     shelf_id =  msg["shelf_id"]
                     camera_id =  int(msg["camera_id"])
@@ -895,6 +899,10 @@ class Main(threading.Thread):
 
                     confident_objects =  self.detected_objects.filter_out_unconfident_objects(potential_objects)
 
+                    confident_objects = self.duplicate_filter.tag_all_duplicates(confident_objects)
+
+                    confident_objects = self.detected_objects.filter_out_duplicate_objects(confident_objects)
+
                     self.detected_objects.create_confident_object_images()
 
                     simplest_inventory = self.detected_objects.tabulate_inventory()
@@ -911,10 +919,6 @@ class Main(threading.Thread):
                     res = self.web_interface.send_report(self.web_interface.prep_for_web(objects_for_web, self.duplicate_filter.x_max, self.duplicate_filter.y_max))
 
                     #print res, res.text
-
-                    confident_objects = self.duplicate_filter.tag_all_duplicates(confident_objects)
-
-                    confident_objects = self.detected_objects.filter_out_duplicate_objects(confident_objects)
 
                     #print confident_objects
                     
