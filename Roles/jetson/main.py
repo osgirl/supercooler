@@ -919,7 +919,7 @@ class Main(threading.Thread):
 
                     confident_objects = self.detected_objects.filter_out_duplicate_objects(confident_objects)
 
-                    print confident_objects
+                    #print confident_objects
                     
                     
             except Exception as e:
