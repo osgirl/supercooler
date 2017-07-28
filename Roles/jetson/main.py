@@ -292,7 +292,7 @@ class Duplicate_Filter(object):
                             }
                         )
                         print "Duplicate_Filter.tag_overlaping_objects_from_one_camera ", shelf_id, camera_id, centroid_distance, radius_distance, radius_inside, centroid_inside
-                        if centroid_inside:
+                        if radius_inside:
                             object_from_one_camera_outer["overlapping_objects_from_one_camera"].append(object_from_one_camera_inner)
                          
                          #centroid_distance, radius_distance, radius_inside, centroid_inside
@@ -588,9 +588,12 @@ class Detected_Objects(object):
                 product_name,  confidence = self.get_best_guess(object_from_one_camera)
                 label = "{}({})".format(product_name,  confidence)
                 if object_from_one_camera["duplicate"]:
-                    circle_color = (0, 0, 255) # green
+                    circle_color = (0, 0, 255) # red
                 else:
-                    circle_color = (0, 255, 0) # green
+                    if object_from_one_camera["product"]["confidence"] > 0.90: 
+                        circle_color = (0, 255, 0) # green
+                    else:
+                        circle_color = (0, 255, 255) # yellow
                 annotations.append(
                     {
                         "type":"circle", 
