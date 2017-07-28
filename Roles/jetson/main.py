@@ -902,7 +902,7 @@ class Main(threading.Thread):
                             #print potential_objects_subset
                     self.detected_objects.create_classified_object_images(potential_objects)
 
-                    self.detected_objects.  (potential_objects)
+                    self.detected_objects.(potential_objects)
 
                     confident_objects =  self.detected_objects.filter_out_unconfident_objects(potential_objects)
 
