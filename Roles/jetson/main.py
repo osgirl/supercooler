@@ -186,8 +186,6 @@ class Images(object):
 class Products(object):
     def __init__(self):
         self.products = {
-
-
             "bottlebecks":                      {"ab_id":"1", "height": 23,     "width":6,  "report_id": 1,  "confidence_threshold":0.90},
             "bottlebudamerica":            {"ab_id":"2", "height": 23,     "width":6,  "report_id": 2,  "confidence_threshold":0.90},
             "bottlebudlight":                  {"ab_id":"3", "height": 23,     "width":6,  "report_id": 3,  "confidence_threshold":0.90},
@@ -791,7 +789,7 @@ class Main(threading.Thread):
             last_close = self.door_log[-1]
 
             # trigger scan
-            if not self.door_open and (((now - last_scan > 1800) and (now - last_close > 120)) or ((now - last_scan > 3600) and (now - last_close > 1))):
+            if not self.door_open and (((now - last_scan > 1800) and (now - last_close > 300)) or ((now - last_scan > 3600) and (now - last_close > 1))):
 
                 timestamp = time.strftime("%Y-%m-%d-%H-%M-%S")
                 print "initiating scan:", timestamp
@@ -902,7 +900,7 @@ class Main(threading.Thread):
                             #print potential_objects_subset
                     self.detected_objects.create_classified_object_images(potential_objects)
 
-                    self.detected_objects.(potential_objects)
+                    self.detected_objects.add_product_parameters(potential_objects)
 
                     confident_objects =  self.detected_objects.filter_out_unconfident_objects(potential_objects)
 
