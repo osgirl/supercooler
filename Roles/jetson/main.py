@@ -297,6 +297,7 @@ class Duplicate_Filter(object):
                          
                          #centroid_distance, radius_distance, radius_inside, centroid_inside
 
+
     def tag_duplicate_objects_from_one_camera(self):
         for shelf_id in ["A","B","C","D"]:
             for camera_id in range(12):
