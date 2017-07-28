@@ -622,7 +622,7 @@ class Detected_Objects(object):
 
     def filter_out_unconfident_objects(self, superset_objects):
         self.confident_objects =  filter(lambda superset_object: superset_object["product"]["name"] != "negative",   superset_objects )
-        return self.confident_objectss
+        return self.confident_objects
         #self.confident_objects =  filter(lambda superset_object: superset_object["product"]["name"] != "negative"  and    superset_object["product"]["confidence"] >= superset_object["product"]["confidence_threshold"],   superset_objects )
 
     def filter_out_duplicate_objects(self, detected_objects):
