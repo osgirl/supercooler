@@ -892,10 +892,6 @@ class Main(threading.Thread):
 
                     confident_objects =  self.detected_objects.filter_out_unconfident_objects(potential_objects)
 
-                    confident_objects = self.duplicate_filter.tag_all_duplicates(confident_objects)
-
-                    self.confident_objects = self.detected_objects.filter_out_duplicate_objects(confident_objects)
-
                     self.detected_objects.create_confident_object_images()
 
                     simplest_inventory = self.detected_objects.tabulate_inventory()
@@ -912,6 +908,12 @@ class Main(threading.Thread):
                     res = self.web_interface.send_report(self.web_interface.prep_for_web(objects_for_web, self.duplicate_filter.x_max, self.duplicate_filter.y_max))
 
                     #print res, res.text
+
+                    confident_objects = self.duplicate_filter.tag_all_duplicates(confident_objects)
+
+                    confident_objects = self.detected_objects.filter_out_duplicate_objects(confident_objects)
+
+                    print confident_objects
                     
                     
             except Exception as e:
