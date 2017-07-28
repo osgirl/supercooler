@@ -324,7 +324,12 @@ class Duplicate_Filter(object):
 
     def calculate_centroid_distance_and_radius_distance(self, circle_a, circle_b ):
         centroid_distance = math.pow( math.pow(circle_a['x'] - circle_b['x'], 2) + math.pow(circle_a['y'] - circle_b['y'], 2), 0.5)
-        circle_outer, inner_circle = circle_a, circle_b if circle_a['r'] > circle_b['r'] else circle_b, circle_a
+        if circle_a['r'] > circle_b['r'] :
+            circle_outer = circle_a
+            inner_circle = circle_b
+        else:    
+            circle_outer = circle_b
+            inner_circle = circle_a
         radius_distance =  circle_outer['r'] - (inner_circle['r'] + centroid_distance)
         radius_inside = True if radius_distance > 0 else False
         centroid_inside = True if radius_distance + inner_circle['r'] > 0 else False
