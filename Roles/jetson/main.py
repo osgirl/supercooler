@@ -283,8 +283,16 @@ class Duplicate_Filter(object):
                             continue
                         # if object_from_one_camera_outer and object_from_one_camera_inner overlap by n%, add to object_from_one_camera_outer.overlapping_objects_from_one_camera
                         centroid_distance, radius_distance, radius_inside, centroid_inside = self.calculate_centroid_distance_and_radius_distance(
-                            (object_from_one_camera_outer["camera_x"], object_from_one_camera_outer["camera_y"], object_from_one_camera_outer["radius"]), 
-                            (object_from_one_camera_inner["camera_x"], object_from_one_camera_inner["camera_y"], object_from_one_camera_inner["radius"])
+                            {
+                                "x":object_from_one_camera_outer["camera_x"], 
+                                "y":object_from_one_camera_outer["camera_y"], 
+                                "r":object_from_one_camera_outer["radius"]
+                            }, 
+                            {
+                                "x":object_from_one_camera_inner["camera_x"], 
+                                "y":object_from_one_camera_inner["camera_y"], 
+                                "r":object_from_one_camera_inner["radius"]
+                            }
                         )
                         if centroid_inside:
                             object_from_one_camera_outer["overlapping_objects_from_one_camera"].append(object_from_one_camera_inner)
