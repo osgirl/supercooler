@@ -313,7 +313,8 @@ class Duplicate_Filter(object):
                     for i, overlapping_object in enumerate(object_from_one_camera["overlapping_objects_from_one_camera"]):
                         overlapping_object["duplicate"] = True
                         if overlapping_object["product"]["confidence"] > highest_confidence["confidence"]:
-                            highest_confidence  = [i, overlapping_object["product"]["confidence"]]
+                            #highest_confidence  = [i, overlapping_object["product"]["confidence"]]
+                            highest_confidence  = {"index":i, "confidence":overlapping_object["product"]["confidence"]}
                     # highest confidence
                     if highest_confidence["confidence"] > object_from_one_camera["product"]["confidence"]:
                         object_from_one_camera["overlapping_objects_from_one_camera"][highest_confidence["index"]]["duplicate"] = False
