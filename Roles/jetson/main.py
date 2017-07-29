@@ -279,7 +279,7 @@ class Duplicate_Filter(object):
                         if object_from_one_camera_inner["product"]["name"]  == "negative":
                             continue
                         # if object_from_one_camera_outer and object_from_one_camera_inner overlap by n%, add to object_from_one_camera_outer.overlapping_objects_from_one_camera
-                        centroid_distance, radius_distance, radius_inside, centroid_inside = self.calculate_centroid_distance_and_radius_distance(
+                        centroid_distance, radius_distance, radius_inside, centroid_inside, circumference_inside = self.calculate_centroid_distance_and_radius_distance(
                             {
                                 "x":object_from_one_camera_outer["camera_x"], 
                                 "y":object_from_one_camera_outer["camera_y"], 
@@ -292,7 +292,7 @@ class Duplicate_Filter(object):
                             }
                         )
                         print "Duplicate_Filter.tag_overlaping_objects_from_one_camera ", shelf_id, camera_id, centroid_distance, radius_distance, radius_inside, centroid_inside
-                        if centroid_inside:
+                        if circumference_inside:
                             object_from_one_camera_outer["overlapping_objects_from_one_camera"].append(object_from_one_camera_inner)
                          
                          #centroid_distance, radius_distance, radius_inside, centroid_inside
@@ -337,7 +337,7 @@ class Duplicate_Filter(object):
         #centroid_inside = True if radius_distance + inner_circle['r'] > 0 else False
         centroid_inside = True if inner_circle['r'] >= centroid_distance else False
         circumference_inside = True if inner_circle['r'] >= (centroid_distance * 2) else False
-        return  centroid_distance, radius_distance, radius_inside, centroid_inside
+        return  centroid_distance, radius_distance, radius_inside, centroid_inside, circumference_inside
 
     # TODO: search for duplicates, transform to global coords & normalize
     def filter_and_transform(self, potential_objects):
