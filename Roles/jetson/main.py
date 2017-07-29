@@ -964,7 +964,7 @@ class Main(threading.Thread):
                 time.sleep(1)
 
             # crop image and encode as jpeg (classifier expects jpeg)
-            print "cropping..."
+            #print "cropping..."
 
             r  = candidate['radius']
             (img_height, img_width) = image.shape[:2]
@@ -977,11 +977,11 @@ class Main(threading.Thread):
             img_crop = image[y1:y2, x1:x2]
             img_jpg = cv2.imencode('.jpg', img_crop)[1].tobytes()
 
-            print "cropped image, w,h = ", x2-x1, y2-y1
+            #print "cropped image, w,h = ", x2-x1, y2-y1
 
             # get a list of guesses w/ confidence in this format:
             # guesses = [(best guess, confidence), (next guess, confidence), ...]
-            print "running classifier..."
+            #print "running classifier..."
 
             guesses = self.guess_image(sess, img_jpg)
             best_guess, confidence = guesses[0]
@@ -994,11 +994,11 @@ class Main(threading.Thread):
         # Feed the image_data as input to the graph and get first prediction
         softmax_tensor = tf_session.graph.get_tensor_by_name('final_result:0')
         
-        print "run tf session..."
+        #print "run tf session..."
         predictions = tf_session.run(softmax_tensor, {'DecodeJpeg/contents:0': image})
         
         # Sort to show labels of first prediction in order of confidence
-        print "sort labels.."
+        #print "sort labels.."
         top_k = predictions[0].argsort()[-len(predictions[0]):][::-1]
 
         scores = [(self.label_lines[node_id], predictions[0][node_id]) for node_id in top_k]
