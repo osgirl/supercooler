@@ -291,12 +291,9 @@ class Duplicate_Filter(object):
                                 "r":object_from_one_camera_inner["radius"]
                             }
                         )
-                        print "Duplicate_Filter.tag_overlaping_objects_from_one_camera ", shelf_id, camera_id, centroid_distance, radius_distance, radius_inside, centroid_inside
+                        #print "Duplicate_Filter.tag_overlaping_objects_from_one_camera ", shelf_id, camera_id, centroid_distance, radius_distance, radius_inside, centroid_inside
                         if circumference_inside:
                             object_from_one_camera_outer["overlapping_objects_from_one_camera"].append(object_from_one_camera_inner)
-                         
-                         #centroid_distance, radius_distance, radius_inside, centroid_inside
-
 
     def tag_duplicate_objects_from_one_camera(self):
         for shelf_id in ["A","B","C","D"]:
@@ -316,7 +313,7 @@ class Duplicate_Filter(object):
                             #highest_confidence  = [i, overlapping_object["product"]["confidence"]]
                             highest_confidence  = {"index":i, "confidence":overlapping_object["product"]["confidence"]}
                     # highest confidence
-                    print "Duplicate_Filter.tag_duplicate_objects_from_one_camera", highest_confidence["confidence"] , object_from_one_camera["product"]["confidence"]
+                    #print "Duplicate_Filter.tag_duplicate_objects_from_one_camera", highest_confidence["confidence"] , object_from_one_camera["product"]["confidence"]
                     if highest_confidence["confidence"] > object_from_one_camera["product"]["confidence"]:
                         object_from_one_camera["overlapping_objects_from_one_camera"][highest_confidence["index"]]["duplicate"] = False
                         #object_from_one_camera["duplicate"] = True
@@ -372,7 +369,7 @@ class Duplicate_Filter(object):
             objects_normalized_coords[i]['norm_x'] = x_norm;
             objects_normalized_coords[i]['norm_y'] = y_norm;
 
-            print objects_normalized_coords[i]
+            #print objects_normalized_coords[i]
 
         return objects_normalized_coords
 
@@ -521,7 +518,7 @@ class Detected_Objects(object):
             objects_from_one_camera =  self.filter_object_list_by_shelf_and_camera(shelf_id, camera_id, object_list)
             annotations = []
             for object_from_one_camera in objects_from_one_camera:
-                print object_from_one_camera
+                #print object_from_one_camera
                 annotations.append(
                     {
                         "type":"circle", 
@@ -991,7 +988,7 @@ class Main(threading.Thread):
 
             candidate["classification"] = guesses
 
-            print guesses
+            #print guesses
 
     def guess_image(self, tf_session, image):
         # Feed the image_data as input to the graph and get first prediction
