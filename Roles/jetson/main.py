@@ -300,8 +300,8 @@ class Duplicate_Filter(object):
             for camera_id in range(12):
                 objects_from_one_camera = filter(lambda d: d['shelf_id'] == shelf_id and int(d['camera_id']) == camera_id,  self.detected_objects)
                 for object_from_one_camera in objects_from_one_camera:
-                    #if object_from_one_camera["duplicate"] is not None:
-                    #    continue
+                    if object_from_one_camera["duplicate"] is not None:
+                        continue
                     #make this pythonic after sleeping
                     if len(object_from_one_camera["overlapping_objects_from_one_camera"]) == 0:
                         object_from_one_camera["duplicate"] = False
