@@ -336,7 +336,7 @@ class Duplicate_Filter(object):
         radius_inside = True if radius_distance > 0 else False
         #centroid_inside = True if radius_distance + inner_circle['r'] > 0 else False
         centroid_inside = True if inner_circle['r'] >= centroid_distance else False
-        circumference_inside = True if inner_circle['r'] >= (centroid_distance * 2) else False
+        circumference_inside = True if (inner_circle['r'] + circle_outer['r']) >= centroid_distance else False
         return  centroid_distance, radius_distance, radius_inside, centroid_inside, circumference_inside
 
     # TODO: search for duplicates, transform to global coords & normalize
