@@ -292,7 +292,7 @@ class Duplicate_Filter(object):
                             }
                         )
                         print "Duplicate_Filter.tag_overlaping_objects_from_one_camera ", shelf_id, camera_id, centroid_distance, radius_distance, radius_inside, centroid_inside
-                        if centroid_distance:
+                        if centroid_inside:
                             object_from_one_camera_outer["overlapping_objects_from_one_camera"].append(object_from_one_camera_inner)
                          
                          #centroid_distance, radius_distance, radius_inside, centroid_inside
@@ -334,7 +334,9 @@ class Duplicate_Filter(object):
             inner_circle = circle_a
         radius_distance =  circle_outer['r'] - (inner_circle['r'] + centroid_distance)
         radius_inside = True if radius_distance > 0 else False
-        centroid_inside = True if radius_distance + inner_circle['r'] > 0 else False
+        #centroid_inside = True if radius_distance + inner_circle['r'] > 0 else False
+        centroid_inside = True if inner_circle['r'] >= centroid_distance else False
+        circumference_inside = True if inner_circle['r'] >= (centroid_distance * 2) else False
         return  centroid_distance, radius_distance, radius_inside, centroid_inside
 
     # TODO: search for duplicates, transform to global coords & normalize
