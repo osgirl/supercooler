@@ -194,10 +194,10 @@ class Products(object):
             "bottlehoegaarden":            {"ab_id":"6", "height": 23,     "width":6,  "report_id": 6,  "confidence_threshold":0.90},
             "bottleultra":                        {"ab_id":"7", "height": 23,     "width":6,  "report_id": 7,  "confidence_threshold":0.90},
             "bottlestella":                       {"ab_id":"10","height": 23,     "width":6,  "report_id": 10,  "confidence_threshold":0.90},
-            "bottlegoose312":               {"ab_id":"8", "height": 23,     "width":6,  "report_id": 1,  "confidence_threshold":0.90},
-            "bottlecoronalight":             {"ab_id":"9", "height": 23,     "width":6,  "report_id": 1,  "confidence_threshold":0.90},
-            "bottlegooseipa":                {"ab_id":"13", "height": 23,     "width":6,  "report_id": 1,  "confidence_threshold":0.90},
-            "bottlebluepoint":                {"ab_id":"15", "height": 23,     "width":6,  "report_id": 1,  "confidence_threshold":0.90},
+            "bottlegoose312":               {"ab_id":"8", "height": 23,     "width":6,  "report_id": 8,  "confidence_threshold":0.90},
+            "bottlecoronalight":             {"ab_id":"9", "height": 23,     "width":6,  "report_id": 9,  "confidence_threshold":0.90},
+            "bottlegooseipa":                {"ab_id":"13", "height": 23,     "width":6,  "report_id": 11,  "confidence_threshold":0.90},
+            "bottlebluepoint":                {"ab_id":"15", "height": 23,     "width":6,  "report_id": 12,  "confidence_threshold":0.90},
             "canbudamerica25":           {"ab_id":"16","height": 20.5,  "width":6.3,  "report_id": 18,  "confidence_threshold":0.90},
             "negative":                           {"ab_id":"0","height": 0,        "width":0,  "report_id": 0,  "confidence_threshold":0}
         }
@@ -690,7 +690,11 @@ class Detected_Objects(object):
         }
         for confident_object in self.confident_objects:
             ab_id = self.products.get_ab_id(confident_object["product"]["name"])
-            inventory[ab_id] += 1
+
+            # remove duplicate objects from inventory
+            if not confident_object["duplicate"] and confident_object["product"]["confidence"] > 0.90:
+                inventory[ab_id] += 1                
+
         return inventory
 
 
