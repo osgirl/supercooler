@@ -306,26 +306,21 @@ class Duplicate_Filter(object):
                     if len(object_from_one_camera["overlapping_objects_from_one_camera"]) == 0:
                         object_from_one_camera["duplicate"] = False
                         continue
-                    highest_confidence_overlapping_object = {"index":-1, "confidence":-1}
+                    highest_confidence = {"index":-1, "confidence":-1}
                     for i, overlapping_object in enumerate(object_from_one_camera["overlapping_objects_from_one_camera"]):
-                        #overlapping_object["duplicate"] = True
-                        if overlapping_object["product"]["confidence"] > highest_confidence_overlapping_object["confidence"]:
-                            #highest_confidence_overlapping_object  = [i, overlapping_object["product"]["confidence"]]
-                            highest_confidence_overlapping_object  = {"index":i, "confidence":overlapping_object["product"]["confidence"]}
+                        overlapping_object["duplicate"] = True
+                        if overlapping_object["product"]["confidence"] > highest_confidence["confidence"]:
+                            #highest_confidence  = [i, overlapping_object["product"]["confidence"]]
+                            highest_confidence  = {"index":i, "confidence":overlapping_object["product"]["confidence"]}
                     # highest confidence
-                    #print "Duplicate_Filter.tag_duplicate_objects_from_one_camera", highest_confidence_overlapping_object["confidence"] , object_from_one_camera["product"]["confidence"]                    
-                    if highest_confidence_overlapping_object["confidence"] > object_from_one_camera["product"]["confidence"]:
-                        object_from_one_camera["duplicate"] = True
-                        
-
-                    """                    
-                    if highest_confidence_overlapping_object["confidence"] > object_from_one_camera["product"]["confidence"]:
-                        object_from_one_camera["overlapping_objects_from_one_camera"][highest_confidence_overlapping_object["index"]]["duplicate"] = False
+                    #print "Duplicate_Filter.tag_duplicate_objects_from_one_camera", highest_confidence["confidence"] , object_from_one_camera["product"]["confidence"]
+                    if highest_confidence["confidence"] > object_from_one_camera["product"]["confidence"]:
+                        object_from_one_camera["overlapping_objects_from_one_camera"][highest_confidence["index"]]["duplicate"] = False
                         #object_from_one_camera["duplicate"] = True
                     else: 
-                        object_from_one_camera["overlapping_objects_from_one_camera"][highest_confidence_overlapping_object["index"]]["duplicate"] = True
+                        object_from_one_camera["overlapping_objects_from_one_camera"][highest_confidence["index"]]["duplicate"] = True
                         object_from_one_camera["duplicate"] = False
-                    """
+
     def calculate_centroid_distance_and_radius_distance(self, circle_a, circle_b ):
         centroid_distance = math.pow( math.pow(circle_a['x'] - circle_b['x'], 2) + math.pow(circle_a['y'] - circle_b['y'], 2), 0.5)
         if circle_a['r'] > circle_b['r'] :
