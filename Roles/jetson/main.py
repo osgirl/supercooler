@@ -316,7 +316,7 @@ class Duplicate_Filter(object):
                     #print "Duplicate_Filter.tag_duplicate_objects_from_one_camera", highest_confidence["confidence"] , object_from_one_camera["product"]["confidence"]
                     if highest_confidence["confidence"] > object_from_one_camera["product"]["confidence"]:
                         object_from_one_camera["overlapping_objects_from_one_camera"][highest_confidence["index"]]["duplicate"] = False
-                        #object_from_one_camera["duplicate"] = True
+                        object_from_one_camera["duplicate"] = True
                     else: 
                         object_from_one_camera["overlapping_objects_from_one_camera"][highest_confidence["index"]]["duplicate"] = True
                         object_from_one_camera["duplicate"] = False
