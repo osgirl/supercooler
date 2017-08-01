@@ -89,7 +89,7 @@ class Network(object):
             dataframe = pd.DataFrame.from_csv("inventory.csv")
             print(dataframe)
             engine = create_engine("mysql+pymysql://root:password@historicoosdata.c4z0sx2tgyqk.us-east-2.rds.amazonaws.com:3306/HistoricOOSData")
-            dataframe.to_sql('inventory', engine, if_exists='replace', index=True) #future if_exists="append"
+            dataframe.to_sql('inventory', engine, if_exists='append', index=True) #future if_exists="append"
 
 class Thirtybirds_Client_Monitor_Server(threading.Thread):
     def __init__(self, network, hostnames, update_period=60):
